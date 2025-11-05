@@ -12,4 +12,4 @@
 - Ungur Andreea  
 
 ## 🚀 Roles & Collaboration
-Our team roles are currently in development as we iterate on our workflow and project structure.  
+Our team roles are currently in development as we iterate on our workflow and project structure. 
