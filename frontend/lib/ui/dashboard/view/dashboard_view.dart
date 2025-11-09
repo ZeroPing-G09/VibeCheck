@@ -36,7 +36,7 @@ class DashboardView extends StatelessWidget {
                     CircleAvatar(
                       radius: 40,
                       backgroundImage:
-                          NetworkImage(user.userMetadata!['avatar_url'].toString()),
+                          NetworkImage(user.userMetadata?['avatar_url']?.toString() ?? ''),
                     ),
                   const SizedBox(height: 16),
                   Text('Welcome, ${user.userMetadata?['name'] ?? 'User'}'),
