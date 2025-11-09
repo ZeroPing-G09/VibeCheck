@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../../../data/models/user_model.dart';
+import '../../../data/models/user.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../di/locator.dart';
 

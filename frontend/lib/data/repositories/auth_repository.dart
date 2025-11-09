@@ -1,4 +1,4 @@
-import '../models/user_model.dart';
+import '../models/user.dart';
 import '../services/api_service.dart';
 
 class AuthRepository {
