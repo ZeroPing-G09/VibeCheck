@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'ui/app.dart';
-import 'di/locator.dart';
+import 'package:frontend/data/services/api_service.dart';
+import 'package:frontend/ui/app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await setupLocator();
-  runApp(const App());
+  await ApiService.init();
+  runApp(const VibeCheckApp());
 }

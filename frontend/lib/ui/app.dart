@@ -1,41 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../core/routing/app_router.dart';
-import '../core/theme/app_theme.dart';
-import '../ui/auth/view/login_view.dart';
-import '../ui/auth/viewmodel/auth_view_model.dart';
-import '../ui/home/view/home_view.dart';
-import '../ui/settings/viewmodel/theme_view_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:frontend/data/services/api_service.dart';
+import 'package:frontend/data/repositories/auth_repository.dart';
+import 'package:frontend/ui/auth/view/login_view.dart';
+import 'package:frontend/ui/dashboard/view/dashboard_view.dart';
 
-class App extends StatelessWidget {
-  const App({super.key});
+class VibeCheckApp extends StatefulWidget {
+  const VibeCheckApp({super.key});
+
+  @override
+  State<VibeCheckApp> createState() => _VibeCheckAppState();
+}
+
+class _VibeCheckAppState extends State<VibeCheckApp> {
+  final AuthRepository _authRepo = AuthRepository();
+  Session? _session;
+
+  @override
+  void initState() {
+    super.initState();
+    _session = Supabase.instance.client.auth.currentSession;
+    _authRepo.onAuthStateChange.listen((data) {
+      setState(() => _session = data.session);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthViewModel()),
-        ChangeNotifierProvider(create: (_) => ThemeViewModel()),
-      ],
-      child: Consumer<ThemeViewModel>(
-        builder: (context, themeViewModel, _) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'VibeCheck',
-            theme: AppTheme.light,
-            darkTheme: AppTheme.dark,
-            themeMode: themeViewModel.isDarkMode 
-              ? ThemeMode.dark 
-              : ThemeMode.light,
-            onGenerateRoute: AppRouter.generateRoute,
-            initialRoute: AppRouter.initialRoute,
-            routes: {
-              '/login': (_) => const LoginView(),
-              '/home': (_) => const HomeView(),
-            },
-          );
-        },
-      ),
+    return MaterialApp(
+      title: 'VibeCheck',
+      theme: ThemeData.dark(),
+      home: _session == null ? const LoginView() : const DashboardView(),
     );
   }
 }

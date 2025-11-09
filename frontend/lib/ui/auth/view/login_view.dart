@@ -1,38 +1,53 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../viewmodel/auth_view_model.dart';
-import '../../../core/widgets/loading_indicator.dart';
+import 'package:frontend/data/repositories/auth_repository.dart';
 
-class LoginView extends StatelessWidget {
+class LoginView extends StatefulWidget {
   const LoginView({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Consumer<AuthViewModel>(
-      builder: (context, viewModel, _) {
-        if (viewModel.user != null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pushReplacementNamed(context, '/home');
-          });
-        }
+  State<LoginView> createState() => _LoginViewState();
+}
 
-        return Scaffold(
-          appBar: AppBar(
-            automaticallyImplyLeading: false,
-            title: const Text('Login'),
-          ),
-          body: Center(
-            child: viewModel.isLoading
-                ? const LoadingIndicator()
-                : ElevatedButton(
-                    onPressed: () {
-                      viewModel.login('test@example.com', '1234'); // Todo: implement login
-                    },
-                    child: const Text('Login'),
-                  ),
-          ),
-        );
-      },
+class _LoginViewState extends State<LoginView> {
+  final AuthRepository _authRepo = AuthRepository();
+  bool _loading = false;
+  String? _error;
+
+  void _login() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await _authRepo.signInWithSpotify();
+    } catch (e) {
+      setState(() => _error = e.toString());
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (_loading) const CircularProgressIndicator(),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(_error!, style: const TextStyle(color: Colors.red)),
+              ),
+            ElevatedButton.icon(
+              onPressed: _loading ? null : _login,
+              icon: const Icon(Icons.music_note),
+              label: const Text('Login with Spotify'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
