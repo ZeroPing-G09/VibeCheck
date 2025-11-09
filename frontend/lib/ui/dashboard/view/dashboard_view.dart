@@ -15,7 +15,13 @@ class DashboardView extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              await AuthRepository().signOut();
+              try {
+                await AuthRepository().signOut();
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Sign out failed: $e')),
+                );
+              }
             },
           ),
         ],
