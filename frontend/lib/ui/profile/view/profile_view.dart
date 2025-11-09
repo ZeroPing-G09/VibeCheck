@@ -11,11 +11,13 @@ class ProfileView extends StatefulWidget {
 
 class _ProfileViewState extends State<ProfileView> {
   final _formKey = GlobalKey<FormState>();
+  String? _selectedGenre; // for dropdown selection
 
   @override
   void initState() {
     super.initState();
-    context.read<ProfileViewModel>().loadUser(1); 
+    context.read<ProfileViewModel>().loadUser(1);
+    context.read<ProfileViewModel>().loadAvailableGenres(); // fetch genres list
   }
 
   @override
@@ -41,21 +43,6 @@ class _ProfileViewState extends State<ProfileView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Profile'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: () async {
-              final updated = user.copyWith(
-                username: usernameController.text,
-                profilePicture: profilePicController.text,
-              );
-              await viewModel.updateUser(updated);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Profile updated')),
-              );
-            },
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -81,9 +68,12 @@ class _ProfileViewState extends State<ProfileView> {
             const SizedBox(height: 24),
             const Align(
               alignment: Alignment.centerLeft,
-              child: Text('Favorite Genres', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              child: Text('Favorite Genres',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 12),
+
+            // List of genre chips
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -97,11 +87,72 @@ class _ProfileViewState extends State<ProfileView> {
                   .toList(),
             ),
             const SizedBox(height: 12),
+
+            // Add Genre Button + Dropdown
+            if (user.genres.length < 3)
+              DropdownButton<String>(
+                hint: const Text('Select Genre'),
+                value: _selectedGenre,
+                items: viewModel.availableGenres
+                    .where((g) => !user.genres.contains(g))
+                    .map((g) => DropdownMenuItem(value: g, child: Text(g)))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() => _selectedGenre = value);
+                },
+              )
+            else
+              ElevatedButton.icon(
+                icon: const Icon(Icons.warning_amber_rounded, color: Colors.amber),
+                label: const Text("You can only choose 3 genres"),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text('Limit Reached'),
+                      content: const Text('You can only select up to 3 genres.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('OK'),
+                        )
+                      ],
+                    ),
+                  );
+                },
+              ),
+
+            const SizedBox(height: 8),
             ElevatedButton.icon(
               icon: const Icon(Icons.add),
               label: const Text('Add Genre'),
-              onPressed: () {
-                setState(() => user.genres.add('New Genre'));
+              onPressed: _selectedGenre != null && user.genres.length < 3
+                  ? () {
+                      setState(() {
+                        user.genres.add(_selectedGenre!);
+                        _selectedGenre = null;
+                      });
+                    }
+                  : null,
+            ),
+
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.save),
+              label: const Text('Submit Changes'),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 48),
+                backgroundColor: Theme.of(context).colorScheme.primary,
+              ),
+              onPressed: () async {
+                final updated = user.copyWith(
+                  username: usernameController.text,
+                  profilePicture: profilePicController.text,
+                );
+                await viewModel.updateUser(updated);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Profile updated successfully')),
+                );
               },
             ),
           ],
