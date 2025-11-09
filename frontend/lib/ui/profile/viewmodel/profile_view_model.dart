@@ -1,38 +1,41 @@
 import 'package:flutter/material.dart';
-import '../../../../data/models/user.dart';
-import '../../../../data/repositories/user_repository.dart';
+import 'package:frontend/data/models/user.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
+import '../../../data/repositories/user_repository.dart';
+import '../../../data/repositories/genre_repository.dart';
+import '../../../data/models/user.dart';
+
 
 class ProfileViewModel extends ChangeNotifier {
-  final UserRepository _repository = UserRepository();
+  final UserRepository _userRepository = UserRepository();
+  final GenreRepository _genreRepository = GenreRepository();
 
-  User? _user;
-  bool _isLoading = false;
-  bool _isSaving = false;
-
-  User? get user => _user;
-  bool get isLoading => _isLoading;
-  bool get isSaving => _isSaving;
+  User? user;
+  bool isLoading = false;
+  List<String> availableGenres = [];
 
   Future<void> loadUser(int id) async {
-    _isLoading = true;
+    isLoading = true;
     notifyListeners();
     try {
-      _user = await _repository.getUserById(id);
+      user = await _userRepository.getUserById(id);
     } finally {
-      _isLoading = false;
+      isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> updateUser(User updatedUser) async {
-    _isSaving = true;
-    notifyListeners();
+  Future<void> loadAvailableGenres() async {
     try {
-      await _repository.updateUser(updatedUser);
-      _user = updatedUser;
-    } finally {
-      _isSaving = false;
-      notifyListeners();
+      availableGenres = await _genreRepository.getAllGenres();
+    } catch (e) {
+      availableGenres = await _genreRepository.getCachedGenres();
     }
+    notifyListeners();
+  }
+
+  Future<void> updateUser(User updatedUser) async {
+    user = await _userRepository.updateUser(updatedUser);
+    notifyListeners();
   }
 }
