@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:frontend/data/services/api_service.dart';
 import 'package:frontend/data/repositories/auth_repository.dart';
 import 'package:frontend/ui/auth/view/login_view.dart';
 import 'package:frontend/ui/dashboard/view/dashboard_view.dart';
