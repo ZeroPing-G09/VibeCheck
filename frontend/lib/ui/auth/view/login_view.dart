@@ -21,7 +21,7 @@ class _LoginViewState extends State<LoginView> {
     try {
       await _authRepo.signInWithSpotify();
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() => _error = 'Login failed. Please try again.');
     } finally {
       setState(() => _loading = false);
     }
