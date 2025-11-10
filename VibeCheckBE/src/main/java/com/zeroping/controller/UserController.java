@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -17,20 +19,20 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/preferences")
-    public ResponseEntity<String> savePreferences(@RequestBody UserPreferencesDTO preferences) {
-        // Check if userId is provided
+    public ResponseEntity<Map<String, Object>> savePreferences(@RequestBody UserPreferencesDTO preferences) {
+        // Check if user id is present
         if (preferences.getUserId() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                 .body("{\"success\": false, \"message\": \"User ID is required.\"}");
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "User ID is required."));
         }
 
         try {
-            String confirmationJson = userService.updateUserPreferences(preferences);
-            
-            return ResponseEntity.status(HttpStatus.OK).body(confirmationJson); 
+            userService.updateUserPreferences(preferences);
+            return ResponseEntity.ok()
+                    .body(Map.of("success", true, "message", "Preferences updated successfully."));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                 .body("{\"success\": false, \"message\": \"Internal error updating preferences.\"}");
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("success", false, "message", "Internal error updating preferences."));
         }
     }
 }
