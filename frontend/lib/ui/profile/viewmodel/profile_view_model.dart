@@ -35,7 +35,14 @@ class ProfileViewModel extends ChangeNotifier {
   }
 
   Future<void> updateUser(User updatedUser) async {
-    user = await _userRepository.updateUser(updatedUser);
-    notifyListeners();
+    debugPrint('ProfileViewModel.updateUser called for id=${updatedUser.id}');
+    try {
+      user = await _userRepository.updateUser(updatedUser);
+      notifyListeners();
+    } catch (e, st) {
+      debugPrint('ProfileViewModel.updateUser error: $e');
+      debugPrint('$st');
+      rethrow;
+    }
   }
 }
