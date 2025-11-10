@@ -1,31 +1,48 @@
 import 'package:flutter/material.dart';
-import '../widgets/dashboard_title.dart';
+import 'package:frontend/data/repositories/auth_repository.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final mockStats = [
-      {'title': 'Songs listened', 'value': '345'},
-      {'title': 'Active hours', 'value': '12'},
-      {'title': 'Playlists', 'value': '5'},
-    ];
+    final user = AuthRepository().currentUser;
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: ListView(
-        children: [
-          Center(
-            child: const Text(
-              'Dashboard',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('VibeCheck Dashboard'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              try {
+                await AuthRepository().signOut();
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Sign out failed: $e')),
+                );
+              }
+            },
           ),
-          const SizedBox(height: 12), // un fel de padding
-          for (var item in mockStats)
-            DashboardTile(title: item['title']!, value: item['value']!),
         ],
+      ),
+      body: Center(
+        child: user == null
+            ? const Text('No user logged in')
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (user.userMetadata?['avatar_url'] != null)
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundImage:
+                          NetworkImage(user.userMetadata?['avatar_url']?.toString() ?? ''),
+                    ),
+                  const SizedBox(height: 16),
+                  Text('Welcome, ${user.userMetadata?['name'] ?? 'User'}'),
+                  Text(user.email ?? ''),
+                ],
+              ),
       ),
     );
   }
