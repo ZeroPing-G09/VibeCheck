@@ -1,24 +1,28 @@
 package com.zeroping.service;
 
 import com.zeroping.dto.UserPreferencesDTO;
+import com.zeroping.entity.User;
 import com.zeroping.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
+    private final UserRepository userRepository;
+
     @Autowired
-    private UserRepository userRepository; 
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
-    public String updateUserPreferences(UserPreferencesDTO preferences) throws Exception {
-        Integer userId = preferences.getUserId();
+    public void updateUserPreferences(UserPreferencesDTO userPreferencesDTO) {
+        User user = userRepository.findById(userPreferencesDTO.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        int rowsAffected = userRepository.updatePreferences(userId, preferences);
+        user.setTop1GenreId(userPreferencesDTO.getTop1GenreId());
+        user.setTop2GenreId(userPreferencesDTO.getTop2GenreId());
+        user.setTop3GenreId(userPreferencesDTO.getTop3GenreId());
 
-        if (rowsAffected > 0) { 
-            return "{\"success\": true, \"message\": \"Preferences updated successfully.\"}";
-        } else {
-            throw new Exception("User not found or preferences were unchanged.");
-        }
+        userRepository.save(user);
     }
 }
