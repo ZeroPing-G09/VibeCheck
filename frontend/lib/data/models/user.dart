@@ -15,11 +15,11 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'] ?? 0,
-      username: json['username'] ?? '',
-      email: json['email'] ?? '',
-      profilePicture: json['profile_picture'] ?? '',
-      genres: (json['genres'] as List?)?.map((g) => g.toString()).toList() ?? [],
+      id: json['id'] as int? ?? 0,
+      username: json['username'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      profilePicture: json['profile_picture'] as String? ?? '',
+      genres: (json['genres'] as List<dynamic>?)?.map((g) => g.toString()).toList() ?? [],
     );
   }
 
@@ -32,6 +32,12 @@ class User {
       'genres': genres,
     };
   }
+
+  Map<String, dynamic> toUpdateJson() => {
+    'username': username,
+    'profile_picture': profilePicture,
+    'genres': genres,
+  };
 
   User copyWith({
     int? id,
