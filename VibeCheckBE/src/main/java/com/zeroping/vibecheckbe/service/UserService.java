@@ -52,12 +52,12 @@ public class UserService {
         User saved = userRepository.save(user);
         List<String> genres = extractGenres(saved);
 
-        return Map.of(
-                "id", saved.getId(),
-                "username", saved.getUsername(),
-                "profile_picture", saved.getProfilePicture(),
-                "genres", genres
-        );
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", saved.getId());
+        response.put("username", saved.getUsername());
+        response.put("profile_picture", saved.getProfilePicture());
+        response.put("genres", genres);
+        return response;
     }
 
     private void updateUserGenres(User user, List<String> genreNames) {
