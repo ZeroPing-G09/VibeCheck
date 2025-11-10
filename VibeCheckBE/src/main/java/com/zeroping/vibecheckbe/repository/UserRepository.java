@@ -1,6 +1,6 @@
-package com.zeroping.repository;
+package com.zeroping.vibecheckbe.repository;
 
-import com.zeroping.entity.User;
+import com.zeroping.vibecheckbe.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

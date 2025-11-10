@@ -1,9 +1,8 @@
-package com.zeroping.controller;
+package com.zeroping.vibecheckbe.controller;
 
-import com.zeroping.dto.UserPreferencesDTO;
-import com.zeroping.service.UserService;
+import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
+import com.zeroping.vibecheckbe.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

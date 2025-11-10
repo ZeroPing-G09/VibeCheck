@@ -1,4 +1,4 @@
-package com.zeroping.entity;
+package com.zeroping.vibecheckbe.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;

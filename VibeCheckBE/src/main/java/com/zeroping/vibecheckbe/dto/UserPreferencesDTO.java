@@ -1,4 +1,4 @@
-package com.zeroping.dto;
+package com.zeroping.vibecheckbe.dto;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

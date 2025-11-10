@@ -1,8 +1,8 @@
-package com.zeroping.service;
+package com.zeroping.vibecheckbe.service;
 
-import com.zeroping.dto.UserPreferencesDTO;
-import com.zeroping.entity.User;
-import com.zeroping.repository.UserRepository;
+import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
+import com.zeroping.vibecheckbe.entity.User;
+import com.zeroping.vibecheckbe.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
