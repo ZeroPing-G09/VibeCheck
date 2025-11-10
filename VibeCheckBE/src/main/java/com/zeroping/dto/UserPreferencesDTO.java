@@ -6,9 +6,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class UserPreferencesDTO {
-    private Integer userId; 
+    private Long userId;
     
-    private Integer top1GenreId;
-    private Integer top2GenreId;
-    private Integer top3GenreId;
+    private Long top1GenreId;
+    private Long top2GenreId;
+    private Long top3GenreId;
 }
