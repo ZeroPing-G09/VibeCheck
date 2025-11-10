@@ -18,7 +18,9 @@ class ProfileViewModel extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     try {
-      user = await _userRepository.getUserById(id);
+      final fetched = await _userRepository.getUserById(id);
+      final dedupedGenres = fetched.genres.toSet().toList();
+      user = fetched.copyWith(genres: dedupedGenres);
     } finally {
       isLoading = false;
       notifyListeners();
