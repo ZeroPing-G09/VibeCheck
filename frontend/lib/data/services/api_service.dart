@@ -6,9 +6,9 @@ class ApiService {
   static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
 
   static Future<void> init() async {
-    // Load .env file
     await dotenv.load(fileName: '.env');
-    
+
+    // v2.10.x — keep it minimal; session persist/refresh are automatic
     await Supabase.initialize(
       url: supabaseUrl,
       anonKey: supabaseAnonKey,

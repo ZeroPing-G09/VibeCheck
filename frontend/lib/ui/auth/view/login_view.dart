@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/data/repositories/auth_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -19,11 +20,20 @@ class _LoginViewState extends State<LoginView> {
       _error = null;
     });
     try {
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Ești deja autentificat.')),
+          );
+        }
+        return;
+      }
       await _authRepo.signInWithSpotify();
     } catch (e) {
       setState(() => _error = 'Login failed. Please try again.');
     } finally {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 

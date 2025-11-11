@@ -2,6 +2,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/api_service.dart';
 
 class AuthRepository {
+  AuthRepository._internal();
+  static final AuthRepository _instance = AuthRepository._internal();
+  factory AuthRepository() => _instance;
+
   final SupabaseClient _client = ApiService.client;
 
   Future<void> signInWithSpotify() async {
@@ -17,6 +21,5 @@ class AuthRepository {
   }
 
   User? get currentUser => _client.auth.currentUser;
-
   Stream<AuthState> get onAuthStateChange => _client.auth.onAuthStateChange;
 }

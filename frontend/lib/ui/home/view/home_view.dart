@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../ui/profile/view/profile_view.dart';
-import '../../../ui/dashboard/view/dashboard_view.dart';
-import '../../../ui/settings/view/settings_view.dart';
-import '../../components/bottom_nav_bar.dart';
+import 'package:frontend/data/repositories/auth_repository.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -12,23 +9,45 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  int _currentIndex = 0;
+  final _authRepo = AuthRepository();
+  bool _signingOut = false;
 
-  final List<Widget> _pages = const [
-    ProfileView(),
-    DashboardView(),
-    SettingsView(),
-  ];
+  Future<void> _logout() async {
+    setState(() => _signingOut = true);
+    try {
+      await _authRepo.signOut();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sesiunea a fost închisă.')),
+        );
+      }
+      // AuthGate will automatically switch to LoginView.
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Eroare la logout.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _signingOut = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _pages),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() => _currentIndex = index);
-        },
+      appBar: AppBar(
+        title: const Text('VibeCheck'),
+        actions: [
+          IconButton(
+            onPressed: _signingOut ? null : _logout,
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+          ),
+        ],
+      ),
+      body: const Center(
+        child: Text('Dashboard / Home content here'),
       ),
     );
   }
