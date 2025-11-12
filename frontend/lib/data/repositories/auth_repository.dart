@@ -1,4 +1,4 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 import '../models/user.dart';
 import '../services/api_service.dart';
 import 'package:flutter/foundation.dart';
@@ -8,11 +8,11 @@ class AuthRepository {
   static final AuthRepository _instance = AuthRepository._internal();
   factory AuthRepository() => _instance;
 
-  final SupabaseClient _client = ApiService.client;
+  final supabase.SupabaseClient _client = ApiService.client;
 
   Future<void> signInWithSpotify() async {
     await _client.auth.signInWithOAuth(
-      OAuthProvider.spotify,
+      supabase.OAuthProvider.spotify,
       redirectTo: kIsWeb ? null : 'vibecheck://auth-callback',
       scopes: 'user-read-email user-read-private',
     );
@@ -22,6 +22,8 @@ class AuthRepository {
     await _client.auth.signOut();
   }
 
-  User? get currentUser => _client.auth.currentUser;
-  Stream<AuthState> get onAuthStateChange => _client.auth.onAuthStateChange;
+  supabase.User? get currentUser => _client.auth.currentUser;
+
+  Stream<supabase.AuthState> get onAuthStateChange =>
+      _client.auth.onAuthStateChange;
 }

@@ -5,6 +5,7 @@ import 'ui/auth/view/login_view.dart';
 import 'di/locator.dart';
 import 'core/auth/auth_notifier.dart';
 import 'ui/home/view/home_view.dart';
+import 'ui/dashboard/view/dashboard_view.dart';
 
 final AuthNotifier _auth = locator<AuthNotifier>();
 
@@ -18,11 +19,15 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/login',
-      builder: (_, __) => const LoginView(), // keep your current login view import if needed
+      builder: (_, __) => const LoginView(), 
+    ),
+    GoRoute(
+      path: '/home',
+      builder: (_, __) => const HomeView(),
     ),
     GoRoute(
       path: '/dashboard',
-      builder: (_, __) => const HomeView(),
+      builder: (_, __) => const DashboardView(),
     ),
   ],
   redirect: (context, state) {
@@ -32,7 +37,7 @@ final GoRouter appRouter = GoRouter(
     if (!loggedIn && state.matchedLocation != '/splash' && !loggingIn) {
       return '/login';
     }
-    if (loggedIn && loggingIn) return '/dashboard';
+    if (loggedIn && loggingIn) return '/home';
     return null;
   },
 );
@@ -44,7 +49,7 @@ class _SplashDecider extends StatelessWidget {
   Widget build(BuildContext context) {
     final loggedIn = Supabase.instance.client.auth.currentSession != null;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.go(loggedIn ? '/dashboard' : '/login');
+      context.go(loggedIn ? '/home' : '/login');
     });
     return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }

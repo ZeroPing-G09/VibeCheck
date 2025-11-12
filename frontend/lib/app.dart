@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:frontend/app_router.dart';
 
@@ -8,7 +7,7 @@ class VibeCheckApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      routerConfig: appRouter,
+      routerConfig: appRouter,          
       debugShowCheckedModeBanner: false,
       title: 'VibeCheck',
       theme: ThemeData(useMaterial3: true),
