@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @Entity
-@Table(name = "PlaylistSongs")
+@Table(name = "\"PlaylistSongs\"", schema = "public")
 public class PlaylistSong {
 
     @Id
@@ -16,14 +16,14 @@ public class PlaylistSong {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "playlist_id")
-    @JsonBackReference("playlist-songs")
-    private Playlist playlist;
-
-    @ManyToOne
     @JoinColumn(name = "song_id")
     @JsonBackReference("song-playlists")
     private Song song;
+
+    @ManyToOne
+    @JoinColumn(name = "playlist_id")
+    @JsonBackReference("playlist-songs")
+    private Playlist playlist;
 
     public PlaylistSong(Playlist playlist, Song song) {
         this.playlist = playlist;
