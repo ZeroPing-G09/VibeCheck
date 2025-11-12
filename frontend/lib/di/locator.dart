@@ -1,10 +1,15 @@
 import 'package:get_it/get_it.dart';
-import '../data/repositories/auth_repository.dart';
-import '../data/services/api_service.dart';
+import 'package:frontend/core/auth/auth_notifier.dart';
+import 'package:frontend/data/repositories/auth_repository.dart';
 
 final locator = GetIt.instance;
 
-Future<void> setupLocator() async {
-  locator.registerLazySingleton(() => ApiService());
-  locator.registerLazySingleton(() => AuthRepository(locator<ApiService>()));
+void setupLocator() {
+  if (!locator.isRegistered<AuthRepository>()) {
+    locator.registerLazySingleton<AuthRepository>(() => AuthRepository());
+  }
+
+  if (!locator.isRegistered<AuthNotifier>()) {
+    locator.registerLazySingleton<AuthNotifier>(() => AuthNotifier());
+  }
 }
