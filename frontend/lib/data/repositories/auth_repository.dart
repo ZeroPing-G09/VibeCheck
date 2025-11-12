@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/api_service.dart';
+import 'package:flutter/foundation.dart';
 
 class AuthRepository {
   AuthRepository._internal();
@@ -11,7 +12,7 @@ class AuthRepository {
   Future<void> signInWithSpotify() async {
     await _client.auth.signInWithOAuth(
       OAuthProvider.spotify,
-      redirectTo: 'vibecheck://auth-callback',
+      redirectTo: kIsWeb ? null : 'vibecheck://auth-callback',
       scopes: 'user-read-email user-read-private',
     );
   }
