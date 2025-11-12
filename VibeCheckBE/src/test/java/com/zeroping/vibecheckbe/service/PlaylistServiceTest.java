@@ -70,14 +70,13 @@ class PlaylistServiceTest {
 
         Song mockSongEntity = new Song();
         mockSongEntity.setId(1L);
-        mockSongEntity.setUrl("spotify-id-123");
-        mockSongEntity.setTitle("Sunroof");
+        mockSongEntity.setUrl("https://open.spotify.com/track/123");
+        mockSongEntity.setName("Sunroof");
 
         Playlist mockPlaylist = new Playlist();
         mockPlaylist.setId(10L);
         mockPlaylist.setName("Happy Vibes");
 
-        when(mockSpotifyTrack.getId()).thenReturn("spotify-id-123");
         when(mockSpotifyTrack.getName()).thenReturn("Sunroof");
         when(mockSpotifyTrack.getArtists()).thenReturn(new ArtistSimplified[]{mockArtist});
         when(mockArtist.getName()).thenReturn("Nicky Youre");
@@ -87,7 +86,7 @@ class PlaylistServiceTest {
         when(spotifyService.searchSong("Sunroof", "Nicky Youre"))
                 .thenReturn(Optional.of(mockSpotifyTrack));
 
-        when(songRepository.findBySpotifyTrackId("spotify-id-123"))
+        when(songRepository.findByUrl("https://open.spotify.com/track/123"))
                 .thenReturn(Optional.empty());
 
         when(playlistRepository.save(any(Playlist.class)))
@@ -106,11 +105,11 @@ class PlaylistServiceTest {
         assertNotNull(resultPlaylist);
         assertEquals("Happy Vibes", resultPlaylist.getName());
         assertEquals(1, resultPlaylist.getPlaylistSongs().size());
-        assertEquals("spotify-id-123", resultPlaylist.getPlaylistSongs().getFirst().getSong().getUrl());
+        assertEquals("https://open.spotify.com/track/123", resultPlaylist.getPlaylistSongs().getFirst().getSong().getUrl());
 
         verify(spotifyService, times(1)).searchSong("Sunroof", "Nicky Youre");
         verify(playlistRepository, times(1)).save(any(Playlist.class));
-        verify(songRepository, times(1)).findBySpotifyTrackId("spotify-id-123");
+        verify(songRepository, times(1)).findByUrl("https://open.spotify.com/track/123");
         verify(songRepository, times(1)).save(any(Song.class));
         verify(playlistSongRepository, times(1)).saveAll(anyList());
     }
@@ -130,14 +129,16 @@ class PlaylistServiceTest {
         PlaylistRequest playlistRequest = new PlaylistRequest();
         playlistRequest.setPlaylist_name("Happy Vibes");
         playlistRequest.setTracks(List.of(trackRequest));
+        ExternalUrl mockUrls = mock(ExternalUrl.class);
 
         Track mockSpotifyTrack = mock(Track.class);
-        when(mockSpotifyTrack.getId()).thenReturn("spotify-id-123");
+        when(mockSpotifyTrack.getExternalUrls()).thenReturn(mockUrls);
+        when(mockUrls.get("spotify")).thenReturn("https://open.spotify.com/track/123");
 
         Song existingSongEntity = new Song(); // This song already exists in DB
         existingSongEntity.setId(1L);
-        existingSongEntity.setUrl("spotify-id-123");
-        existingSongEntity.setTitle("Sunroof");
+        existingSongEntity.setUrl("https://open.spotify.com/track/123");
+        existingSongEntity.setName("Sunroof");
 
         Playlist mockPlaylist = new Playlist();
         mockPlaylist.setId(10L);
@@ -146,7 +147,7 @@ class PlaylistServiceTest {
 
         when(spotifyService.searchSong("Sunroof", "Nicky Youre"))
                 .thenReturn(Optional.of(mockSpotifyTrack));
-        when(songRepository.findBySpotifyTrackId("spotify-id-123"))
+        when(songRepository.findByUrl("https://open.spotify.com/track/123"))
                 .thenReturn(Optional.of(existingSongEntity));
         when(playlistRepository.save(any(Playlist.class)))
                 .thenReturn(mockPlaylist);
@@ -168,7 +169,7 @@ class PlaylistServiceTest {
 
         verify(spotifyService, times(1)).searchSong("Sunroof", "Nicky Youre");
         verify(playlistRepository, times(1)).save(any(Playlist.class));
-        verify(songRepository, times(1)).findBySpotifyTrackId("spotify-id-123");
+        verify(songRepository, times(1)).findByUrl("https://open.spotify.com/track/123");
         verify(songRepository, times(0)).save(any(Song.class)); // Verifies that a new song was NOT created
         verify(playlistSongRepository, times(1)).saveAll(anyList());
     }
@@ -209,7 +210,7 @@ class PlaylistServiceTest {
 
         verify(spotifyService, times(1)).searchSong("NonExistentSong", "Nobody");
         verify(playlistRepository, times(1)).save(any(Playlist.class));
-        verify(songRepository, times(0)).findBySpotifyTrackId(anyString()); // Never checked DB
+        verify(songRepository, times(0)).findByUrl(anyString()); // Never checked DB
         verify(songRepository, times(0)).save(any(Song.class)); // Never saved a song
 
         verify(playlistSongRepository, times(1)).saveAll(captor.capture());
@@ -242,26 +243,27 @@ class PlaylistServiceTest {
         playlistRequest.setTracks(List.of(newTrackReq, existingTrackReq, notFoundTrackReq));
 
         Track mockSpotifyTrackNew = mock(Track.class);
-        when(mockSpotifyTrackNew.getId()).thenReturn("spotify-id-123");
         when(mockSpotifyTrackNew.getName()).thenReturn("Sunroof");
         ArtistSimplified mockArtistNew = mock(ArtistSimplified.class);
         when(mockArtistNew.getName()).thenReturn("Nicky Youre");
         when(mockSpotifyTrackNew.getArtists()).thenReturn(new ArtistSimplified[]{mockArtistNew});
+
         ExternalUrl mockUrlsNew = mock(ExternalUrl.class);
         when(mockSpotifyTrackNew.getExternalUrls()).thenReturn(mockUrlsNew);
         when(mockUrlsNew.get("spotify")).thenReturn("https://open.spotify.com/track/123");
 
-
         Track mockSpotifyTrackExisting = mock(Track.class);
-        when(mockSpotifyTrackExisting.getId()).thenReturn("spotify-id-456");
+        ExternalUrl mockSpotifyTrackExistingUrls = mock(ExternalUrl.class);
+        when(mockSpotifyTrackExistingUrls.get("spotify")).thenReturn("https://open.spotify.com/track/456");
+        when(mockSpotifyTrackExisting.getExternalUrls()).thenReturn(mockSpotifyTrackExistingUrls);
 
         Song mockSongEntityNew = new Song();
         mockSongEntityNew.setId(1L);
-        mockSongEntityNew.setUrl("spotify-id-123");
+        mockSongEntityNew.setUrl("https://open.spotify.com/track/123");
 
         Song mockSongEntityExisting = new Song();
         mockSongEntityExisting.setId(2L);
-        mockSongEntityExisting.setUrl("spotify-id-456");
+        mockSongEntityExisting.setUrl("https://open.spotify.com/track/456");
 
         Playlist mockPlaylist = new Playlist();
         mockPlaylist.setId(10L);
@@ -272,8 +274,8 @@ class PlaylistServiceTest {
         when(spotifyService.searchSong("As It Was", "Harry Styles")).thenReturn(Optional.of(mockSpotifyTrackExisting));
         when(spotifyService.searchSong("NonExistentSong", "Nobody")).thenReturn(Optional.empty());
 
-        when(songRepository.findBySpotifyTrackId("spotify-id-123")).thenReturn(Optional.empty()); // New
-        when(songRepository.findBySpotifyTrackId("spotify-id-456")).thenReturn(Optional.of(mockSongEntityExisting)); // Existing
+        when(songRepository.findByUrl("https://open.spotify.com/track/123")).thenReturn(Optional.empty()); // New
+        when(songRepository.findByUrl("https://open.spotify.com/track/456")).thenReturn(Optional.of(mockSongEntityExisting)); // Existing
         when(songRepository.save(any(Song.class))).thenReturn(mockSongEntityNew); // Return the new song when saved
 
         when(playlistRepository.save(any(Playlist.class))).thenReturn(mockPlaylist);
@@ -299,9 +301,9 @@ class PlaylistServiceTest {
 
         verify(playlistRepository, times(1)).save(any(Playlist.class));
 
-        verify(songRepository, times(1)).findBySpotifyTrackId("spotify-id-123");
-        verify(songRepository, times(1)).findBySpotifyTrackId("spotify-id-456");
-        verify(songRepository, never()).findBySpotifyTrackId(null); // Just in case
+        verify(songRepository, times(1)).findByUrl("https://open.spotify.com/track/123");
+        verify(songRepository, times(1)).findByUrl("https://open.spotify.com/track/456");
+        verify(songRepository, never()).findByUrl(null);
 
         verify(songRepository, times(1)).save(any(Song.class));
 

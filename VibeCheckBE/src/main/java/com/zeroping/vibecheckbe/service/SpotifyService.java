@@ -5,6 +5,7 @@ import org.apache.hc.core5.http.ParseException;
 import se.michaelthelin.spotify.SpotifyApi;
 
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
+import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
 import se.michaelthelin.spotify.model_objects.specification.Paging;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 
@@ -35,7 +36,7 @@ public class SpotifyService {
         try {
             // Ask for only the first result
             Paging<Track> page = spotifyApi.searchTracks(q)
-                    .limit(1)
+                    .limit(10)
                     .build()
                     .execute();
 
@@ -43,6 +44,26 @@ public class SpotifyService {
             if (items == null || items.length == 0) {
                 return Optional.empty();
             }
+            for (Track track : items) {
+                // Check if the track name contains the title
+                boolean titleMatch = track.getName().toLowerCase().contains(title.toLowerCase());
+
+                // Check if any of the artists match
+                boolean artistMatch = false;
+                for (ArtistSimplified trackArtist : track.getArtists()) {
+                    if (trackArtist.getName().toLowerCase().contains(artist.toLowerCase())) {
+                        artistMatch = true;
+                        break; // Found a match, stop looping artists
+                    }
+                }
+
+                // If both are a good match, return it
+                if (titleMatch && artistMatch) {
+                    return Optional.of(track);
+                }
+            }
+
+            // If looped through all 10 and found no good match, the first one as a fallback
             return Optional.of(items[0]);
 
         } catch (IOException | SpotifyWebApiException | ParseException e) {

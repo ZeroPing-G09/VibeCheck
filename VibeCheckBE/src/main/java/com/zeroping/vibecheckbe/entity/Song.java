@@ -18,13 +18,14 @@ public class Song {
     private Long id;
 
     @Column(nullable = false)
-    private String title;
+    private String name;
+
+    @Column(nullable = false)
+    private String url;
 
     @Column(nullable = false)
     private String artist_name;
 
-    @Column(nullable = false)
-    private String url;
 
     @OneToMany(mappedBy = "song")
     @JsonManagedReference("song-playlists")

@@ -55,10 +55,13 @@ public class PlaylistService {
             if (spotifyTrackOpt.isPresent()) {
                 Track spotifyTrack = spotifyTrackOpt.get();
 
-                // Check if this song is already in db with the unique Spotify ID
-                String spotifyId = spotifyTrack.getId();
+                if(spotifyTrack.getExternalUrls() == null) {
+                    continue;
+                }
+                // Check if this song is already in db with the url
+                String spotifyURL = spotifyTrack.getExternalUrls().get("spotify");
 
-                Optional<Song> existingSongOpt = songRepository.findBySpotifyTrackId(spotifyId);
+                Optional<Song> existingSongOpt = songRepository.findByUrl(spotifyURL);
 
                 Song songEntity;
                 if (existingSongOpt.isPresent()) {
@@ -69,7 +72,7 @@ public class PlaylistService {
                     songEntity = new Song();
 
                     songEntity.setArtist_name(spotifyTrack.getArtists()[0].getName());
-                    songEntity.setTitle(spotifyTrack.getName());
+                    songEntity.setName(spotifyTrack.getName());
                     songEntity.setUrl(spotifyTrack.getExternalUrls().get("spotify"));
 
                     songEntity = songRepository.save(songEntity);
