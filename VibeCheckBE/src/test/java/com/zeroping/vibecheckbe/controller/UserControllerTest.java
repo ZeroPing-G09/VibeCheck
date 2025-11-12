@@ -1,0 +1,155 @@
+package com.zeroping.vibecheckbe.controller;
+
+import com.zeroping.vibecheckbe.exception.user.GenreNotFoundForUserException;
+import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
+import com.zeroping.vibecheckbe.service.UserService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.ResponseEntity;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+class UserControllerTest {
+
+    @Mock
+    private UserService userService;
+
+    @InjectMocks
+    private UserController userController;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    @DisplayName("""
+            Given a valid user ID
+            When getUser is called
+            Then it returns a successful response with user details
+            """)
+    void givenValidId_WhenGetUserIsCalled_ThenReturnsUserDetails() {
+        // Given
+        Map<String, Object> mockUser = Map.of(
+                "id", 1L,
+                "username", "Andreea",
+                "profile_picture", "andreea.png",
+                "genres", List.of("Pop", "Jazz")
+        );
+
+        when(userService.getUserById(1L)).thenReturn(mockUser);
+
+        // When
+        ResponseEntity<Map<String, Object>> response = userController.getUser(1L);
+
+        // Then
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("Andreea", response.getBody().get("username"));
+        assertEquals(List.of("Pop", "Jazz"), response.getBody().get("genres"));
+        verify(userService, times(1)).getUserById(1L);
+    }
+
+    @Test
+    @DisplayName("""
+            Given a valid ID and valid payload
+            When updateUser is called
+            Then it returns a successful response with updated details
+            """)
+    void givenValidIdAndPayload_WhenUpdateUserIsCalled_ThenReturnsUpdatedUser() {
+        // Given
+        Long userId = 1L;
+        Map<String, Object> payload = Map.of(
+                "username", "UpdatedUser",
+                "profile_picture", "updated.png",
+                "genres", List.of("Rock", "Pop")
+        );
+
+        Map<String, Object> updatedUser = Map.of(
+                "id", 1L,
+                "username", "UpdatedUser",
+                "profile_picture", "updated.png",
+                "genres", List.of("Rock", "Pop")
+        );
+
+        when(userService.updateUser(userId, payload)).thenReturn(updatedUser);
+
+        // When
+        ResponseEntity<Map<String, Object>> response = userController.updateUser(userId, payload);
+
+        // Then
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("UpdatedUser", response.getBody().get("username"));
+        verify(userService, times(1)).updateUser(userId, payload);
+    }
+
+    @Test
+    @DisplayName("""
+            Given an invalid user ID
+            When getUser is called
+            Then it returns a 404 not found error
+            """)
+    void givenInvalidId_WhenGetUserIsCalled_ThenThrowsUserNotFoundException() {
+        // Given
+        Long invalidId = 999L;
+        when(userService.getUserById(invalidId)).thenThrow(new UserNotFoundException(invalidId));
+
+        // When / Then
+        UserNotFoundException exception = assertThrows(
+                UserNotFoundException.class,
+                () -> userController.getUser(invalidId)
+        );
+
+        assertTrue(exception.getMessage().contains("999"));
+        verify(userService, times(1)).getUserById(invalidId);
+    }
+
+    @Test
+    @DisplayName("""
+            Given a valid user ID but invalid genres
+            When updateUser is called
+            Then it returns a 400 bad request error
+            """)
+    void givenInvalidGenres_WhenUpdateUserIsCalled_ThenThrowsGenreNotFoundForUserException() {
+        // Given
+        Long userId = 1L;
+        Map<String, Object> invalidPayload = Map.of(
+                "username", "TestUser",
+                "genres", List.of("UnknownGenre")
+        );
+
+        when(userService.updateUser(userId, invalidPayload))
+                .thenThrow(new GenreNotFoundForUserException("UnknownGenre"));
+
+        // When / Then
+        GenreNotFoundForUserException exception = assertThrows(
+                GenreNotFoundForUserException.class,
+                () -> userController.updateUser(userId, invalidPayload)
+        );
+
+        assertTrue(exception.getMessage().contains("UnknownGenre"));
+        verify(userService, times(1)).updateUser(userId, invalidPayload);
+    }
+
+    @Test
+    @DisplayName("""
+            Given a non-numeric ID input
+            When calling getUser
+            Then it returns a type conversion error before service execution
+            """)
+    void givenInvalidTypeId_WhenGetUserIsCalled_ThenThrowsException() {
+        assertThrows(NumberFormatException.class, () -> {
+            Long invalidId = Long.valueOf("abc");
+            userController.getUser(invalidId);
+        });
+
+        verify(userService, never()).getUserById(any());
+    }
+}
