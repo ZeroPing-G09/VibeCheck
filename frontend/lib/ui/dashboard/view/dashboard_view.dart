@@ -52,10 +52,11 @@ class _DashboardViewState extends State<DashboardView> {
                   )
                 : supabaseUser != null
                     ? UserChip(
-                        username: viewModel.user?.username ?? 
-                            supabaseUser.userMetadata?['full_name'] ?? 
-                            supabaseUser.email?.split('@')[0] ?? 
-                            'User',
+                        username: viewModel.user?.username ??
+                            supabaseUser.userMetadata?['full_name'] ??
+                            (supabaseUser.email != null && supabaseUser.email!.contains('@')
+                                ? supabaseUser.email!.split('@')[0]
+                                : 'User'),
                         imageUrl: viewModel.user?.profilePicture ?? 
                             supabaseUser.userMetadata?['avatar_url'] ?? 
                             '',
