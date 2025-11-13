@@ -38,7 +38,7 @@ public class UserService {
             // Create new user if doesn't exist (for OAuth users)
             user = new User();
             user.setEmail(email);
-            user.setUsername(email.split("@")[0]); // Use email prefix as default username
+            user.setUsername(email.contains("@") ? email.substring(0, email.indexOf("@")) : email); // Use email prefix as default username
             user.setPassword(""); // OAuth users don't have passwords
             user.setProfilePicture("");
             user = userRepository.save(user);
