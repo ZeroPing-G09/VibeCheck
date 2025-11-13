@@ -98,9 +98,14 @@ class _ProfileViewState extends State<ProfileView> {
                           onClose: () {},
                         ),
                       ),
-                      VerticalDivider(
-                        width: 1,
-                        color: Colors.grey[700],
+                      Builder(
+                        builder: (context) {
+                          final isDark = Theme.of(context).brightness == Brightness.dark;
+                          return VerticalDivider(
+                            width: 1,
+                            color: isDark ? Colors.grey[700] : Colors.grey[300],
+                          );
+                        },
                       ),
                       Expanded(
                         child: SingleChildScrollView(

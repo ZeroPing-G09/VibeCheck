@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeViewModel extends ChangeNotifier {
-  bool _isDarkMode = false;
+  bool _isDarkMode = true; // Default to dark mode
 
   bool get isDarkMode => _isDarkMode;
 

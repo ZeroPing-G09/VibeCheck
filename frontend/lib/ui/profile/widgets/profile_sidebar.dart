@@ -33,11 +33,18 @@ class ProfileSidebar extends StatelessWidget {
 
   Widget _navItem(BuildContext ctx, String title, IconData icon, bool selected,
       {VoidCallback? onTap}) {
+    final theme = Theme.of(ctx);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Container(
-      color: selected ? Colors.grey[800] : null,
+      color: selected 
+          ? (isDark ? Colors.grey[800] : Colors.grey[200])
+          : null,
       child: ListTile(
         leading: Icon(icon,
-            color: selected ? Theme.of(ctx).primaryColor : Colors.grey.shade400),
+            color: selected 
+                ? theme.primaryColor 
+                : (isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
         title: Text(
           title,
           style: TextStyle(
