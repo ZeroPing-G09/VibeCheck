@@ -13,13 +13,13 @@ class DashboardViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  Future<void> loadUser(int id) async {
+  Future<void> loadUserByEmail(String email) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _user = await _userRepository.getUserById(id);
+      _user = await _userRepository.getUserByEmail(email);
     } catch (e) {
       _error = e.toString();
     } finally {

@@ -17,12 +17,17 @@ class _DashboardViewState extends State<DashboardView> {
   @override
   void initState() {
     super.initState();
-    context.read<DashboardViewModel>().loadUser(1);
+    final email = AuthRepository().currentUser?.email;
+    if (email != null) {
+      context.read<DashboardViewModel>().loadUserByEmail(email);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<DashboardViewModel>();
+    final authRepo = AuthRepository();
+    final supabaseUser = authRepo.currentUser;
 
     return Scaffold(
       appBar: AppBar(
@@ -45,10 +50,15 @@ class _DashboardViewState extends State<DashboardView> {
                       ),
                     ),
                   )
-                : viewModel.user != null
+                : supabaseUser != null
                     ? UserChip(
-                        username: viewModel.user!.username,
-                        imageUrl: viewModel.user!.profilePicture,
+                        username: viewModel.user?.username ?? 
+                            supabaseUser.userMetadata?['full_name'] ?? 
+                            supabaseUser.email?.split('@')[0] ?? 
+                            'User',
+                        imageUrl: viewModel.user?.profilePicture ?? 
+                            supabaseUser.userMetadata?['avatar_url'] ?? 
+                            '',
                         onActionSelected: (value) async {
                           if (value == 'profile') {
                             final homeViewState = HomeView.of(context);

@@ -12,13 +12,18 @@ class ProfileViewModel extends ChangeNotifier {
   bool isLoading = false;
   List<String> availableGenres = [];
 
-  Future<void> loadUser(int id) async {
+  Future<void> loadUserByEmail(String email) async {
     isLoading = true;
     notifyListeners();
     try {
-      final fetched = await _userRepository.getUserById(id);
+      final fetched = await _userRepository.getUserByEmail(email);
       final dedupedGenres = fetched.genres.toSet().toList();
       user = fetched.copyWith(genres: dedupedGenres);
+    } catch (e, st) {
+      debugPrint('ProfileViewModel.loadUserByEmail error: $e');
+      debugPrint('$st');
+      // Keep user as null so UI can show error state
+      user = null;
     } finally {
       isLoading = false;
       notifyListeners();

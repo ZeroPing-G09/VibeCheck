@@ -25,12 +25,26 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
-        List<String> genres = extractGenres(user);
-        return Map.of(
-                "username", user.getUsername(),
-                "profile_picture", user.getProfilePicture(),
-                "genres", genres
-        );
+        return toUserResponse(user);
+    }
+
+    public Map<String, Object> getUserByEmail(String email) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        User user;
+        
+        if (userOpt.isPresent()) {
+            user = userOpt.get();
+        } else {
+            // Create new user if doesn't exist (for OAuth users)
+            user = new User();
+            user.setEmail(email);
+            user.setUsername(email.split("@")[0]); // Use email prefix as default username
+            user.setPassword(""); // OAuth users don't have passwords
+            user.setProfilePicture("");
+            user = userRepository.save(user);
+        }
+
+        return toUserResponse(user);
     }
 
     public Map<String, Object> updateUser(Long id, Map<String, Object> payload) {
@@ -50,12 +64,16 @@ public class UserService {
         }
 
         User saved = userRepository.save(user);
-        List<String> genres = extractGenres(saved);
+        return toUserResponse(saved);
+    }
 
+    private Map<String, Object> toUserResponse(User user) {
+        List<String> genres = extractGenres(user);
         Map<String, Object> response = new HashMap<>();
-        response.put("id", saved.getId());
-        response.put("username", saved.getUsername());
-        response.put("profile_picture", saved.getProfilePicture());
+        response.put("id", user.getId());
+        response.put("email", user.getEmail());
+        response.put("username", user.getUsername());
+        response.put("profile_picture", user.getProfilePicture());
         response.put("genres", genres);
         return response;
     }
