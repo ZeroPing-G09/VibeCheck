@@ -19,7 +19,7 @@ class ThemeViewModel extends ChangeNotifier {
 
   void _loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
-    _isDarkMode = prefs.getBool('isDarkMode') ?? false;
+    _isDarkMode = prefs.getBool('isDarkMode') ?? true;
     notifyListeners();
   }
 }
