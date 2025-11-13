@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/data/repositories/auth_repository.dart';
 import 'package:frontend/core/routing/app_router.dart';
+import '../../../ui/home/view/home_view.dart';
 import '../viewmodel/dashboard_view_model.dart';
 import '../widgets/user_chip.dart';
 
@@ -50,11 +51,21 @@ class _DashboardViewState extends State<DashboardView> {
                         imageUrl: viewModel.user!.profilePicture,
                         onActionSelected: (value) async {
                           if (value == 'profile') {
-                            AppRouter.navigatorKey.currentState
-                                ?.pushNamed(AppRouter.profileRoute);
+                            final homeViewState = HomeView.of(context);
+                            if (homeViewState != null) {
+                              homeViewState.switchToTab(0);
+                            } else {
+                              AppRouter.navigatorKey.currentState
+                                  ?.pushNamed(AppRouter.profileRoute);
+                            }
                           } else if (value == 'settings') {
-                            AppRouter.navigatorKey.currentState
-                                ?.pushNamed(AppRouter.settingsRoute);
+                            final homeViewState = HomeView.of(context);
+                            if (homeViewState != null) {
+                              homeViewState.switchToTab(2);
+                            } else {
+                              AppRouter.navigatorKey.currentState
+                                  ?.pushNamed(AppRouter.settingsRoute);
+                            }
                           } else if (value == 'logout') {
                             await AuthRepository().signOut();
                             if (mounted) {

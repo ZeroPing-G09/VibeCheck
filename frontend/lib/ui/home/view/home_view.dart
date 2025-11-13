@@ -9,6 +9,10 @@ class HomeView extends StatefulWidget {
 
   @override
   State<HomeView> createState() => _HomeViewState();
+
+  static _HomeViewState? of(BuildContext context) {
+    return context.findAncestorStateOfType<_HomeViewState>();
+  }
 }
 
 class _HomeViewState extends State<HomeView> {
@@ -19,6 +23,10 @@ class _HomeViewState extends State<HomeView> {
     DashboardView(),
     SettingsView(),
   ];
+
+  void switchToTab(int index) {
+    setState(() => _currentIndex = index);
+  }
 
   @override
   Widget build(BuildContext context) {

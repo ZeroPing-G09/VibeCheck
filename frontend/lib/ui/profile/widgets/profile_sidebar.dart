@@ -5,16 +5,19 @@ import '../viewmodel/profile_view_model.dart';
 import 'package:provider/provider.dart';
 
 class ProfileSidebar extends StatelessWidget {
-  const ProfileSidebar({super.key});
+  final VoidCallback? onClose;
+
+  const ProfileSidebar({super.key, this.onClose});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 250,
-      color: Colors.white,
+    return SafeArea(
       child: Column(
         children: [
-          _navItem(context, "My Profile", Icons.person_outline, true),
+          _navItem(context, "My Profile", Icons.person_outline, true,
+              onTap: () {
+            onClose?.call();
+          }),
           const Spacer(),
           _navItem(
             context,
@@ -31,21 +34,23 @@ class ProfileSidebar extends StatelessWidget {
   Widget _navItem(BuildContext ctx, String title, IconData icon, bool selected,
       {VoidCallback? onTap}) {
     return Container(
-      color: selected ? Colors.grey[100] : null,
+      color: selected ? Colors.grey[800] : null,
       child: ListTile(
         leading: Icon(icon,
-            color:
-                selected ? Theme.of(ctx).primaryColor : Colors.grey.shade600),
-        title: Text(title,
-            style: TextStyle(
-              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-            )),
+            color: selected ? Theme.of(ctx).primaryColor : Colors.grey.shade400),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
         onTap: onTap,
       ),
     );
   }
 
   Future<void> _handleLogout(BuildContext context) async {
+    onClose?.call();
     await AuthRepository().signOut();
     if (context.mounted) {
       context.read<ProfileViewModel>().clear();

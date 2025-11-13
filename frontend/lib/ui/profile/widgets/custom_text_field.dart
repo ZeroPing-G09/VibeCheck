@@ -24,22 +24,24 @@ class CustomTextField extends StatelessWidget {
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: Colors.white,
           ),
         ),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
           readOnly: readOnly,
+          style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: hint,
+            hintStyle: TextStyle(color: Colors.grey[400]),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
+              borderSide: BorderSide(color: Colors.grey[600]!),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
+              borderSide: BorderSide(color: Colors.grey[600]!),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
@@ -50,7 +52,7 @@ class CustomTextField extends StatelessWidget {
               vertical: 12,
             ),
             filled: readOnly,
-            fillColor: readOnly ? Colors.grey[100] : null,
+            fillColor: readOnly ? Colors.grey[800] : null,
           ),
         ),
       ],
