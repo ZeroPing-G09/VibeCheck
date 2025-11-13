@@ -1,21 +1,31 @@
 import 'package:flutter/material.dart';
-import '../dialogs/logout_dialog.dart';
+import 'package:frontend/data/repositories/auth_repository.dart';
+import 'package:frontend/core/routing/app_router.dart';
+import '../viewmodel/profile_view_model.dart';
+import 'package:provider/provider.dart';
 
 class ProfileSidebar extends StatelessWidget {
-  const ProfileSidebar({super.key});
+  final VoidCallback? onClose;
+
+  const ProfileSidebar({super.key, this.onClose});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 250,
-      color: Colors.white,
+    return SafeArea(
       child: Column(
         children: [
-          _navItem(context, "My Profile", Icons.person_outline, true),
-          const Spacer(),
-          _navItem(context, "Logout", Icons.logout_outlined, false, onTap: () {
-            showDialog(context: context, builder: (_) => const LogoutDialog());
+          _navItem(context, "My Profile", Icons.person_outline, true,
+              onTap: () {
+            onClose?.call();
           }),
+          const Spacer(),
+          _navItem(
+            context,
+            "Logout",
+            Icons.logout_outlined,
+            false,
+            onTap: () => _handleLogout(context),
+          ),
         ],
       ),
     );
@@ -23,18 +33,38 @@ class ProfileSidebar extends StatelessWidget {
 
   Widget _navItem(BuildContext ctx, String title, IconData icon, bool selected,
       {VoidCallback? onTap}) {
+    final theme = Theme.of(ctx);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Container(
-      color: selected ? Colors.grey[100] : null,
+      color: selected 
+          ? (isDark ? Colors.grey[800] : Colors.grey[200])
+          : null,
       child: ListTile(
         leading: Icon(icon,
-            color:
-                selected ? Theme.of(ctx).primaryColor : Colors.grey.shade600),
-        title: Text(title,
-            style: TextStyle(
-              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-            )),
+            color: selected 
+                ? theme.primaryColor 
+                : (isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
         onTap: onTap,
       ),
     );
+  }
+
+  Future<void> _handleLogout(BuildContext context) async {
+    onClose?.call();
+    await AuthRepository().signOut();
+    if (context.mounted) {
+      context.read<ProfileViewModel>().clear();
+      AppRouter.navigatorKey.currentState?.pushNamedAndRemoveUntil(
+        AppRouter.loginRoute,
+        (route) => false,
+      );
+    }
   }
 }

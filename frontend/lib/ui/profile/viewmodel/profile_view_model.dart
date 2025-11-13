@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/data/models/user.dart';
 import 'package:frontend/data/repositories/user_repository.dart';
-import '../../../data/repositories/user_repository.dart';
 import '../../../data/repositories/genre_repository.dart';
-import '../../../data/models/user.dart';
 
 
 class ProfileViewModel extends ChangeNotifier {
@@ -14,13 +12,18 @@ class ProfileViewModel extends ChangeNotifier {
   bool isLoading = false;
   List<String> availableGenres = [];
 
-  Future<void> loadUser(int id) async {
+  Future<void> loadUserByEmail(String email) async {
     isLoading = true;
     notifyListeners();
     try {
-      final fetched = await _userRepository.getUserById(id);
+      final fetched = await _userRepository.getUserByEmail(email);
       final dedupedGenres = fetched.genres.toSet().toList();
       user = fetched.copyWith(genres: dedupedGenres);
+    } catch (e, st) {
+      debugPrint('ProfileViewModel.loadUserByEmail error: $e');
+      debugPrint('$st');
+      // Keep user as null so UI can show error state
+      user = null;
     } finally {
       isLoading = false;
       notifyListeners();
@@ -46,5 +49,12 @@ class ProfileViewModel extends ChangeNotifier {
       debugPrint('$st');
       rethrow;
     }
+  }
+  
+  void clear() {
+    user = null;
+    isLoading = false;
+    availableGenres = [];
+    notifyListeners();
   }
 }

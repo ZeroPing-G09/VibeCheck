@@ -13,6 +13,12 @@ class UserRepository {
     return user;
   }
 
+  Future<User> getUserByEmail(String email) async {
+    final user = await _service.fetchUserByEmail(email);
+    await _saveGenres(user.genres);
+    return user;
+  }
+
   Future<User> updateUser(User updatedUser) async {
     final user = await _service.updateUser(updatedUser);
     await _saveGenres(user.genres);
