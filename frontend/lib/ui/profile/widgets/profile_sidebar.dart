@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import '../dialogs/logout_dialog.dart';
+import 'package:frontend/data/repositories/auth_repository.dart';
+import 'package:frontend/core/routing/app_router.dart';
+import '../viewmodel/profile_view_model.dart';
+import 'package:provider/provider.dart';
 
 class ProfileSidebar extends StatelessWidget {
   const ProfileSidebar({super.key});
@@ -13,9 +16,13 @@ class ProfileSidebar extends StatelessWidget {
         children: [
           _navItem(context, "My Profile", Icons.person_outline, true),
           const Spacer(),
-          _navItem(context, "Logout", Icons.logout_outlined, false, onTap: () {
-            showDialog(context: context, builder: (_) => const LogoutDialog());
-          }),
+          _navItem(
+            context,
+            "Logout",
+            Icons.logout_outlined,
+            false,
+            onTap: () => _handleLogout(context),
+          ),
         ],
       ),
     );
@@ -36,5 +43,16 @@ class ProfileSidebar extends StatelessWidget {
         onTap: onTap,
       ),
     );
+  }
+
+  Future<void> _handleLogout(BuildContext context) async {
+    await AuthRepository().signOut();
+    if (context.mounted) {
+      context.read<ProfileViewModel>().clear();
+      AppRouter.navigatorKey.currentState?.pushNamedAndRemoveUntil(
+        AppRouter.loginRoute,
+        (route) => false,
+      );
+    }
   }
 }

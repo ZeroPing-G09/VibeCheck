@@ -1,34 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'ui/dashboard/view/dashboard_view.dart';
+import 'package:frontend/data/services/api_service.dart';
 import 'ui/dashboard/viewmodel/dashboard_view_model.dart';
-import 'ui/profile/view/profile_view.dart';
 import 'ui/profile/viewmodel/profile_view_model.dart';
+import 'ui/app.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await ApiService.init();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => DashboardViewModel()),
         ChangeNotifierProvider(create: (_) => ProfileViewModel()),
       ],
-      child: const MyApp(),
+      child: const VibeCheckApp(),
     ),
   );
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ZeroPing',
-      routes: {
-        '/dashboard': (_) => const DashboardView(),
-        '/profile': (_) => const ProfileView(),
-      },
-      initialRoute: '/dashboard',
-    );
-  }
 }

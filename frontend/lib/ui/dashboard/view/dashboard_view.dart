@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:frontend/data/repositories/auth_repository.dart';
+import 'package:frontend/core/routing/app_router.dart';
 import '../viewmodel/dashboard_view_model.dart';
 import '../widgets/user_chip.dart';
 
@@ -14,7 +16,6 @@ class _DashboardViewState extends State<DashboardView> {
   @override
   void initState() {
     super.initState();
-    // Example user id
     context.read<DashboardViewModel>().loadUser(1);
   }
 
@@ -47,11 +48,23 @@ class _DashboardViewState extends State<DashboardView> {
                     ? UserChip(
                         username: viewModel.user!.username,
                         imageUrl: viewModel.user!.profilePicture,
-                        onActionSelected: (value) {
+                        onActionSelected: (value) async {
                           if (value == 'profile') {
-                            Navigator.pushNamed(context, '/profile');
+                            AppRouter.navigatorKey.currentState
+                                ?.pushNamed(AppRouter.profileRoute);
+                          } else if (value == 'settings') {
+                            AppRouter.navigatorKey.currentState
+                                ?.pushNamed(AppRouter.settingsRoute);
                           } else if (value == 'logout') {
-                            Navigator.pushReplacementNamed(context, '/login');
+                            await AuthRepository().signOut();
+                            if (mounted) {
+                              context.read<DashboardViewModel>().clear();
+                              AppRouter.navigatorKey.currentState
+                                  ?.pushNamedAndRemoveUntil(
+                                AppRouter.loginRoute,
+                                (route) => false,
+                              );
+                            }
                           }
                         },
                       )
@@ -69,7 +82,7 @@ class _DashboardViewState extends State<DashboardView> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Welcome, ${viewModel.user!.username}!',
+                            'Welcome, ${viewModel.user!.username}! ',
                             style: const TextStyle(
                                 fontSize: 22, fontWeight: FontWeight.bold),
                           ),

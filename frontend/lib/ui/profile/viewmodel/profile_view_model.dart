@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/data/models/user.dart';
 import 'package:frontend/data/repositories/user_repository.dart';
-import '../../../data/repositories/user_repository.dart';
 import '../../../data/repositories/genre_repository.dart';
-import '../../../data/models/user.dart';
 
 
 class ProfileViewModel extends ChangeNotifier {
@@ -46,5 +44,12 @@ class ProfileViewModel extends ChangeNotifier {
       debugPrint('$st');
       rethrow;
     }
+  }
+  
+  void clear() {
+    user = null;
+    isLoading = false;
+    availableGenres = [];
+    notifyListeners();
   }
 }
