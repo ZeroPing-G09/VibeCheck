@@ -3,18 +3,17 @@ package com.zeroping.vibecheckbe.service;
 import com.zeroping.vibecheckbe.entity.Genre;
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
 import com.zeroping.vibecheckbe.entity.User;
+import com.zeroping.vibecheckbe.exception.genre.GenreNotFoundException;
 import com.zeroping.vibecheckbe.exception.user.GenreNotFoundForUserException;
 import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
 import com.zeroping.vibecheckbe.repository.GenreRepository;
 import com.zeroping.vibecheckbe.repository.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.*;
@@ -35,11 +34,6 @@ class UserServiceTest {
 
     @InjectMocks
     private UserService userService;
-
-    @BeforeEach
-    void init() {
-        MockitoAnnotations.openMocks(this);
-    }
 
     @Test
     @DisplayName("""
@@ -184,8 +178,13 @@ class UserServiceTest {
             Then it throws UserNotFoundException
             """)
     void givenMissingUser_WhenGetUserById_ThenThrowsUserNotFound() {
+        // Given
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        // When & Then
         assertThrows(UserNotFoundException.class, () -> userService.getUserById(99L));
+
+        // Verify the interaction happened
         verify(userRepository).findById(99L);
     }
 
@@ -196,8 +195,13 @@ class UserServiceTest {
             Then it throws UserNotFoundException and does not save
             """)
     void givenMissingUser_WhenUpdateUser_ThenThrowsUserNotFound() {
+        // Given
         when(userRepository.findById(42L)).thenReturn(Optional.empty());
+
+        // When & Then
         assertThrows(UserNotFoundException.class, () -> userService.updateUser(42L, Map.of()));
+
+        // Verify the interaction happened
         verify(userRepository).findById(42L);
         verify(userRepository, never()).save(any());
     }
@@ -232,14 +236,19 @@ class UserServiceTest {
     }
 
     @Test
+    @DisplayName("""
+            Given valid user preferences with genre IDs
+            When updateUserPreferences is called
+            Then it should update user preferences with genre entities
+            """)
     void updateUserPreferences_WhenUserExists_ShouldUpdatePreferences() {
         // Given
         Long userId = 1L;
         User existingUser = new User();
         existingUser.setId(userId);
-        existingUser.setTop1GenreId(null);
-        existingUser.setTop2GenreId(null);
-        existingUser.setTop3GenreId(null);
+        existingUser.setTop1Genre(null);
+        existingUser.setTop2Genre(null);
+        existingUser.setTop3Genre(null);
 
         UserPreferencesDTO preferences = new UserPreferencesDTO();
         preferences.setUserId(userId);
@@ -247,48 +256,68 @@ class UserServiceTest {
         preferences.setTop2GenreId(10L);
         preferences.setTop3GenreId(15L);
 
+        Genre rockGenre = genre(5L, "Rock");
+        Genre jazzGenre = genre(10L, "Jazz");
+        Genre popGenre = genre(15L, "Pop");
+
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(genreRepository.findById(5L)).thenReturn(Optional.of(rockGenre));
+        when(genreRepository.findById(10L)).thenReturn(Optional.of(jazzGenre));
+        when(genreRepository.findById(15L)).thenReturn(Optional.of(popGenre));
         when(userRepository.save(any(User.class))).thenReturn(existingUser);
 
-        // When
+        // When & Then
         assertDoesNotThrow(() -> userService.updateUserPreferences(preferences));
 
-        // Then
         verify(userRepository).findById(userId);
+        verify(genreRepository).findById(5L);
+        verify(genreRepository).findById(10L);
+        verify(genreRepository).findById(15L);
         verify(userRepository).save(existingUser);
 
-        assertEquals(5, existingUser.getTop1GenreId());
-        assertEquals(10, existingUser.getTop2GenreId());
-        assertEquals(15, existingUser.getTop3GenreId());
+        assertEquals(rockGenre, existingUser.getTop1Genre());
+        assertEquals(jazzGenre, existingUser.getTop2Genre());
+        assertEquals(popGenre, existingUser.getTop3Genre());
     }
 
     @Test
+    @DisplayName("""
+            Given user not found
+            When updateUserPreferences is called
+            Then it should throw UserNotFoundException
+            """)
     void updateUserPreferences_WhenUserNotFound_ShouldThrowException() {
         // Given
         Long userId = 999L;
         UserPreferencesDTO preferences = new UserPreferencesDTO();
         preferences.setUserId(userId);
+        preferences.setTop1GenreId(5L);
 
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        // Note: This test expects UserNotFoundException, not RuntimeException
+        assertThrows(UserNotFoundException.class,
                 () -> userService.updateUserPreferences(preferences));
 
-        assertEquals("User not found", exception.getMessage());
         verify(userRepository).findById(userId);
+        verify(genreRepository, never()).findById(any());
         verify(userRepository, never()).save(any());
     }
 
     @Test
+    @DisplayName("""
+            When some genre preferences are null
+            Then it should update only provided genre values and set others to null
+            """)
     void updateUserPreferences_WhenSomePreferencesAreNull_ShouldUpdateOnlyProvidedValues() {
         // Given
         Long userId = 1L;
         User existingUser = new User();
         existingUser.setId(userId);
-        existingUser.setTop1GenreId(1L);
-        existingUser.setTop2GenreId(2L);
-        existingUser.setTop3GenreId(3L);
+        existingUser.setTop1Genre(genre(1L, "OldRock"));
+        existingUser.setTop2Genre(genre(2L, "OldJazz"));
+        existingUser.setTop3Genre(genre(3L, "OldPop"));
 
         UserPreferencesDTO preferences = new UserPreferencesDTO();
         preferences.setUserId(userId);
@@ -296,19 +325,26 @@ class UserServiceTest {
         preferences.setTop2GenreId(null);
         preferences.setTop3GenreId(null);
 
+        Genre newRockGenre = genre(5L, "NewRock");
+
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(genreRepository.findById(5L)).thenReturn(Optional.of(newRockGenre));
         when(userRepository.save(any(User.class))).thenReturn(existingUser);
 
         // When
         userService.updateUserPreferences(preferences);
 
         // Then
-        assertEquals(5, existingUser.getTop1GenreId());  // Updated
-        assertNull(existingUser.getTop2GenreId());       // Set to null
-        assertNull(existingUser.getTop3GenreId());       // Set to null
+        assertEquals(newRockGenre, existingUser.getTop1Genre());  // Updated
+        assertNull(existingUser.getTop2Genre());                  // Set to null
+        assertNull(existingUser.getTop3Genre());                  // Set to null
     }
 
     @Test
+    @DisplayName("""
+            When updateUserPreferences is called
+            Then it should call save with updated user entity
+            """)
     void updateUserPreferences_ShouldCallSaveWithUpdatedUser() {
         // Given
         Long userId = 1L;
@@ -322,6 +358,9 @@ class UserServiceTest {
         preferences.setTop3GenreId(15L);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(genreRepository.findById(5L)).thenReturn(Optional.of(genre(5L, "Rock")));
+        when(genreRepository.findById(10L)).thenReturn(Optional.of(genre(10L, "Jazz")));
+        when(genreRepository.findById(15L)).thenReturn(Optional.of(genre(15L, "Pop")));
         when(userRepository.save(existingUser)).thenReturn(existingUser);
 
         // When
@@ -329,5 +368,62 @@ class UserServiceTest {
 
         // Then - Verify that save was called with the same user instance that was found
         verify(userRepository).save(existingUser);
+    }
+
+    @Test
+    @DisplayName("""
+            Given all null genre preferences
+            When updateUserPreferences is called
+            Then it should clear all genre preferences
+            """)
+    void updateUserPreferences_WhenAllPreferencesNull_ShouldClearAllGenres() {
+        // Given
+        Long userId = 1L;
+        User existingUser = new User();
+        existingUser.setId(userId);
+        existingUser.setTop1Genre(genre(1L, "Rock"));
+        existingUser.setTop2Genre(genre(2L, "Jazz"));
+        existingUser.setTop3Genre(genre(3L, "Pop"));
+
+        UserPreferencesDTO preferences = new UserPreferencesDTO();
+        preferences.setUserId(userId);
+        preferences.setTop1GenreId(null);
+        preferences.setTop2GenreId(null);
+        preferences.setTop3GenreId(null);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(any(User.class))).thenReturn(existingUser);
+
+        // When
+        userService.updateUserPreferences(preferences);
+
+        // Then
+        assertNull(existingUser.getTop1Genre());
+        assertNull(existingUser.getTop2Genre());
+        assertNull(existingUser.getTop3Genre());
+    }
+
+    @Test
+    @DisplayName("""
+            Given non-existent genre ID
+            When updateUserPreferences is called
+            Then it should throw GenreNotFoundException
+            """)
+    void updateUserPreferences_WhenGenreNotFound_ShouldThrowException() {
+        // Given
+        Long userId = 1L;
+        User existingUser = new User();
+        existingUser.setId(userId);
+
+        UserPreferencesDTO preferences = new UserPreferencesDTO();
+        preferences.setUserId(userId);
+        preferences.setTop1GenreId(999L); // Non-existent genre
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(genreRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(GenreNotFoundException.class, () -> userService.updateUserPreferences(preferences));
+        verify(userRepository, never()).save(any());
     }
 }
