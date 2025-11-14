@@ -11,17 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
-import org.springframework.http.MediaType;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 import java.util.Map;
@@ -29,11 +18,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(UserController.class)
-@Import(UserControllerTest.TestConfig.class)
 class UserControllerTest {
 
     @Mock
@@ -69,6 +54,7 @@ class UserControllerTest {
 
         // Then
         assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
         assertEquals("Andreea", response.getBody().get("username"));
         assertEquals(List.of("Pop", "Jazz"), response.getBody().get("genres"));
         verify(userService, times(1)).getUserById(1L);
@@ -103,6 +89,7 @@ class UserControllerTest {
 
         // Then
         assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
         assertEquals("UpdatedUser", response.getBody().get("username"));
         verify(userService, times(1)).updateUser(userId, payload);
     }
@@ -170,86 +157,82 @@ class UserControllerTest {
         verify(userService, never()).getUserById(any());
     }
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private UserService userService;
-
-    @TestConfiguration
-    static class TestConfig {
-        @Bean
-        @Primary
-        public UserService userService() {
-            return mock(UserService.class);
-        }
-
-        @Bean
-        @Primary
-        public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
-            http.csrf(AbstractHttpConfigurer::disable)
-                    .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-            return http.build();
-        }
-    }
-
     @Test
-    void savePreferences_ValidRequest_ReturnsSuccess() throws Exception {
+    @DisplayName("""
+        Given a valid preferences payload
+        When savePreferences is called
+        Then it returns a success message
+        """)
+    void givenValidPreferences_WhenSavePreferencesIsCalled_ThenReturnsSuccess() {
+        // Given
+        UserPreferencesDTO dto = new UserPreferencesDTO();
+        dto.setUserId(1L);
+        dto.setTop1GenreId(5L);
+        dto.setTop2GenreId(10L);
+        dto.setTop3GenreId(15L);
+
         doNothing().when(userService).updateUserPreferences(any(UserPreferencesDTO.class));
 
-        String jsonRequest = """
-            {
-                "userId": 1,
-                "top1GenreId": 5,
-                "top2GenreId": 10,
-                "top3GenreId": 15
-            }
-            """;
+        // When
+        ResponseEntity<Map<String, Object>> response = userController.savePreferences(dto);
 
-        mockMvc.perform(post("/users/preferences")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonRequest))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Preferences updated successfully."));
+        // Then
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertTrue((Boolean) response.getBody().get("success"));
+        assertEquals("Preferences updated successfully.", response.getBody().get("message"));
+        verify(userService, times(1)).updateUserPreferences(any(UserPreferencesDTO.class));
     }
 
     @Test
-    void savePreferences_MissingUserId_ReturnsBadRequest() throws Exception {
-        String jsonRequest = """
-            {
-                "top1GenreId": 5,
-                "top2GenreId": 10,
-                "top3GenreId": 15
-            }
-            """;
+    @DisplayName("""
+        Given a preferences payload without userId
+        When savePreferences is called
+        Then it returns a bad request error
+        """)
+    void givenMissingUserId_WhenSavePreferencesIsCalled_ThenReturnsBadRequest() {
+        // Given
+        UserPreferencesDTO dto = new UserPreferencesDTO();
+        dto.setTop1GenreId(5L);
+        dto.setTop2GenreId(10L);
+        dto.setTop3GenreId(15L);
 
-        mockMvc.perform(post("/users/preferences")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonRequest))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("User ID is required."));
+        // When
+        ResponseEntity<Map<String, Object>> response = userController.savePreferences(dto);
+
+        // Then
+        assertEquals(400, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertFalse((Boolean) response.getBody().get("success"));
+        assertEquals("User ID is required.", response.getBody().get("message"));
+        verify(userService, never()).updateUserPreferences(any());
     }
 
     @Test
-    void savePreferences_ServiceThrowsException_ReturnsInternalError() throws Exception {
-        doThrow(new RuntimeException("DB error")).when(userService).updateUserPreferences(any(UserPreferencesDTO.class));
+    @DisplayName("""
+        Given a valid preferences payload
+        When the service throws an exception
+        Then it returns internal server error
+        """)
+    void givenValidPreferences_WhenServiceThrowsException_ThenReturnsInternalError() {
+        // Given
+        UserPreferencesDTO dto = new UserPreferencesDTO();
+        dto.setUserId(1L);
+        dto.setTop1GenreId(5L);
+        dto.setTop2GenreId(10L);
+        dto.setTop3GenreId(15L);
 
-        String jsonRequest = """
-            {
-                "userId": 1,
-                "top1GenreId": 5,
-                "top2GenreId": 10,
-                "top3GenreId": 15
-            }
-            """;
+        doThrow(new RuntimeException("DB error"))
+                .when(userService).updateUserPreferences(any(UserPreferencesDTO.class));
 
-        mockMvc.perform(post("/users/preferences")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonRequest))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Internal error updating preferences."));
+        // When
+        ResponseEntity<Map<String, Object>> response = userController.savePreferences(dto);
+
+        // Then
+        assertEquals(500, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertFalse((Boolean) response.getBody().get("success"));
+        assertEquals("Internal error updating preferences.", response.getBody().get("message"));
+        verify(userService, times(1)).updateUserPreferences(any());
     }
 }
