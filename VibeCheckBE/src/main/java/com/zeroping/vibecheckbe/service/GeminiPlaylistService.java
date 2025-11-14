@@ -9,98 +9,85 @@ import com.zeroping.vibecheckbe.repository.GenreRepository;
 import org.springframework.stereotype.Service;
 import java.util.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.*;
+import org.springframework.stereotype.Service;
+
 @Service
-public class UserService {
-    private final UserRepository userRepository;
-    private final GenreRepository genreRepository;
+public class GeminiPlaylistService {
 
-    private static final int MAX_TOP_GENRES = 3;
+    private static final String GEMINI_URL =
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyAn-_hWIDO1Gd8GMWQlt-CXGFRRGT_IlXY";
 
-    public UserService(UserRepository userRepository, GenreRepository genreRepository) {
-        this.userRepository = userRepository;
-        this.genreRepository = genreRepository;
-    }
+    private final OkHttpClient client = new OkHttpClient();
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    public Map<String, Object> getUserById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+    public Playlist generatePlaylist(String mood, List<String> genres) throws Exception {
 
-        return toUserResponse(user);
-    }
+        // Prompt generat dinamic
+        String prompt = """
+            You are a music recommendation assistant.
+            Generate a JSON playlist based on the user preferences.
 
-    public Map<String, Object> getUserByEmail(String email) {
-        Optional<User> userOpt = userRepository.findByEmail(email);
-        User user;
-        
-        if (userOpt.isPresent()) {
-            user = userOpt.get();
-        } else {
-            // Create new user if doesn't exist (for OAuth users)
-            user = new User();
-            user.setEmail(email);
-            user.setUsername(email.contains("@") ? email.substring(0, email.indexOf("@")) : email); // Use email prefix as default username
-            user.setPassword(""); // OAuth users don't have passwords
-            user.setProfilePicture("");
-            user = userRepository.save(user);
-        }
+            Input:
+            { mood: "%s", genres: %s }
 
-        return toUserResponse(user);
-    }
-
-    public Map<String, Object> updateUser(Long id, Map<String, Object> payload) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
-
-        if (payload.containsKey("username")) {
-            user.setUsername((String) payload.get("username"));
-        }
-        if (payload.containsKey("profile_picture")) {
-            user.setProfilePicture((String) payload.get("profile_picture"));
-        }
-
-        if (payload.containsKey("genres")) {
-            List<String> genreNames = (List<String>) payload.get("genres");
-            updateUserGenres(user, genreNames);
-        }
-
-        User saved = userRepository.save(user);
-        return toUserResponse(saved);
-    }
-
-    private Map<String, Object> toUserResponse(User user) {
-        List<String> genres = extractGenres(user);
-        Map<String, Object> response = new HashMap<>();
-        response.put("id", user.getId());
-        response.put("email", user.getEmail());
-        response.put("username", user.getUsername());
-        response.put("profile_picture", user.getProfilePicture());
-        response.put("genres", genres);
-        return response;
-    }
-
-    private void updateUserGenres(User user, List<String> genreNames) {
-        user.setTop1Genre(null);
-        user.setTop2Genre(null);
-        user.setTop3Genre(null);
-
-       for (int genreIndex = 0; genreIndex < genreNames.size() && genreIndex < MAX_TOP_GENRES; genreIndex++) {
-            String name = genreNames.get(genreIndex);
-            Genre genre = genreRepository.findByNameIgnoreCase(name)
-                    .orElseThrow(() -> new GenreNotFoundForUserException(name));
-
-            switch (genreIndex) {
-                case 0 -> user.setTop1Genre(genre);
-                case 1 -> user.setTop2Genre(genre);
-                case 2 -> user.setTop3Genre(genre);
+            Return ONLY valid JSON in this structure:
+            {
+              "playlist_name": "string",
+              "tracks": [
+                { "title": "string", "artist": "string", "spotify_url": "string" }
+              ]
             }
-        }
+            """.formatted(mood, mapper.writeValueAsString(genres));
+
+        // Structura cererii pentru Gemini
+        String jsonBody = """
+            {
+              "contents": [{
+                "parts": [{
+                  "text": %s
+                }]
+              }]
+            }
+            """.formatted(mapper.writeValueAsString(prompt));
+
+        Request request = new Request.Builder()
+                .url(GEMINI_URL)
+                .post(RequestBody.create(jsonBody, MediaType.parse("application/json")))
+                .build();
+
+        Response response = client.newCall(request).execute();
+        String responseBody = response.body().string();
+
+        // Extragem doar textul generat de AI
+        String aiText = mapper.readTree(responseBody)
+                .get("candidates").get(0)
+                .get("content").get("parts").get(0)
+                .get("text").asText();
+
+        // Validare JSON
+        return validatePlaylist(aiText);
     }
 
-    private List<String> extractGenres(User user) {
-        List<String> genres = new ArrayList<>();
-        if (user.getTop1Genre() != null) genres.add(user.getTop1Genre().getName());
-        if (user.getTop2Genre() != null) genres.add(user.getTop2Genre().getName());
-        if (user.getTop3Genre() != null) genres.add(user.getTop3Genre().getName());
-        return genres;
+    private Playlist validatePlaylist(String json) throws Exception {
+        try {
+            Playlist playlist = mapper.readValue(json, Playlist.class);
+
+            if (playlist.getPlaylist_name() == null || playlist.getTracks() == null) {
+                throw new Exception("Invalid JSON structure.");
+            }
+
+            for (Track t : playlist.getTracks()) {
+                if (t.getTitle() == null || t.getArtist() == null || t.getSpotify_url() == null) {
+                    throw new Exception("A track contains missing fields.");
+                }
+            }
+
+            return playlist;
+
+        } catch (Exception e) {
+            throw new Exception("JSON parse/validation error: " + e.getMessage());
+        }
     }
 }
