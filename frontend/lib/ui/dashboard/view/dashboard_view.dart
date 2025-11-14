@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:frontend/data/repositories/auth_repository.dart';
+import 'package:frontend/core/routing/app_router.dart';
+import '../../../ui/home/view/home_view.dart';
 import '../viewmodel/dashboard_view_model.dart';
 import '../widgets/user_chip.dart';
 
@@ -14,13 +17,17 @@ class _DashboardViewState extends State<DashboardView> {
   @override
   void initState() {
     super.initState();
-    // Example user id
-    context.read<DashboardViewModel>().loadUser(1);
+    final email = AuthRepository().currentUser?.email;
+    if (email != null) {
+      context.read<DashboardViewModel>().loadUserByEmail(email);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<DashboardViewModel>();
+    final authRepo = AuthRepository();
+    final supabaseUser = authRepo.currentUser;
 
     return Scaffold(
       appBar: AppBar(
@@ -43,15 +50,43 @@ class _DashboardViewState extends State<DashboardView> {
                       ),
                     ),
                   )
-                : viewModel.user != null
+                : supabaseUser != null
                     ? UserChip(
-                        username: viewModel.user!.username,
-                        imageUrl: viewModel.user!.profilePicture,
-                        onActionSelected: (value) {
+                        username: viewModel.user?.username ??
+                            supabaseUser.userMetadata?['full_name'] ??
+                            (supabaseUser.email != null && supabaseUser.email!.contains('@')
+                                ? supabaseUser.email!.split('@')[0]
+                                : 'User'),
+                        imageUrl: viewModel.user?.profilePicture ?? 
+                            supabaseUser.userMetadata?['avatar_url'] ?? 
+                            '',
+                        onActionSelected: (value) async {
                           if (value == 'profile') {
-                            Navigator.pushNamed(context, '/profile');
+                            final homeViewState = HomeView.of(context);
+                            if (homeViewState != null) {
+                              homeViewState.switchToTab(0);
+                            } else {
+                              AppRouter.navigatorKey.currentState
+                                  ?.pushNamed(AppRouter.profileRoute);
+                            }
+                          } else if (value == 'settings') {
+                            final homeViewState = HomeView.of(context);
+                            if (homeViewState != null) {
+                              homeViewState.switchToTab(2);
+                            } else {
+                              AppRouter.navigatorKey.currentState
+                                  ?.pushNamed(AppRouter.settingsRoute);
+                            }
                           } else if (value == 'logout') {
-                            Navigator.pushReplacementNamed(context, '/login');
+                            await AuthRepository().signOut();
+                            if (mounted) {
+                              context.read<DashboardViewModel>().clear();
+                              AppRouter.navigatorKey.currentState
+                                  ?.pushNamedAndRemoveUntil(
+                                AppRouter.loginRoute,
+                                (route) => false,
+                              );
+                            }
                           }
                         },
                       )
@@ -69,7 +104,7 @@ class _DashboardViewState extends State<DashboardView> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Welcome, ${viewModel.user!.username}!',
+                            'Welcome, ${viewModel.user!.username}! ',
                             style: const TextStyle(
                                 fontSize: 22, fontWeight: FontWeight.bold),
                           ),

@@ -20,6 +20,12 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/by-email")
+    public ResponseEntity<Map<String, Object>> getUserByEmail(@RequestParam String email) {
+        Map<String, Object> response = userService.getUserByEmail(email);
+        return ResponseEntity.ok(response);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, Object>> updateUser(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
         Map<String, Object> response = userService.updateUser(id, payload);
