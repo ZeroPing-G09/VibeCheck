@@ -34,7 +34,7 @@ public class SpotifyService {
         String q = "track: " + title + " artist: " + artist;
 
         try {
-            // Ask for only the first result
+            // Ask for first 10 results
             Paging<Track> page = spotifyApi.searchTracks(q)
                     .limit(10)
                     .build()
