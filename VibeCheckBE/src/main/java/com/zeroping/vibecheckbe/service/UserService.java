@@ -3,11 +3,11 @@ package com.zeroping.vibecheckbe.service;
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
 import com.zeroping.vibecheckbe.entity.User;
 import com.zeroping.vibecheckbe.entity.Genre;
+import com.zeroping.vibecheckbe.exception.genre.GenreNotFoundException;
 import com.zeroping.vibecheckbe.exception.user.GenreNotFoundForUserException;
 import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
 import com.zeroping.vibecheckbe.repository.UserRepository;
 import com.zeroping.vibecheckbe.repository.GenreRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.*;
 
@@ -106,13 +106,23 @@ public class UserService {
         return genres;
     }
 
+    private Genre resolveGenreOrNull(Long genreId) {
+        if (genreId == null) return null; // allow null genre
+        return genreRepository.findById(genreId)
+                .orElseThrow(() -> new GenreNotFoundException("Genre not found: " + genreId));
+    }
+
     public void updateUserPreferences(UserPreferencesDTO userPreferencesDTO) {
         User user = userRepository.findById(userPreferencesDTO.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        user.setTop1GenreId(userPreferencesDTO.getTop1GenreId());
-        user.setTop2GenreId(userPreferencesDTO.getTop2GenreId());
-        user.setTop3GenreId(userPreferencesDTO.getTop3GenreId());
+        var top1Genre = resolveGenreOrNull(userPreferencesDTO.getTop1GenreId());
+        var top2Genre = resolveGenreOrNull(userPreferencesDTO.getTop2GenreId());
+        var top3Genre = resolveGenreOrNull(userPreferencesDTO.getTop3GenreId());
+
+        user.setTop1Genre(top1Genre);
+        user.setTop2Genre(top2Genre);
+        user.setTop3Genre(top3Genre);
 
         userRepository.save(user);
     }
