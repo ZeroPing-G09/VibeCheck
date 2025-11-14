@@ -9,16 +9,24 @@ class HomeView extends StatefulWidget {
 
   @override
   State<HomeView> createState() => _HomeViewState();
+
+  static _HomeViewState? of(BuildContext context) {
+    return context.findAncestorStateOfType<_HomeViewState>();
+  }
 }
 
 class _HomeViewState extends State<HomeView> {
-  int _currentIndex = 0;
+  int _currentIndex = 1;
 
   final List<Widget> _pages = const [
     ProfileView(),
     DashboardView(),
     SettingsView(),
   ];
+
+  void switchToTab(int index) {
+    setState(() => _currentIndex = index);
+  }
 
   @override
   Widget build(BuildContext context) {

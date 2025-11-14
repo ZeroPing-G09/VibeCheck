@@ -1,39 +1,50 @@
 package com.zeroping.vibecheckbe.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-
-import java.time.Instant;
+import lombok.*;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Users")
-@Data
+@Table(name = "\"Users\"", schema = "public")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "created_at", nullable = false)
-    private Instant createdAt;
-
-    @Column(name = "email", nullable = false, unique = true)
+    @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(name = "username", nullable = false)
+    @Column(nullable = false)
     private String username;
 
-    @Column(name = "password", nullable = false)
+    @Column(nullable = false)
     private String password;
 
     @Column(name = "profile_picture")
     private String profilePicture;
 
-    @Column(name = "top1_genre_id")
-    private Long top1GenreId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "top1_genre_id", referencedColumnName = "id")
+    private Genre top1Genre;
 
-    @Column(name = "top2_genre_id")
-    private Long top2GenreId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "top2_genre_id", referencedColumnName = "id")
+    private Genre top2Genre;
 
-    @Column(name = "top3_genre_id")
-    private Long top3GenreId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "top3_genre_id", referencedColumnName = "id")
+    private Genre top3Genre;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }

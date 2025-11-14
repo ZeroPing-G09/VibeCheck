@@ -1,6 +1,19 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class ApiService {
-  Future<Map<String, dynamic>> login(String email, String password) async {
-    await Future.delayed(const Duration(seconds: 1)); // Simulate network call
-    return {'id': '123', 'name': 'John Doe', 'email': email};
+  static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
+  static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+
+  static Future<void> init() async {
+    // Load .env file
+    await dotenv.load(fileName: '.env');
+    
+    await Supabase.initialize(
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
+    );
   }
+
+  static SupabaseClient get client => Supabase.instance.client;
 }
