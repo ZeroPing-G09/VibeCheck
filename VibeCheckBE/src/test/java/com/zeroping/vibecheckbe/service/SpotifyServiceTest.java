@@ -9,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.model_objects.credentials.ClientCredentials;
+import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
 import se.michaelthelin.spotify.model_objects.specification.Paging;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import se.michaelthelin.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
@@ -43,7 +44,7 @@ class SpotifyServiceTest {
         Paging<Track> page = mock(Paging.class);
 
         when(spotifyApi.searchTracks(expectedQuery)).thenReturn(sBuilder);
-        when(sBuilder.limit(1)).thenReturn(sBuilder);
+        when(sBuilder.limit(10)).thenReturn(sBuilder);
         when(sBuilder.build()).thenReturn(sRequest);
         when(sRequest.execute()).thenReturn(page);
         when(page.getItems()).thenReturn(items);
@@ -73,6 +74,12 @@ class SpotifyServiceTest {
         Track first = mock(Track.class);
         String q = "track: " + "Yellow" + " artist: " + "Coldplay"; // must match service format
         mockSearchFlow(q, new Track[]{ first });
+
+        when(first.getName()).thenReturn("Yellow");
+        ArtistSimplified mockArtist = mock(ArtistSimplified.class);
+        when(mockArtist.getName()).thenReturn("Coldplay");
+
+        when(first.getArtists()).thenReturn(new ArtistSimplified[]{ mockArtist });
 
         Optional<Track> result = spotifyService.searchSong("Yellow", "Coldplay");
 
@@ -132,9 +139,21 @@ class SpotifyServiceTest {
         // Return creds1 on first execute(), creds2 on second execute()
         when(cRequest.execute()).thenReturn(creds1, creds2);
 
-        // Mock two searches (one per call)
-        mockSearchFlow("track: A artist: B", new Track[]{ mock(Track.class) });
-        mockSearchFlow("track: C artist: D", new Track[]{ mock(Track.class) });
+        Track mockTrack1 = mock(Track.class);
+        when(mockTrack1.getName()).thenReturn("A");
+        ArtistSimplified mockArtist1 = mock(ArtistSimplified.class);
+        when(mockArtist1.getName()).thenReturn("B");
+        when(mockTrack1.getArtists()).thenReturn(new ArtistSimplified[]{mockArtist1});
+
+        Track mockTrack2 = mock(Track.class);
+        when(mockTrack2.getName()).thenReturn("C");
+        ArtistSimplified mockArtist2 = mock(ArtistSimplified.class);
+        when(mockArtist2.getName()).thenReturn("D");
+        when(mockTrack2.getArtists()).thenReturn(new ArtistSimplified[]{mockArtist2});
+
+        mockSearchFlow("track: A artist: B", new Track[]{ mockTrack1 });
+        mockSearchFlow("track: C artist: D", new Track[]{ mockTrack2 });
+
 
         // Call service twice
         spotifyService.searchSong("A", "B");
