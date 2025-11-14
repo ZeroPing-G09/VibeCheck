@@ -2,6 +2,7 @@ package com.zeroping.vibecheckbe.controller;
 
 import com.zeroping.vibecheckbe.exception.user.GenreNotFoundForUserException;
 import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
+import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
 import com.zeroping.vibecheckbe.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class UserControllerTest {
@@ -52,6 +54,7 @@ class UserControllerTest {
 
         // Then
         assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
         assertEquals("Andreea", response.getBody().get("username"));
         assertEquals(List.of("Pop", "Jazz"), response.getBody().get("genres"));
         verify(userService, times(1)).getUserById(1L);
@@ -86,6 +89,7 @@ class UserControllerTest {
 
         // Then
         assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
         assertEquals("UpdatedUser", response.getBody().get("username"));
         verify(userService, times(1)).updateUser(userId, payload);
     }
@@ -151,5 +155,84 @@ class UserControllerTest {
         });
 
         verify(userService, never()).getUserById(any());
+    }
+
+    @Test
+    @DisplayName("""
+        Given a valid preferences payload
+        When savePreferences is called
+        Then it returns a success message
+        """)
+    void givenValidPreferences_WhenSavePreferencesIsCalled_ThenReturnsSuccess() {
+        // Given
+        UserPreferencesDTO dto = new UserPreferencesDTO();
+        dto.setUserId(1L);
+        dto.setTop1GenreId(5L);
+        dto.setTop2GenreId(10L);
+        dto.setTop3GenreId(15L);
+
+        doNothing().when(userService).updateUserPreferences(any(UserPreferencesDTO.class));
+
+        // When
+        ResponseEntity<Map<String, Object>> response = userController.savePreferences(dto);
+
+        // Then
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertTrue((Boolean) response.getBody().get("success"));
+        assertEquals("Preferences updated successfully.", response.getBody().get("message"));
+        verify(userService, times(1)).updateUserPreferences(any(UserPreferencesDTO.class));
+    }
+
+    @Test
+    @DisplayName("""
+        Given a preferences payload without userId
+        When savePreferences is called
+        Then it returns a bad request error
+        """)
+    void givenMissingUserId_WhenSavePreferencesIsCalled_ThenReturnsBadRequest() {
+        // Given
+        UserPreferencesDTO dto = new UserPreferencesDTO();
+        dto.setTop1GenreId(5L);
+        dto.setTop2GenreId(10L);
+        dto.setTop3GenreId(15L);
+
+        // When
+        ResponseEntity<Map<String, Object>> response = userController.savePreferences(dto);
+
+        // Then
+        assertEquals(400, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertFalse((Boolean) response.getBody().get("success"));
+        assertEquals("User ID is required.", response.getBody().get("message"));
+        verify(userService, never()).updateUserPreferences(any());
+    }
+
+    @Test
+    @DisplayName("""
+        Given a valid preferences payload
+        When the service throws an exception
+        Then it returns internal server error
+        """)
+    void givenValidPreferences_WhenServiceThrowsException_ThenReturnsInternalError() {
+        // Given
+        UserPreferencesDTO dto = new UserPreferencesDTO();
+        dto.setUserId(1L);
+        dto.setTop1GenreId(5L);
+        dto.setTop2GenreId(10L);
+        dto.setTop3GenreId(15L);
+
+        doThrow(new RuntimeException("DB error"))
+                .when(userService).updateUserPreferences(any(UserPreferencesDTO.class));
+
+        // When
+        ResponseEntity<Map<String, Object>> response = userController.savePreferences(dto);
+
+        // Then
+        assertEquals(500, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertFalse((Boolean) response.getBody().get("success"));
+        assertEquals("Internal error updating preferences.", response.getBody().get("message"));
+        verify(userService, times(1)).updateUserPreferences(any());
     }
 }
