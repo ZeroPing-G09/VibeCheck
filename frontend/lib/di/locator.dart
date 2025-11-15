@@ -8,10 +8,12 @@ final locator = GetIt.instance;
 
 Future<void> setupLocator() async {
   locator.registerLazySingleton(() => ApiService());
-  locator.registerLazySingleton(() => AuthRepository());
+  // Register services (data layer) first
+  locator.registerLazySingleton(() => AuthService());
   locator.registerLazySingleton(() => UserService());
-  locator.registerLazySingleton(() => AuthService(
-        authRepository: locator<AuthRepository>(),
+  // Register repositories (business layer) that depend on services
+  locator.registerLazySingleton(() => AuthRepository(
+        authService: locator<AuthService>(),
         userService: locator<UserService>(),
       ));
 }

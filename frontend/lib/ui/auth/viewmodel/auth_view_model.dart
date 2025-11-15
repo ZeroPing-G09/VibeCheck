@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import '../../../data/models/user.dart';
-import '../../../data/services/auth_service.dart';
+import '../../../data/repositories/auth_repository.dart';
 import '../../../di/locator.dart';
 
 class AuthViewModel extends ChangeNotifier {
-  final AuthService _authService = locator<AuthService>();
+  final AuthRepository _authRepository = locator<AuthRepository>();
 
   bool _isLoading = false;
   User? _user;
@@ -16,7 +16,7 @@ class AuthViewModel extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    _user = await _authService.login(email, password);
+    _user = await _authRepository.login(email, password);
 
     _isLoading = false;
     notifyListeners();

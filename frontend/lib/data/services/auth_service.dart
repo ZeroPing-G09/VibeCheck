@@ -1,43 +1,31 @@
-import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
-import '../models/user.dart';
-import '../repositories/auth_repository.dart';
-import 'user_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'api_service.dart';
 
 class AuthService {
-  final AuthRepository _authRepository;
-  final UserService _userService;
+  final SupabaseClient _client = ApiService.client;
 
-  AuthService({
-    required AuthRepository authRepository,
-    required UserService userService,
-  })  : _authRepository = authRepository,
-        _userService = userService;
-
-  Future<User?> login(String email, String password) async {
-    await _authRepository.login(email, password);
-    
-    final supabaseUser = _authRepository.currentUser;
-    if (supabaseUser?.email != null) {
-      try {
-        return await _userService.fetchUserByEmail(supabaseUser!.email!);
-      } catch (e) {
-        // If user doesn't exist in backend, return null
-        return null;
-      }
-    }
-    return null;
+  // Data layer: Direct Supabase operations
+  Future<void> signInWithPassword(String email, String password) async {
+    await _client.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
   }
 
   Future<void> signInWithSpotify() async {
-    await _authRepository.signInWithSpotify();
+    await _client.auth.signInWithOAuth(
+      OAuthProvider.spotify,
+      redirectTo: 'vibecheck://auth-callback',
+      scopes: 'user-read-email user-read-private',
+    );
   }
 
   Future<void> signOut() async {
-    await _authRepository.signOut();
+    await _client.auth.signOut();
   }
 
-  supabase.User? get currentUser => _authRepository.currentUser;
+  User? get currentUser => _client.auth.currentUser;
 
-  Stream<supabase.AuthState> get onAuthStateChange => _authRepository.onAuthStateChange;
+  Stream<AuthState> get onAuthStateChange => _client.auth.onAuthStateChange;
 }
 
