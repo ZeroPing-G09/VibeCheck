@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/data/repositories/auth_repository.dart';
 import 'package:frontend/core/routing/app_router.dart';
+import 'package:frontend/di/locator.dart';
 import '../../../ui/home/view/home_view.dart';
 import '../viewmodel/dashboard_view_model.dart';
 import '../widgets/user_chip.dart';
@@ -17,7 +18,7 @@ class _DashboardViewState extends State<DashboardView> {
   @override
   void initState() {
     super.initState();
-    final email = AuthRepository().currentUser?.email;
+    final email = locator<AuthRepository>().currentUser?.email;
     if (email != null) {
       context.read<DashboardViewModel>().loadUserByEmail(email);
     }
@@ -26,7 +27,7 @@ class _DashboardViewState extends State<DashboardView> {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<DashboardViewModel>();
-    final authRepo = AuthRepository();
+    final authRepo = locator<AuthRepository>();
     final supabaseUser = authRepo.currentUser;
 
     return Scaffold(
@@ -78,7 +79,7 @@ class _DashboardViewState extends State<DashboardView> {
                                   ?.pushNamed(AppRouter.settingsRoute);
                             }
                           } else if (value == 'logout') {
-                            await AuthRepository().signOut();
+                            await locator<AuthRepository>().signOut();
                             if (mounted) {
                               context.read<DashboardViewModel>().clear();
                               AppRouter.navigatorKey.currentState

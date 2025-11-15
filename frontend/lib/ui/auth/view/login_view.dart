@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/data/repositories/auth_repository.dart';
+import 'package:frontend/di/locator.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -9,7 +10,7 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
-  final AuthRepository _authRepo = AuthRepository();
+  final AuthRepository _authRepo = locator<AuthRepository>();
   bool _loading = false;
   String? _error;
 
