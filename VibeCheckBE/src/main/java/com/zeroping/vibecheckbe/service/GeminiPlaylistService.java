@@ -16,14 +16,26 @@ import org.springframework.stereotype.Service;
 @Service
 public class GeminiPlaylistService {
 
-    private static final String GEMINI_URL =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyAn-_hWIDO1Gd8GMWQlt-CXGFRRGT_IlXY";
+    @Value("${gemini.api.key}")
+    private String apiKey;
+
+    private static final String GEMINI_URL_TEMPLATE =
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=%s";
 
     private final OkHttpClient client = new OkHttpClient();
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public Playlist generatePlaylist(String mood, List<String> genres) throws Exception {
+    @PostConstruct
+    public void validateKey() {
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new IllegalStateException("Missing GEMINI_API_KEY in environment variables!");
+        }
+    }
 
+
+    public Playlist generatePlaylist(String mood, List<String> genres) throws Exception {
+      
+        String geminiUrl = String.format(GEMINI_URL_TEMPLATE, apiKey);
         // Prompt generat dinamic
         String prompt = """
             You are a music recommendation assistant.
@@ -53,7 +65,7 @@ public class GeminiPlaylistService {
             """.formatted(mapper.writeValueAsString(prompt));
 
         Request request = new Request.Builder()
-                .url(GEMINI_URL)
+                .url(geminiUrl)
                 .post(RequestBody.create(jsonBody, MediaType.parse("application/json")))
                 .build();
 
