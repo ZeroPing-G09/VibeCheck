@@ -12,6 +12,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -83,24 +84,19 @@ public class GeminiPlaylistService {
         }
     }
 
-    private PlaylistAgentResponse validatePlaylist(String json) throws Exception {
-        try {
-            PlaylistAgentResponse playlist = mapper.readValue(json, PlaylistAgentResponse.class);
+    private PlaylistAgentResponse validatePlaylist(String json) throws IOException {
+        PlaylistAgentResponse playlist = mapper.readValue(json, PlaylistAgentResponse.class);
 
-            if (playlist.getPlaylist_name() == null || playlist.getTracks() == null) {
-                throw new Exception("Invalid JSON structure.");
-            }
-
-            for (TrackAgentResponse t : playlist.getTracks()) {
-                if (t.getTitle() == null || t.getArtist() == null) {
-                    throw new Exception("A track contains missing fields.");
-                }
-            }
-
-            return playlist;
-
-        } catch (Exception e) {
-            throw new Exception("JSON parse/validation error: " + e.getMessage());
+        if (playlist.getPlaylist_name() == null || playlist.getTracks() == null) {
+            throw new IllegalArgumentException("Invalid JSON structure.");
         }
+
+        for (TrackAgentResponse t : playlist.getTracks()) {
+            if (t.getTitle() == null || t.getArtist() == null) {
+                throw new IllegalArgumentException("A track contains missing fields.");
+            }
+        }
+
+        return playlist;
     }
 }
