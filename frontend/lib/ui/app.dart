@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:frontend/data/repositories/auth_repository.dart';
 import 'package:frontend/core/routing/app_router.dart';
+import 'package:frontend/di/locator.dart';
 import 'package:frontend/ui/settings/viewmodel/theme_view_model.dart';
 
 class VibeCheckApp extends StatefulWidget {
@@ -16,7 +17,7 @@ class VibeCheckApp extends StatefulWidget {
 }
 
 class _VibeCheckAppState extends State<VibeCheckApp> {
-  final AuthRepository _authRepo = AuthRepository();
+  final AuthRepository _authRepo = locator<AuthRepository>();
   Session? _session;
   StreamSubscription<AuthState>? _authSubscription;
   String? _currentRoute;

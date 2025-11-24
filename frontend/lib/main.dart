@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/data/services/api_service.dart';
+import 'package:frontend/di/locator.dart';
 import 'ui/dashboard/viewmodel/dashboard_view_model.dart';
 import 'ui/profile/viewmodel/profile_view_model.dart';
 import 'ui/settings/viewmodel/theme_view_model.dart';
@@ -9,6 +10,7 @@ import 'ui/app.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ApiService.init();
+  await setupLocator();
 
   runApp(
     MultiProvider(

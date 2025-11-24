@@ -7,10 +7,10 @@ class AuthViewModel extends ChangeNotifier {
   final AuthRepository _authRepository = locator<AuthRepository>();
 
   bool _isLoading = false;
-  UserModel? _user;
+  User? _user;
 
   bool get isLoading => _isLoading;
-  UserModel? get user => _user;
+  User? get user => _user;
 
   Future<void> login(String email, String password) async {
     _isLoading = true;

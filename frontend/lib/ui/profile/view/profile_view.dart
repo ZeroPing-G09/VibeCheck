@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/data/models/user.dart';
 import 'package:frontend/data/repositories/auth_repository.dart';
+import 'package:frontend/di/locator.dart';
 import '../viewmodel/profile_view_model.dart';
 import '../../dashboard/viewmodel/dashboard_view_model.dart';
 import '../widgets/profile_sidebar.dart';
@@ -32,7 +33,7 @@ class _ProfileViewState extends State<ProfileView> {
 
   void _loadUserData() {
     final vm = context.read<ProfileViewModel>();
-    final email = AuthRepository().currentUser?.email;
+    final email = locator<AuthRepository>().currentUser?.email;
     if (email != null) {
       vm.loadUserByEmail(email).then((_) {
         if (mounted) {
@@ -208,7 +209,7 @@ class _ProfileDetails extends StatelessWidget {
             await vm.updateUser(updated);
             
             // Reload dashboard user to reflect changes
-            final email = AuthRepository().currentUser?.email;
+            final email = locator<AuthRepository>().currentUser?.email;
             if (email != null && context.mounted) {
               try {
                 final dashboardVm = context.read<DashboardViewModel>();
