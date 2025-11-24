@@ -1,10 +1,8 @@
 package com.zeroping.vibecheckbe.controller;
 
-import com.zeroping.vibecheckbe.service.GenreService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Map;
+import com.zeroping.vibecheckbe.entity.PlaylistAgentResponse;
+import com.zeroping.vibecheckbe.entity.PlaylistRequest;
+import com.zeroping.vibecheckbe.service.GeminiPlaylistService;
 import org.springframework.web.bind.annotation.*;
 /*
 POST EXAMPLE FROM FE
@@ -27,7 +25,7 @@ public class PlaylistController {
     }
 
     @PostMapping("/generate")
-    public Playlist generate(@RequestBody PlaylistRequest req) throws Exception {
+    public PlaylistAgentResponse generate(@RequestBody PlaylistRequest req) throws Exception {
         return playlistService.generatePlaylist(req.getMood(), req.getGenres());
     }
 }

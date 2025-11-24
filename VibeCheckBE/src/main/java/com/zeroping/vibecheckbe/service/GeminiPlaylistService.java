@@ -1,17 +1,18 @@
 package com.zeroping.vibecheckbe.service;
 
-import com.zeroping.vibecheckbe.entity.User;
-import com.zeroping.vibecheckbe.entity.Genre;
-import com.zeroping.vibecheckbe.exception.user.GenreNotFoundForUserException;
-import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
-import com.zeroping.vibecheckbe.repository.UserRepository;
-import com.zeroping.vibecheckbe.repository.GenreRepository;
-import org.springframework.stereotype.Service;
-import java.util.*;
-
+import com.zeroping.vibecheckbe.entity.PlaylistAgentResponse;
+import com.zeroping.vibecheckbe.entity.TrackAgentResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import okhttp3.*;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+import java.util.List;
 
 @Service
 public class GeminiPlaylistService {
@@ -20,7 +21,7 @@ public class GeminiPlaylistService {
     private String apiKey;
 
     private static final String GEMINI_URL_TEMPLATE =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=%s";
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=%s";
 
     private final OkHttpClient client = new OkHttpClient();
     private final ObjectMapper mapper = new ObjectMapper();
@@ -28,18 +29,17 @@ public class GeminiPlaylistService {
     @PostConstruct
     public void validateKey() {
         if (apiKey == null || apiKey.isBlank()) {
-            throw new IllegalStateException("Missing GEMINI_API_KEY in environment variables!");
+            throw new IllegalStateException("Missing gemini.api.key in properties or environment!");
         }
     }
 
-
-    public Playlist generatePlaylist(String mood, List<String> genres) throws Exception {
-      
+    public PlaylistAgentResponse generatePlaylist(String mood, List<String> genres) throws Exception {
         String geminiUrl = String.format(GEMINI_URL_TEMPLATE, apiKey);
-        // Prompt generat dinamic
+
         String prompt = """
             You are a music recommendation assistant.
             Generate a JSON playlist based on the user preferences.
+            Return the JSON as a plain string.
 
             Input:
             { mood: "%s", genres: %s }
@@ -48,12 +48,11 @@ public class GeminiPlaylistService {
             {
               "playlist_name": "string",
               "tracks": [
-                { "title": "string", "artist": "string", "spotify_url": "string" }
+                { "title": "string", "artist": "string" }
               ]
             }
             """.formatted(mood, mapper.writeValueAsString(genres));
 
-        // Structura cererii pentru Gemini
         String jsonBody = """
             {
               "contents": [{
@@ -69,29 +68,31 @@ public class GeminiPlaylistService {
                 .post(RequestBody.create(jsonBody, MediaType.parse("application/json")))
                 .build();
 
-        Response response = client.newCall(request).execute();
-        String responseBody = response.body().string();
+        try (Response response = client.newCall(request).execute()) {
+            if (response.body() == null) {
+                throw new IllegalStateException("Empty response body from Gemini API");
+            }
+            String responseBody = response.body().string();
 
-        // Extragem doar textul generat de AI
-        String aiText = mapper.readTree(responseBody)
-                .get("candidates").get(0)
-                .get("content").get("parts").get(0)
-                .get("text").asText();
+            String aiText = mapper.readTree(responseBody)
+                    .get("candidates").get(0)
+                    .get("content").get("parts").get(0)
+                    .get("text").asText();
 
-        // Validare JSON
-        return validatePlaylist(aiText);
+            return validatePlaylist(aiText);
+        }
     }
 
-    private Playlist validatePlaylist(String json) throws Exception {
+    private PlaylistAgentResponse validatePlaylist(String json) throws Exception {
         try {
-            Playlist playlist = mapper.readValue(json, Playlist.class);
+            PlaylistAgentResponse playlist = mapper.readValue(json, PlaylistAgentResponse.class);
 
             if (playlist.getPlaylist_name() == null || playlist.getTracks() == null) {
                 throw new Exception("Invalid JSON structure.");
             }
 
-            for (Track t : playlist.getTracks()) {
-                if (t.getTitle() == null || t.getArtist() == null || t.getSpotify_url() == null) {
+            for (TrackAgentResponse t : playlist.getTracks()) {
+                if (t.getTitle() == null || t.getArtist() == null) {
                     throw new Exception("A track contains missing fields.");
                 }
             }
