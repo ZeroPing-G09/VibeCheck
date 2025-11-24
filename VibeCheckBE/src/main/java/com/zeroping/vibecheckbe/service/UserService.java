@@ -1,7 +1,9 @@
 package com.zeroping.vibecheckbe.service;
 
+import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
 import com.zeroping.vibecheckbe.entity.User;
 import com.zeroping.vibecheckbe.entity.Genre;
+import com.zeroping.vibecheckbe.exception.genre.GenreNotFoundException;
 import com.zeroping.vibecheckbe.exception.user.GenreNotFoundForUserException;
 import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
 import com.zeroping.vibecheckbe.repository.UserRepository;
@@ -31,7 +33,7 @@ public class UserService {
     public Map<String, Object> getUserByEmail(String email) {
         Optional<User> userOpt = userRepository.findByEmail(email);
         User user;
-        
+
         if (userOpt.isPresent()) {
             user = userOpt.get();
         } else {
@@ -102,5 +104,26 @@ public class UserService {
         if (user.getTop2Genre() != null) genres.add(user.getTop2Genre().getName());
         if (user.getTop3Genre() != null) genres.add(user.getTop3Genre().getName());
         return genres;
+    }
+
+    private Genre resolveGenreOrNull(Long genreId) {
+        if (genreId == null) return null; // allow null genre
+        return genreRepository.findById(genreId)
+                .orElseThrow(() -> new GenreNotFoundException("Genre not found: " + genreId));
+    }
+
+    public void updateUserPreferences(UserPreferencesDTO userPreferencesDTO) {
+        User user = userRepository.findById(userPreferencesDTO.getUserId())
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        var top1Genre = resolveGenreOrNull(userPreferencesDTO.getTop1GenreId());
+        var top2Genre = resolveGenreOrNull(userPreferencesDTO.getTop2GenreId());
+        var top3Genre = resolveGenreOrNull(userPreferencesDTO.getTop3GenreId());
+
+        user.setTop1Genre(top1Genre);
+        user.setTop2Genre(top2Genre);
+        user.setTop3Genre(top3Genre);
+
+        userRepository.save(user);
     }
 }
