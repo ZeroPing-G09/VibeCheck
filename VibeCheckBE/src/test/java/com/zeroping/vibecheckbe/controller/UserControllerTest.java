@@ -1,5 +1,8 @@
 package com.zeroping.vibecheckbe.controller;
 
+import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
+import com.zeroping.vibecheckbe.entity.Genre;
+import com.zeroping.vibecheckbe.entity.User;
 import com.zeroping.vibecheckbe.exception.user.GenreNotFoundForUserException;
 import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
@@ -69,28 +72,44 @@ class UserControllerTest {
     void givenValidIdAndPayload_WhenUpdateUserIsCalled_ThenReturnsUpdatedUser() {
         // Given
         Long userId = 1L;
-        Map<String, Object> payload = Map.of(
-                "username", "UpdatedUser",
-                "profile_picture", "updated.png",
-                "genres", List.of("Rock", "Pop")
-        );
 
+        UserUpdateDTO payload = new UserUpdateDTO();
+        payload.setUsername("UpdatedUser");
+        payload.setProfilePicture("updated.png");
+
+        UserPreferencesDTO prefs = new UserPreferencesDTO();
+        prefs.setUserId(userId);
+        prefs.setTop1GenreId(1L); // Rock
+        prefs.setTop2GenreId(2L); // Pop
+        payload.setPreferences(prefs);
+
+        // Mocked response from service
         Map<String, Object> updatedUser = Map.of(
                 "id", 1L,
                 "username", "UpdatedUser",
-                "profile_picture", "updated.png",
+                "profile_picture", "updated.png", // make sure key matches toUserResponse
                 "genres", List.of("Rock", "Pop")
         );
 
         when(userService.updateUser(userId, payload)).thenReturn(updatedUser);
 
         // When
-        ResponseEntity<Map<String, Object>> response = userController.updateUser(userId, payload);
+        ResponseEntity<?> response = userController.updateUser(userId, payload);
 
         // Then
-        assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
-        assertEquals("UpdatedUser", response.getBody().get("username"));
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getBody();
+
+        assertEquals("UpdatedUser", body.get("username"));
+        assertEquals("updated.png", body.get("profile_picture"));
+
+        @SuppressWarnings("unchecked")
+        List<String> genres = (List<String>) body.get("genres");
+        assertEquals(List.of("Rock", "Pop"), genres);
+
+        // Verify service call
         verify(userService, times(1)).updateUser(userId, payload);
     }
 
@@ -124,13 +143,19 @@ class UserControllerTest {
     void givenInvalidGenres_WhenUpdateUserIsCalled_ThenThrowsGenreNotFoundForUserException() {
         // Given
         Long userId = 1L;
-        Map<String, Object> invalidPayload = Map.of(
-                "username", "TestUser",
-                "genres", List.of("UnknownGenre")
-        );
 
+        // Build DTO payload instead of Map
+        UserUpdateDTO invalidPayload = new UserUpdateDTO();
+        invalidPayload.setUsername("TestUser");
+
+        UserPreferencesDTO prefs = new UserPreferencesDTO();
+        prefs.setUserId(userId);
+        prefs.setTop1GenreId(999L); // invalid/non-existent genre ID
+        invalidPayload.setPreferences(prefs);
+
+        // Mock service to throw the exception when called with this payload
         when(userService.updateUser(userId, invalidPayload))
-                .thenThrow(new GenreNotFoundForUserException("UnknownGenre"));
+                .thenThrow(new GenreNotFoundForUserException("Genre not found: 999"));
 
         // When / Then
         GenreNotFoundForUserException exception = assertThrows(
@@ -138,7 +163,9 @@ class UserControllerTest {
                 () -> userController.updateUser(userId, invalidPayload)
         );
 
-        assertTrue(exception.getMessage().contains("UnknownGenre"));
+        assertTrue(exception.getMessage().contains("999"));
+
+        // Verify service was called once with the DTO
         verify(userService, times(1)).updateUser(userId, invalidPayload);
     }
 
@@ -164,14 +191,21 @@ class UserControllerTest {
         Then it returns a success message
         """)
     void givenValidPreferences_WhenSavePreferencesIsCalled_ThenReturnsSuccess() {
-        // Given
+// Given
         UserPreferencesDTO dto = new UserPreferencesDTO();
         dto.setUserId(1L);
         dto.setTop1GenreId(5L);
         dto.setTop2GenreId(10L);
         dto.setTop3GenreId(15L);
 
-        doNothing().when(userService).updateUserPreferences(any(UserPreferencesDTO.class));
+        User mockUser = new User();
+        mockUser.setId(1L);
+        mockUser.setTop1Genre(new Genre(5L, "Genre5"));
+        mockUser.setTop2Genre(new Genre(10L, "Genre10"));
+        mockUser.setTop3Genre(new Genre(15L, "Genre15"));
+
+        when(userService.updateUserPreferences(any(UserPreferencesDTO.class)))
+                .thenReturn(mockUser);  // return the mocked User
 
         // When
         ResponseEntity<Map<String, Object>> response = userController.savePreferences(dto);
@@ -181,6 +215,7 @@ class UserControllerTest {
         assertNotNull(response.getBody());
         assertTrue((Boolean) response.getBody().get("success"));
         assertEquals("Preferences updated successfully.", response.getBody().get("message"));
+
         verify(userService, times(1)).updateUserPreferences(any(UserPreferencesDTO.class));
     }
 
