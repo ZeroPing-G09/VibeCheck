@@ -1,10 +1,7 @@
 package com.zeroping.vibecheckbe.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.util.List;
 
 @Entity
 @Table(name = "\"Songs\"", schema = "public")
@@ -25,9 +22,4 @@ public class Song {
 
     @Column(nullable = false)
     private String artist_name;
-
-
-    @OneToMany(mappedBy = "song")
-    @JsonManagedReference("song-playlists")
-    private List<PlaylistSong> playlistSongs;
 }
