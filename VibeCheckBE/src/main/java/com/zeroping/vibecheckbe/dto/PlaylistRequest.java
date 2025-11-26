@@ -1,11 +1,11 @@
 package com.zeroping.vibecheckbe.dto;
 
-import lombok.Data;
-
+import lombok.*;
 import java.util.List;
 
 @Data
 public class PlaylistRequest {
-    private String playlist_name;
-    private List<TrackRequest> tracks;
+    private String mood;
+    private List<String> genres;
+
 }

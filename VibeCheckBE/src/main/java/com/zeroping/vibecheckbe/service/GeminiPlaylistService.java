@@ -1,7 +1,7 @@
 package com.zeroping.vibecheckbe.service;
 
-import com.zeroping.vibecheckbe.entity.PlaylistAgentResponse;
-import com.zeroping.vibecheckbe.entity.TrackAgentResponse;
+import com.zeroping.vibecheckbe.dto.PlaylistAgentResponse;
+import com.zeroping.vibecheckbe.dto.TrackAgentResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;

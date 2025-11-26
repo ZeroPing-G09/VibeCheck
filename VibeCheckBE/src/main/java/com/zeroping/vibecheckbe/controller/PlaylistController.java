@@ -1,7 +1,7 @@
 package com.zeroping.vibecheckbe.controller;
 
-import com.zeroping.vibecheckbe.entity.PlaylistAgentResponse;
-import com.zeroping.vibecheckbe.entity.PlaylistRequest;
+import com.zeroping.vibecheckbe.dto.PlaylistAgentResponse;
+import com.zeroping.vibecheckbe.dto.PlaylistRequest;
 import com.zeroping.vibecheckbe.service.GeminiPlaylistService;
 import org.springframework.web.bind.annotation.*;
 /*

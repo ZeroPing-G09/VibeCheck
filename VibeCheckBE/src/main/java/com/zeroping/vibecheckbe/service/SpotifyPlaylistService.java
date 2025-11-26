@@ -1,9 +1,10 @@
 package com.zeroping.vibecheckbe.service;
 
+import com.zeroping.vibecheckbe.dto.PlaylistSpotifyRequest;
+import com.zeroping.vibecheckbe.dto.PlaylistSpotifyResponse;
+import com.zeroping.vibecheckbe.dto.TrackSpotifyRequest;
 import com.zeroping.vibecheckbe.entity.Song;
 import com.zeroping.vibecheckbe.repository.SongRepository;
-import com.zeroping.vibecheckbe.dto.PlaylistRequest;
-import com.zeroping.vibecheckbe.dto.TrackRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import se.michaelthelin.spotify.model_objects.specification.Track;
@@ -13,28 +14,28 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class PlaylistService {
+public class SpotifyPlaylistService {
     private final SongRepository songRepository;
     private final SpotifyService spotifyService;
 
-    public PlaylistService(SongRepository songRepository,
-                           SpotifyService spotifyService) {
+
+    public SpotifyPlaylistService(SongRepository songRepository,
+                                  SpotifyService spotifyService) {
         this.songRepository = songRepository;
         this.spotifyService = spotifyService;
     }
 
     @Transactional
-    public void createPlaylistFromAI(PlaylistRequest request) {
-
+    public PlaylistSpotifyResponse searchAndSaveSongsFromPlaylist(PlaylistSpotifyRequest request) {
         List<Song> savedSongs = new ArrayList<>();
 
         // search the songs
-        for (TrackRequest trackRequest : request.getTracks()) {
+        for (TrackSpotifyRequest trackSpotifyRequest : request.getTracks()) {
 
             // Call Spotify service
             Optional<Track> spotifyTrackOpt = spotifyService.searchSong(
-                    trackRequest.getTitle(),
-                    trackRequest.getArtist()
+                    trackSpotifyRequest.getTitle(),
+                    trackSpotifyRequest.getArtist()
             );
 
             if (spotifyTrackOpt.isPresent()) {
@@ -67,5 +68,6 @@ public class PlaylistService {
             }
             // If search fails (Optional is empty), skip this track.
         }
+        return new PlaylistSpotifyResponse(savedSongs);
     }
 }

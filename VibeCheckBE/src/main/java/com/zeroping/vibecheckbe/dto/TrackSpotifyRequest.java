@@ -1,9 +1,9 @@
-package com.zeroping.vibecheckbe.entity;
+package com.zeroping.vibecheckbe.dto;
 
 import lombok.Data;
 
 @Data
-public class TrackAgentResponse {
+public class TrackSpotifyRequest {
     private String title;
     private String artist;
 }
