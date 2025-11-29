@@ -1,14 +1,18 @@
 package com.zeroping.vibecheckbe.controller;
 
+import com.zeroping.vibecheckbe.dto.PlaylistDTO;
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
+import com.zeroping.vibecheckbe.service.PlaylistService;
 import com.zeroping.vibecheckbe.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -17,8 +21,10 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
-    public UserController(UserService userService) {
+    private final PlaylistService playlistService;
+    public UserController(UserService userService, PlaylistService playlistService) {
         this.userService = userService;
+        this.playlistService = playlistService;
     }
 
     @GetMapping("/{id}")
@@ -55,5 +61,34 @@ public class UserController {
             return ResponseEntity.internalServerError()
                     .body(Map.of("success", false, "message", "Internal error updating preferences."));
         }
+    }
+
+    // Get all distinct moods of authenticated user, sorted by createdAt ascending
+    @GetMapping("/moods")
+    public List<String> getUserMoods() {
+        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
+        UUID userId = UUID.fromString(userIdString);
+        return playlistService.getUserMoods(userId);
+    }
+
+    // Get total number of playlists of authenticated user
+    @GetMapping("/playlist-count")
+    public Map<String, Long> getUserPlaylistCount() {
+        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
+        UUID userId = UUID.fromString(userIdString);
+        long count = playlistService.getNumberOfPlaylists(userId);
+        return Map.of("playlistCount", count);
+    }
+
+    // Get all the user's playlists
+    @GetMapping("/{userId}/playlists")
+    public List<PlaylistDTO> getUserPlaylists(@PathVariable UUID userId) {
+        return playlistService.getUserPlaylists(userId);
+    }
+
+    // Get the latest playlist for the user
+    @GetMapping("/{userId}/last-playlist")
+    public PlaylistDTO getLastPlaylist(@PathVariable UUID userId) {
+        return playlistService.getLastPlaylist(userId);
     }
 }
