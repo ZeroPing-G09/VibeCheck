@@ -1,10 +1,10 @@
 package com.zeroping.vibecheckbe.service;
 
+import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
 import com.zeroping.vibecheckbe.entity.Genre;
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
 import com.zeroping.vibecheckbe.entity.User;
 import com.zeroping.vibecheckbe.exception.genre.GenreNotFoundException;
-import com.zeroping.vibecheckbe.exception.user.GenreNotFoundForUserException;
 import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
 import com.zeroping.vibecheckbe.repository.GenreRepository;
 import com.zeroping.vibecheckbe.repository.UserRepository;
@@ -78,14 +78,20 @@ class UserServiceTest {
         existing.setUsername("old");
         existing.setProfilePicture("old.png");
 
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("username", "newname");
-        payload.put("profile_picture", "new.png");
-        payload.put("genres", List.of("Rock", "Pop"));
+        UserUpdateDTO payload = new UserUpdateDTO();
+        payload.setUsername("newname");
+        payload.setProfilePicture("new.png");
+
+        UserPreferencesDTO prefs = new UserPreferencesDTO();
+        prefs.setUserId(id);
+        prefs.setTop1GenreId(1L);  // Rock
+        prefs.setTop2GenreId(2L);  // Pop
+
+        payload.setPreferences(prefs);
 
         when(userRepository.findById(id)).thenReturn(Optional.of(existing));
-        when(genreRepository.findByNameIgnoreCase("Rock")).thenReturn(Optional.of(genre(1L, "Rock")));
-        when(genreRepository.findByNameIgnoreCase("Pop")).thenReturn(Optional.of(genre(2L, "Pop")));
+        when(genreRepository.findById(1L)).thenReturn(Optional.of(genre(1L, "Rock")));
+        when(genreRepository.findById(2L)).thenReturn(Optional.of(genre(2L, "Pop")));
 
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -100,46 +106,13 @@ class UserServiceTest {
         assertEquals(List.of("Rock", "Pop"), genres);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(captor.capture());
+        verify(userRepository, atLeast(1)).save(captor.capture());
         User saved = captor.getValue();
         assertEquals("newname", saved.getUsername());
         assertEquals("new.png", saved.getProfilePicture());
         assertEquals("Rock", saved.getTop1Genre().getName());
         assertEquals("Pop", saved.getTop2Genre().getName());
         assertNull(saved.getTop3Genre());
-    }
-
-    @Test
-    @DisplayName("""
-            Given more than 3 genre names
-            When updateUser is called
-            Then it returns only the first 3 genres and ignores the rest
-            """)
-    void givenMoreThanThreeGenres_WhenUpdateUser_ThenOnlyFirstThreeApplied() {
-        // Given
-        Long id = 7L;
-        User u = new User();
-        u.setId(id);
-
-        List<String> names = List.of("Rock", "Pop", "Jazz", "HipHop"); // 4 names
-
-        Map<String, Object> payload = Map.of("genres", names);
-
-        when(userRepository.findById(id)).thenReturn(Optional.of(u));
-        when(genreRepository.findByNameIgnoreCase("Rock")).thenReturn(Optional.of(genre(1L, "Rock")));
-        when(genreRepository.findByNameIgnoreCase("Pop")).thenReturn(Optional.of(genre(2L, "Pop")));
-        when(genreRepository.findByNameIgnoreCase("Jazz")).thenReturn(Optional.of(genre(3L, "Jazz")));
-
-        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        // When
-        Map<String, Object> out = userService.updateUser(id, payload);
-
-        // Then
-        @SuppressWarnings("unchecked")
-        List<String> genres = (List<String>) out.get("genres");
-        assertEquals(List.of("Rock", "Pop", "Jazz"), genres);
-        verify(genreRepository, never()).findByNameIgnoreCase("HipHop");
     }
 
     @Test
@@ -156,7 +129,11 @@ class UserServiceTest {
         u.setUsername("old");
         u.setTop1Genre(genre(1L, "Rock"));
 
-        Map<String, Object> payload = Map.of("username", "kept", "profile_picture", "x.png");
+        UserUpdateDTO payload = new UserUpdateDTO();
+        payload.setUsername("kept");
+        payload.setProfilePicture("x.png");
+
+        payload.setPreferences(null);
 
         when(userRepository.findById(id)).thenReturn(Optional.of(u));
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -198,8 +175,10 @@ class UserServiceTest {
         // Given
         when(userRepository.findById(42L)).thenReturn(Optional.empty());
 
+        UserUpdateDTO payload = new UserUpdateDTO();
+
         // When & Then
-        assertThrows(UserNotFoundException.class, () -> userService.updateUser(42L, Map.of()));
+        assertThrows(UserNotFoundException.class, () -> userService.updateUser(42L, payload));
 
         // Verify the interaction happened
         verify(userRepository).findById(42L);
@@ -217,14 +196,23 @@ class UserServiceTest {
         Long id = 3L;
         User u = new User();
         u.setId(id);
-
-        Map<String, Object> payload = Map.of("genres", List.of("NarniaCore"));
-
         when(userRepository.findById(id)).thenReturn(Optional.of(u));
-        when(genreRepository.findByNameIgnoreCase("NarniaCore")).thenReturn(Optional.empty());
+
+        UserUpdateDTO payload = new UserUpdateDTO();
+
+        UserPreferencesDTO prefs = new UserPreferencesDTO();
+        prefs.setUserId(id);
+        prefs.setTop1GenreId(999L); // non-existent genre id
+        payload.setPreferences(prefs);
+
+        // Mock genre repo to return empty for the missing id
+        when(genreRepository.findById(999L)).thenReturn(Optional.empty());
 
         // When / Then
-        assertThrows(GenreNotFoundForUserException.class, () -> userService.updateUser(id, payload));
+        assertThrows(GenreNotFoundException.class,
+                () -> userService.updateUser(id, payload));
+
+        // Ensure we never saved the user
         verify(userRepository, never()).save(any());
     }
 

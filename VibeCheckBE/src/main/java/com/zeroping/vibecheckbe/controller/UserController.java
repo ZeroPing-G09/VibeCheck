@@ -2,6 +2,8 @@ package com.zeroping.vibecheckbe.controller;
 
 import com.zeroping.vibecheckbe.dto.PlaylistDTO;
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
+import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
+import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
 import com.zeroping.vibecheckbe.service.PlaylistService;
 import com.zeroping.vibecheckbe.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -40,9 +42,10 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> updateUser(@PathVariable UUID id, @RequestBody Map<String, Object> payload) {
-        Map<String, Object> response = userService.updateUser(id, payload);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> updateUser(
+            @PathVariable UUID id,
+            @RequestBody UserUpdateDTO payload) {
+        return ResponseEntity.ok(userService.updateUser(id, payload));
     }
 
     @PostMapping("/preferences")
