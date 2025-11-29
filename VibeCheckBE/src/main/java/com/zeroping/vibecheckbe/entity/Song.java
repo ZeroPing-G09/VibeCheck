@@ -3,6 +3,8 @@ package com.zeroping.vibecheckbe.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Set;
+
 @Entity
 @Table(name = "\"Songs\"", schema = "public")
 @Getter
@@ -22,4 +24,7 @@ public class Song {
 
     @Column(nullable = false)
     private String artist_name;
+
+    @ManyToMany(mappedBy = "songs")
+    private Set<Playlist> playlists;
 }

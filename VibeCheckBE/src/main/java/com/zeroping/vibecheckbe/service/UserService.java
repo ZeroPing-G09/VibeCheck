@@ -52,7 +52,16 @@ public class UserService {
         }
 
         if (payload.containsKey("genres")) {
-            List<String> genreNames = (List<String>) payload.get("genres");
+            Object genresObj = payload.get("genres");
+            List<String> genreNames;
+            if (genresObj instanceof List<?>) {
+                genreNames = ((List<?>) genresObj).stream()
+                        .map(Object::toString)
+                        .limit(MAX_TOP_GENRES)
+                        .collect(Collectors.toList());
+            } else {
+                throw new IllegalArgumentException("`genres` must be a list of strings");
+            }
             updateUserGenres(user, genreNames);
         }
 

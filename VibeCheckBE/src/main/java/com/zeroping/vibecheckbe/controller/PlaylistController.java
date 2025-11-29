@@ -2,8 +2,12 @@ package com.zeroping.vibecheckbe.controller;
 
 import com.zeroping.vibecheckbe.dto.*;
 import com.zeroping.vibecheckbe.service.GeminiPlaylistService;
+import com.zeroping.vibecheckbe.service.PlaylistMetadataService;
 import com.zeroping.vibecheckbe.service.SpotifyPlaylistService;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 /*
 POST EXAMPLE FROM FE
@@ -16,19 +20,25 @@ POST EXAMPLE FROM FE
  */
 
 @RestController
-@RequestMapping("/api/playlist")
+@RequestMapping("/playlist")
 public class PlaylistController {
 
     private final GeminiPlaylistService geminiPlaylistService;
     private final SpotifyPlaylistService spotifyPlaylistService;
+    private final PlaylistMetadataService playlistMetadataService;
 
-    public PlaylistController(GeminiPlaylistService service, SpotifyPlaylistService spotifyPlaylistService) {
+    public PlaylistController(GeminiPlaylistService service, SpotifyPlaylistService spotifyPlaylistService, PlaylistMetadataService playlistMetadataService) {
         this.geminiPlaylistService = service;
         this.spotifyPlaylistService = spotifyPlaylistService;
+        this.playlistMetadataService = playlistMetadataService;
     }
 
     @PostMapping("/generate")
-    public PlaylistSpotifyResponse generate(@RequestBody PlaylistRequest req) throws Exception {
+    public PlaylistResponse generate(@RequestBody PlaylistRequest req) throws Exception {
+
+        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
+        UUID authenticatedUserId = UUID.fromString(userIdString);
+
         PlaylistAgentResponse playlistAgentResponse = geminiPlaylistService.generatePlaylist(req.getMood(), req.getGenres());
 
         System.out.println("Gemini returned this playlist:" + playlistAgentResponse);
@@ -38,7 +48,20 @@ public class PlaylistController {
                         track -> new TrackSpotifyRequest(track.getTitle(), track.getArtist())
                 ).toList()
         );
-        return spotifyPlaylistService.searchAndSaveSongsFromPlaylist(playlistSpotifyRequest);
+
+        PlaylistSpotifyResponse spotifyResponse = spotifyPlaylistService.searchAndSaveSongsFromPlaylist(playlistSpotifyRequest);
+
+        PlaylistDTO playlist = playlistMetadataService.savePlaylistMetadata(
+                spotifyResponse.getSongs(),
+                playlistAgentResponse.getPlaylist_name(),
+                req.getMood(),
+                authenticatedUserId
+        );
+
+        return new PlaylistResponse(
+                playlist,
+                spotifyResponse.getSongs()
+        );
     }
 }
 
