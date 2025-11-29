@@ -1,8 +1,12 @@
 package com.zeroping.vibecheckbe.repository;
 
 import com.zeroping.vibecheckbe.entity.Playlist;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.List;
@@ -20,6 +24,11 @@ public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
     // Count the number of playlists for a specific user
     long countByUserId(UUID userId);
 
-    // Get distinct moods for a user
-    List<String> findDistinctMoodByUserIdOrderByCreatedAtDesc(UUID userId);
+    // Get top distinct moods for a user
+    @Query("SELECT DISTINCT p.mood FROM Playlist p WHERE p.userId = :userId ORDER BY p.createdAt DESC")
+    List<String> findDistinctMoodByUserIdOrderByCreatedAtDesc(@Param("userId") UUID userId, Pageable pageable);
+
+    @Query("SELECT p.createdAt FROM Playlist p WHERE p.userId = :userId ORDER BY p.createdAt DESC LIMIT 1")
+    Optional<Instant> findLatestTimestamp(UUID userId);
+
 }

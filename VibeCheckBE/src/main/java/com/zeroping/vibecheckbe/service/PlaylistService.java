@@ -3,8 +3,11 @@ package com.zeroping.vibecheckbe.service;
 import com.zeroping.vibecheckbe.dto.PlaylistDTO;
 import com.zeroping.vibecheckbe.entity.Playlist;
 import com.zeroping.vibecheckbe.repository.PlaylistRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,9 +20,10 @@ public class PlaylistService {
     }
 
     public List<String> getUserMoods(UUID userId) {
-        // Returns the user moods sorted from newest to oldest
-        return playlistRepository.findDistinctMoodByUserIdOrderByCreatedAtDesc(userId);
+        Pageable topThree = PageRequest.of(0, 3);
+        return playlistRepository.findDistinctMoodByUserIdOrderByCreatedAtDesc(userId, topThree);
     }
+
 
     public long getNumberOfPlaylists(UUID userId) {
         return playlistRepository.countByUserId(userId);
@@ -36,6 +40,11 @@ public class PlaylistService {
         return playlistRepository.findFirstByUserIdOrderByCreatedAtDesc(userId)
                 .map(this::mapToDTO)
                 .orElse(null); // Or can throw exception
+    }
+
+    public Instant getLastPlaylistTimestamp(UUID userId) {
+        return playlistRepository.findLatestTimestamp(userId)
+                .orElse(null); // return null if no playlists exist
     }
 
     private PlaylistDTO mapToDTO(Playlist playlist) {

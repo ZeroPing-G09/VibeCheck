@@ -62,33 +62,4 @@ public class UserController {
                     .body(Map.of("success", false, "message", "Internal error updating preferences."));
         }
     }
-
-    // Get all distinct moods of authenticated user, sorted by createdAt ascending
-    @GetMapping("/moods")
-    public List<String> getUserMoods() {
-        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
-        UUID userId = UUID.fromString(userIdString);
-        return playlistService.getUserMoods(userId);
-    }
-
-    // Get total number of playlists of authenticated user
-    @GetMapping("/playlist-count")
-    public Map<String, Long> getUserPlaylistCount() {
-        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
-        UUID userId = UUID.fromString(userIdString);
-        long count = playlistService.getNumberOfPlaylists(userId);
-        return Map.of("playlistCount", count);
-    }
-
-    // Get all the user's playlists
-    @GetMapping("/{userId}/playlists")
-    public List<PlaylistDTO> getUserPlaylists(@PathVariable UUID userId) {
-        return playlistService.getUserPlaylists(userId);
-    }
-
-    // Get the latest playlist for the user
-    @GetMapping("/{userId}/last-playlist")
-    public PlaylistDTO getLastPlaylist(@PathVariable UUID userId) {
-        return playlistService.getLastPlaylist(userId);
-    }
 }

@@ -3,10 +3,14 @@ package com.zeroping.vibecheckbe.controller;
 import com.zeroping.vibecheckbe.dto.*;
 import com.zeroping.vibecheckbe.service.GeminiPlaylistService;
 import com.zeroping.vibecheckbe.service.PlaylistMetadataService;
+import com.zeroping.vibecheckbe.service.PlaylistService;
 import com.zeroping.vibecheckbe.service.SpotifyPlaylistService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /*
@@ -26,11 +30,14 @@ public class PlaylistController {
     private final GeminiPlaylistService geminiPlaylistService;
     private final SpotifyPlaylistService spotifyPlaylistService;
     private final PlaylistMetadataService playlistMetadataService;
+    private final PlaylistService playlistService;
 
-    public PlaylistController(GeminiPlaylistService service, SpotifyPlaylistService spotifyPlaylistService, PlaylistMetadataService playlistMetadataService) {
+    public PlaylistController(GeminiPlaylistService service, SpotifyPlaylistService spotifyPlaylistService,
+                              PlaylistMetadataService playlistMetadataService, PlaylistService playlistService) {
         this.geminiPlaylistService = service;
         this.spotifyPlaylistService = spotifyPlaylistService;
         this.playlistMetadataService = playlistMetadataService;
+        this.playlistService = playlistService;
     }
 
     @PostMapping("/generate")
@@ -62,6 +69,49 @@ public class PlaylistController {
                 playlist,
                 spotifyResponse.getSongs()
         );
+    }
+
+    // Get all distinct moods of authenticated user, sorted by createdAt ascending
+    @GetMapping("/moods")
+    public List<String> getUserMoods() {
+        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
+        UUID userId = UUID.fromString(userIdString);
+        return playlistService.getUserMoods(userId);
+    }
+
+    // Get total number of playlists of authenticated user
+    @GetMapping("/playlist-count")
+    public Map<String, Long> getUserPlaylistCount() {
+        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
+        UUID userId = UUID.fromString(userIdString);
+        long count = playlistService.getNumberOfPlaylists(userId);
+        return Map.of("playlistCount", count);
+    }
+
+    // Get all the user's playlists
+    @GetMapping("/playlists")
+    public List<PlaylistDTO> getUserPlaylists() {
+        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
+        UUID userId = UUID.fromString(userIdString);
+        return playlistService.getUserPlaylists(userId);
+    }
+
+    // Get the latest playlist for the user
+    @GetMapping("/last-playlist")
+    public PlaylistDTO getLastPlaylist() {
+        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
+        UUID userId = UUID.fromString(userIdString);
+        return playlistService.getLastPlaylist(userId);
+    }
+
+    // Get timestamp of the latest playlist generation
+    @GetMapping("/last-playlist-timestamp")
+    public Map<String, Instant> getLastGenerationTimestamp() {
+        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
+        UUID userId = UUID.fromString(userIdString);
+        Instant timestamp = playlistService.getLastPlaylistTimestamp(userId);
+
+        return Map.of("lastGeneration", timestamp);
     }
 }
 
