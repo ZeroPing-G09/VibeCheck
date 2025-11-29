@@ -9,15 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
-/*
-POST EXAMPLE FROM FE
-
-{
-  "mood": "happy",
-  "genres": ["pop", "indie", "electronic"]
-}
-
- */
 
 @RestController
 @RequestMapping("/playlist")
@@ -59,26 +50,3 @@ public class PlaylistController {
         );
     }
 }
-
-
-/*
-JSON RESPONSE FROM AI
-
-{
-  "playlist_name": "Happy Vibes",
-  "tracks": [
-    {
-      "title": "Sunroof",
-      "artist": "Nicky Youre",
-      "spotify_url": "https://open.spotify.com/track/..."
-    },
-    {
-      "title": "Electric Feel",
-      "artist": "MGMT",
-      "spotify_url": "https://open.spotify.com/track/..."
-    }
-  ]
-}
-
-
- */
