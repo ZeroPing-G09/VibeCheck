@@ -13,15 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/*
-POST EXAMPLE FROM FE
-
-{
-  "mood": "happy",
-  "genres": ["pop", "indie", "electronic"]
-}
-
- */
 
 @RestController
 @RequestMapping("/playlist")
@@ -41,7 +32,7 @@ public class PlaylistController {
     }
 
     @PostMapping("/generate")
-    public PlaylistResponse generate(@RequestBody PlaylistRequest req) throws Exception {
+    public PlaylistDTO generate(@RequestBody PlaylistRequest req) throws Exception {
 
         String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
         UUID authenticatedUserId = UUID.fromString(userIdString);
@@ -58,16 +49,11 @@ public class PlaylistController {
 
         PlaylistSpotifyResponse spotifyResponse = spotifyPlaylistService.searchAndSaveSongsFromPlaylist(playlistSpotifyRequest);
 
-        PlaylistDTO playlist = playlistMetadataService.savePlaylistMetadata(
+        return playlistMetadataService.savePlaylistMetadata(
                 spotifyResponse.getSongs(),
                 playlistAgentResponse.getPlaylist_name(),
                 req.getMood(),
                 authenticatedUserId
-        );
-
-        return new PlaylistResponse(
-                playlist,
-                spotifyResponse.getSongs()
         );
     }
 
@@ -114,26 +100,3 @@ public class PlaylistController {
         return Map.of("lastGeneration", timestamp);
     }
 }
-
-
-/*
-JSON RESPONSE FROM AI
-
-{
-  "playlist_name": "Happy Vibes",
-  "tracks": [
-    {
-      "title": "Sunroof",
-      "artist": "Nicky Youre",
-      "spotify_url": "https://open.spotify.com/track/..."
-    },
-    {
-      "title": "Electric Feel",
-      "artist": "MGMT",
-      "spotify_url": "https://open.spotify.com/track/..."
-    }
-  ]
-}
-
-
- */

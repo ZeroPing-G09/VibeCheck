@@ -1,5 +1,6 @@
 package com.zeroping.vibecheckbe.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,5 +27,6 @@ public class Song {
     private String artist_name;
 
     @ManyToMany(mappedBy = "songs")
+    @JsonIgnoreProperties("songs")
     private Set<Playlist> playlists;
 }
