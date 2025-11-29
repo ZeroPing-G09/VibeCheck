@@ -1,4 +1,4 @@
-package com.zeroping.vibecheckbe.entity;
+package com.zeroping.vibecheckbe.dto;
 
 import lombok.*;
 import java.util.List;

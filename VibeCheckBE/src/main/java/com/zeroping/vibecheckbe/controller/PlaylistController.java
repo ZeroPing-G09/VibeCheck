@@ -1,9 +1,10 @@
 package com.zeroping.vibecheckbe.controller;
 
-import com.zeroping.vibecheckbe.entity.PlaylistAgentResponse;
-import com.zeroping.vibecheckbe.entity.PlaylistRequest;
+import com.zeroping.vibecheckbe.dto.*;
 import com.zeroping.vibecheckbe.service.GeminiPlaylistService;
+import com.zeroping.vibecheckbe.service.SpotifyPlaylistService;
 import org.springframework.web.bind.annotation.*;
+
 /*
 POST EXAMPLE FROM FE
 
@@ -18,15 +19,26 @@ POST EXAMPLE FROM FE
 @RequestMapping("/api/playlist")
 public class PlaylistController {
 
-    private final GeminiPlaylistService playlistService;
+    private final GeminiPlaylistService geminiPlaylistService;
+    private final SpotifyPlaylistService spotifyPlaylistService;
 
-    public PlaylistController(GeminiPlaylistService service) {
-        this.playlistService = service;
+    public PlaylistController(GeminiPlaylistService service, SpotifyPlaylistService spotifyPlaylistService) {
+        this.geminiPlaylistService = service;
+        this.spotifyPlaylistService = spotifyPlaylistService;
     }
 
     @PostMapping("/generate")
-    public PlaylistAgentResponse generate(@RequestBody PlaylistRequest req) throws Exception {
-        return playlistService.generatePlaylist(req.getMood(), req.getGenres());
+    public PlaylistSpotifyResponse generate(@RequestBody PlaylistRequest req) throws Exception {
+        PlaylistAgentResponse playlistAgentResponse = geminiPlaylistService.generatePlaylist(req.getMood(), req.getGenres());
+
+        System.out.println("Gemini returned this playlist:" + playlistAgentResponse);
+
+        PlaylistSpotifyRequest playlistSpotifyRequest = new PlaylistSpotifyRequest(
+                playlistAgentResponse.getTracks().stream().map(
+                        track -> new TrackSpotifyRequest(track.getTitle(), track.getArtist())
+                ).toList()
+        );
+        return spotifyPlaylistService.searchAndSaveSongsFromPlaylist(playlistSpotifyRequest);
     }
 }
 

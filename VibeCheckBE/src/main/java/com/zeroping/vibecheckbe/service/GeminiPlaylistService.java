@@ -1,7 +1,8 @@
 package com.zeroping.vibecheckbe.service;
 
-import com.zeroping.vibecheckbe.entity.PlaylistAgentResponse;
-import com.zeroping.vibecheckbe.entity.TrackAgentResponse;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.zeroping.vibecheckbe.dto.PlaylistAgentResponse;
+import com.zeroping.vibecheckbe.dto.TrackAgentResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
@@ -75,12 +76,28 @@ public class GeminiPlaylistService {
             }
             String responseBody = response.body().string();
 
-            String aiText = mapper.readTree(responseBody)
-                    .get("candidates").get(0)
-                    .get("content").get("parts").get(0)
-                    .get("text").asText();
+            JsonNode rootNode = mapper.readTree(responseBody);
 
-            return validatePlaylist(aiText);
+            if (rootNode.has("error")) {
+                String msg = rootNode.get("error").get("message").asText();
+                throw new RuntimeException("Gemini API Error: " + msg);
+            }
+
+            if (rootNode.has("promptFeedback") && rootNode.get("promptFeedback").has("blockReason")) {
+                throw new RuntimeException("Blocked by Safety Filter");
+            }
+
+            if (rootNode.has("candidates")) {
+
+                String aiText = mapper.readTree(responseBody)
+                        .get("candidates").get(0)
+                        .get("content").get("parts").get(0)
+                        .get("text").asText();
+
+                return validatePlaylist(aiText);
+            } else {
+                throw new RuntimeException("Gemini did not return a candidate. Check logs for safety blocks or errors.");
+            }
         }
     }
 
