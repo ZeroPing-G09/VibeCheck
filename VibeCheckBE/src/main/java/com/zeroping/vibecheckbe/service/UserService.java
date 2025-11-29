@@ -1,6 +1,7 @@
 package com.zeroping.vibecheckbe.service;
 
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
+import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
 import com.zeroping.vibecheckbe.entity.User;
 import com.zeroping.vibecheckbe.entity.Genre;
 import com.zeroping.vibecheckbe.exception.genre.GenreNotFoundException;
@@ -49,25 +50,29 @@ public class UserService {
         return toUserResponse(user);
     }
 
-    public Map<String, Object> updateUser(Long id, Map<String, Object> payload) {
+    public Map<String, Object> updateUser(Long id, UserUpdateDTO payload) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
-        if (payload.containsKey("username")) {
-            user.setUsername((String) payload.get("username"));
-        }
-        if (payload.containsKey("profile_picture")) {
-            user.setProfilePicture((String) payload.get("profile_picture"));
+        if (payload.getUsername() != null) {
+            user.setUsername(payload.getUsername());
         }
 
-        if (payload.containsKey("genres")) {
-            List<String> genreNames = (List<String>) payload.get("genres");
-            updateUserGenres(user, genreNames);
+        if (payload.getProfilePicture() != null) {
+            user.setProfilePicture(payload.getProfilePicture());
         }
 
-        User saved = userRepository.save(user);
+        User saved;
+
+        if (payload.getPreferences() != null) {
+            saved = updateUserPreferences(payload.getPreferences());
+        } else {
+            saved = userRepository.save(user);
+        }
+
         return toUserResponse(saved);
     }
+
 
     private Map<String, Object> toUserResponse(User user) {
         List<String> genres = extractGenres(user);
@@ -78,24 +83,6 @@ public class UserService {
         response.put("profile_picture", user.getProfilePicture());
         response.put("genres", genres);
         return response;
-    }
-
-    private void updateUserGenres(User user, List<String> genreNames) {
-        user.setTop1Genre(null);
-        user.setTop2Genre(null);
-        user.setTop3Genre(null);
-
-       for (int genreIndex = 0; genreIndex < genreNames.size() && genreIndex < MAX_TOP_GENRES; genreIndex++) {
-            String name = genreNames.get(genreIndex);
-            Genre genre = genreRepository.findByNameIgnoreCase(name)
-                    .orElseThrow(() -> new GenreNotFoundForUserException(name));
-
-            switch (genreIndex) {
-                case 0 -> user.setTop1Genre(genre);
-                case 1 -> user.setTop2Genre(genre);
-                case 2 -> user.setTop3Genre(genre);
-            }
-        }
     }
 
     private List<String> extractGenres(User user) {
@@ -112,7 +99,7 @@ public class UserService {
                 .orElseThrow(() -> new GenreNotFoundException("Genre not found: " + genreId));
     }
 
-    public void updateUserPreferences(UserPreferencesDTO userPreferencesDTO) {
+    public User updateUserPreferences(UserPreferencesDTO userPreferencesDTO) {
         User user = userRepository.findById(userPreferencesDTO.getUserId())
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
@@ -124,6 +111,6 @@ public class UserService {
         user.setTop2Genre(top2Genre);
         user.setTop3Genre(top3Genre);
 
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 }
