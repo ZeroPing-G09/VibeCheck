@@ -1,6 +1,7 @@
 package com.zeroping.vibecheckbe.service;
 
 import com.zeroping.vibecheckbe.dto.PlaylistDTO;
+import com.zeroping.vibecheckbe.dto.SongDTO;
 import com.zeroping.vibecheckbe.entity.Playlist;
 import com.zeroping.vibecheckbe.entity.Song;
 import com.zeroping.vibecheckbe.repository.PlaylistRepository;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class PlaylistMetadataService {
@@ -50,7 +52,17 @@ public class PlaylistMetadataService {
                 playlistEntity.getName(),
                 playlistEntity.getMood(),
                 playlistEntity.getUserId(),
-                playlistEntity.getCreatedAt()
+                playlistEntity.getCreatedAt(),
+                songs.stream().map(this::mapToSongDTO).collect(Collectors.toSet())
+        );
+    }
+
+    public SongDTO mapToSongDTO(Song song) {
+        return new SongDTO(
+                song.getId(),
+                song.getName(),
+                song.getUrl(),
+                song.getArtist_name()
         );
     }
 }

@@ -34,7 +34,7 @@ public class PlaylistController {
     }
 
     @PostMapping("/generate")
-    public PlaylistResponse generate(@RequestBody PlaylistRequest req) throws Exception {
+    public PlaylistDTO generate(@RequestBody PlaylistRequest req) throws Exception {
 
         String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
         UUID authenticatedUserId = UUID.fromString(userIdString);
@@ -51,16 +51,11 @@ public class PlaylistController {
 
         PlaylistSpotifyResponse spotifyResponse = spotifyPlaylistService.searchAndSaveSongsFromPlaylist(playlistSpotifyRequest);
 
-        PlaylistDTO playlist = playlistMetadataService.savePlaylistMetadata(
+        return playlistMetadataService.savePlaylistMetadata(
                 spotifyResponse.getSongs(),
                 playlistAgentResponse.getPlaylist_name(),
                 req.getMood(),
                 authenticatedUserId
-        );
-
-        return new PlaylistResponse(
-                playlist,
-                spotifyResponse.getSongs()
         );
     }
 }
