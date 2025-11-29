@@ -33,7 +33,6 @@ public class PlaylistController {
 
     @PostMapping("/generate")
     public PlaylistDTO generate(@RequestBody PlaylistRequest req) throws Exception {
-
         String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
         UUID authenticatedUserId = UUID.fromString(userIdString);
 
