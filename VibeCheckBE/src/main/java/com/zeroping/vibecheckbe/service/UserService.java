@@ -9,7 +9,10 @@ import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
 import com.zeroping.vibecheckbe.repository.UserRepository;
 import com.zeroping.vibecheckbe.repository.GenreRepository;
 import org.springframework.stereotype.Service;
+
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -23,41 +26,29 @@ public class UserService {
         this.genreRepository = genreRepository;
     }
 
-    public Map<String, Object> getUserById(Long id) {
+    public Map<String, Object> getUserById(UUID id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+                .orElseThrow(() -> new UserNotFoundException(id.toString()));
 
         return toUserResponse(user);
     }
 
     public Map<String, Object> getUserByEmail(String email) {
-        Optional<User> userOpt = userRepository.findByEmail(email);
-        User user;
-
-        if (userOpt.isPresent()) {
-            user = userOpt.get();
-        } else {
-            // Create new user if doesn't exist (for OAuth users)
-            user = new User();
-            user.setEmail(email);
-            user.setUsername(email.contains("@") ? email.substring(0, email.indexOf("@")) : email); // Use email prefix as default username
-            user.setPassword(""); // OAuth users don't have passwords
-            user.setProfilePicture("");
-            user = userRepository.save(user);
-        }
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found for email: " + email));
 
         return toUserResponse(user);
     }
 
-    public Map<String, Object> updateUser(Long id, Map<String, Object> payload) {
+    public Map<String, Object> updateUser(UUID id, Map<String, Object> payload) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+                .orElseThrow(() -> new UserNotFoundException(id.toString()));
 
-        if (payload.containsKey("username")) {
-            user.setUsername((String) payload.get("username"));
+        if (payload.containsKey("display_name")) {
+            user.setDisplay_name((String) payload.get("display_name"));
         }
-        if (payload.containsKey("profile_picture")) {
-            user.setProfilePicture((String) payload.get("profile_picture"));
+        if (payload.containsKey("email")) {
+            user.setEmail((String) payload.get("email"));
         }
 
         if (payload.containsKey("genres")) {
@@ -74,56 +65,57 @@ public class UserService {
         Map<String, Object> response = new HashMap<>();
         response.put("id", user.getId());
         response.put("email", user.getEmail());
-        response.put("username", user.getUsername());
-        response.put("profile_picture", user.getProfilePicture());
+        response.put("display_name", user.getDisplay_name());
+        response.put("avatar_url", user.getAvatarUrl());
         response.put("genres", genres);
         return response;
     }
 
     private void updateUserGenres(User user, List<String> genreNames) {
-        user.setTop1Genre(null);
-        user.setTop2Genre(null);
-        user.setTop3Genre(null);
-
-       for (int genreIndex = 0; genreIndex < genreNames.size() && genreIndex < MAX_TOP_GENRES; genreIndex++) {
+        Set<Genre> genres = new LinkedHashSet<>();
+        for (int genreIndex = 0; genreIndex < genreNames.size() && genreIndex < MAX_TOP_GENRES; genreIndex++) {
             String name = genreNames.get(genreIndex);
             Genre genre = genreRepository.findByNameIgnoreCase(name)
                     .orElseThrow(() -> new GenreNotFoundForUserException(name));
-
-            switch (genreIndex) {
-                case 0 -> user.setTop1Genre(genre);
-                case 1 -> user.setTop2Genre(genre);
-                case 2 -> user.setTop3Genre(genre);
-            }
+            genres.add(genre);
         }
+        user.setGenres(genres);
     }
 
     private List<String> extractGenres(User user) {
-        List<String> genres = new ArrayList<>();
-        if (user.getTop1Genre() != null) genres.add(user.getTop1Genre().getName());
-        if (user.getTop2Genre() != null) genres.add(user.getTop2Genre().getName());
-        if (user.getTop3Genre() != null) genres.add(user.getTop3Genre().getName());
-        return genres;
+        if (user.getGenres() == null || user.getGenres().isEmpty()) {
+            return Collections.emptyList();
+        }
+        return user.getGenres().stream()
+                .limit(MAX_TOP_GENRES)
+                .map(Genre::getName)
+                .collect(Collectors.toList());
     }
 
     private Genre resolveGenreOrNull(Long genreId) {
-        if (genreId == null) return null; // allow null genre
+        if (genreId == null) return null;
         return genreRepository.findById(genreId)
                 .orElseThrow(() -> new GenreNotFoundException("Genre not found: " + genreId));
     }
 
     public void updateUserPreferences(UserPreferencesDTO userPreferencesDTO) {
-        User user = userRepository.findById(userPreferencesDTO.getUserId())
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        UUID userId = userPreferencesDTO.getUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
 
-        var top1Genre = resolveGenreOrNull(userPreferencesDTO.getTop1GenreId());
-        var top2Genre = resolveGenreOrNull(userPreferencesDTO.getTop2GenreId());
-        var top3Genre = resolveGenreOrNull(userPreferencesDTO.getTop3GenreId());
+        Genre top1 = resolveGenreOrNull(userPreferencesDTO.getTop1GenreId());
+        Genre top2 = resolveGenreOrNull(userPreferencesDTO.getTop2GenreId());
+        Genre top3 = resolveGenreOrNull(userPreferencesDTO.getTop3GenreId());
 
-        user.setTop1Genre(top1Genre);
-        user.setTop2Genre(top2Genre);
-        user.setTop3Genre(top3Genre);
+        Set<Genre> genres = new LinkedHashSet<>();
+        if (top1 != null) genres.add(top1);
+        if (top2 != null) genres.add(top2);
+        if (top3 != null) genres.add(top3);
 
+        // Ensure limit
+        Set<Genre> limited = genres.stream().limit(MAX_TOP_GENRES).collect(Collectors.toCollection(LinkedHashSet::new));
+
+        user.setGenres(limited);
         userRepository.save(user);
     }
 }

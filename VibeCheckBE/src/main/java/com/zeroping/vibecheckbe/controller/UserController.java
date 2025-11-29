@@ -1,9 +1,7 @@
 package com.zeroping.vibecheckbe.controller;
 
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
-import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
 import com.zeroping.vibecheckbe.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
@@ -23,7 +22,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getUser(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getUser(@PathVariable UUID id) {
         Map<String, Object> response = userService.getUserById(id);
         return ResponseEntity.ok(response);
     }
@@ -35,7 +34,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> updateUser(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
+    public ResponseEntity<Map<String, Object>> updateUser(@PathVariable UUID id, @RequestBody Map<String, Object> payload) {
         Map<String, Object> response = userService.updateUser(id, payload);
         return ResponseEntity.ok(response);
     }
