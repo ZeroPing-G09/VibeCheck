@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/data/models/user.dart';
+import 'package:frontend/data/repositories/genre_repository.dart';
 import 'package:frontend/data/repositories/user_repository.dart';
-import '../../../data/repositories/genre_repository.dart';
-
 
 class ProfileViewModel extends ChangeNotifier {
   final UserRepository _userRepository = UserRepository();
@@ -50,7 +49,7 @@ class ProfileViewModel extends ChangeNotifier {
       rethrow;
     }
   }
-  
+
   void clear() {
     user = null;
     isLoading = false;

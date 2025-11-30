@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:frontend/data/services/api_service.dart';
 import 'package:frontend/di/locator.dart';
-import 'ui/dashboard/viewmodel/dashboard_view_model.dart';
-import 'ui/profile/viewmodel/profile_view_model.dart';
-import 'ui/settings/viewmodel/theme_view_model.dart';
-import 'ui/app.dart';
+import 'package:frontend/ui/app.dart';
+import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
+import 'package:frontend/ui/profile/viewmodel/profile_view_model.dart';
+import 'package:frontend/ui/settings/viewmodel/theme_view_model.dart';
+import 'package:provider/provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

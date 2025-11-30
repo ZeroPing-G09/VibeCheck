@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:frontend/data/models/user.dart';
 import 'package:frontend/data/repositories/auth_repository.dart';
 import 'package:frontend/di/locator.dart';
-import '../viewmodel/profile_view_model.dart';
-import '../../dashboard/viewmodel/dashboard_view_model.dart';
-import '../widgets/profile_sidebar.dart';
-import '../widgets/profile_picture_section.dart';
-import '../widgets/genres_section.dart';
-import '../widgets/save_button.dart';
-import '../widgets/custom_text_field.dart';
+import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
+import 'package:frontend/ui/profile/viewmodel/profile_view_model.dart';
+import 'package:frontend/ui/profile/widgets/custom_text_field.dart';
+import 'package:frontend/ui/profile/widgets/genres_section.dart';
+import 'package:frontend/ui/profile/widgets/profile_picture_section.dart';
+import 'package:frontend/ui/profile/widgets/profile_sidebar.dart';
+import 'package:frontend/ui/profile/widgets/save_button.dart';
+import 'package:provider/provider.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -35,19 +35,22 @@ class _ProfileViewState extends State<ProfileView> {
     final vm = context.read<ProfileViewModel>();
     final email = locator<AuthRepository>().currentUser?.email;
     if (email != null) {
-      vm.loadUserByEmail(email).then((_) {
-        if (mounted) {
-          final user = vm.user;
-          if (user != null) {
-            _usernameController.text = user.username;
-            _profilePicController.text = user.profilePicture;
-            setState(() {});
-          }
-        }
-      }).catchError((error) {
-        debugPrint('Error loading user in ProfileView: $error');
-        if (mounted) setState(() {});
-      });
+      vm
+          .loadUserByEmail(email)
+          .then((_) {
+            if (mounted) {
+              final user = vm.user;
+              if (user != null) {
+                _usernameController.text = user.displayName;
+                _profilePicController.text = user.avatarUrl;
+                setState(() {});
+              }
+            }
+          })
+          .catchError((error) {
+            debugPrint('Error loading user in ProfileView: $error');
+            if (mounted) setState(() {});
+          });
     }
     vm.loadAvailableGenres();
   }
@@ -118,7 +121,10 @@ class _ProfileViewState extends State<ProfileView> {
           body: SafeArea(
             child: isMobile
                 ? SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 24,
+                    ),
                     child: _ProfileDetails(
                       usernameController: _usernameController,
                       profilePicController: _profilePicController,
@@ -131,13 +137,12 @@ class _ProfileViewState extends State<ProfileView> {
                     children: [
                       SizedBox(
                         width: 260,
-                        child: ProfileSidebar(
-                          onClose: () {},
-                        ),
+                        child: ProfileSidebar(onClose: () {}),
                       ),
                       Builder(
                         builder: (context) {
-                          final isDark = Theme.of(context).brightness == Brightness.dark;
+                          final isDark =
+                              Theme.of(context).brightness == Brightness.dark;
                           return VerticalDivider(
                             width: 1,
                             color: isDark ? Colors.grey[700] : Colors.grey[300],
@@ -188,26 +193,21 @@ class _ProfileDetails extends StatelessWidget {
           style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 32),
-        ProfilePictureSection(
-          controller: profilePicController,
-        ),
+        ProfilePictureSection(controller: profilePicController),
         const SizedBox(height: 40),
-        CustomTextField(
-          label: "Username",
-          controller: usernameController,
-        ),
+        CustomTextField(label: "Username", controller: usernameController),
         const SizedBox(height: 32),
         GenresSection(user: user),
         const SizedBox(height: 40),
         SaveButton(
           onSave: () async {
             final updated = user.copyWith(
-              username: usernameController.text,
-              profilePicture: profilePicController.text,
+              displayName: usernameController.text,
+              avatarUrl: profilePicController.text,
               genres: user.genres,
             );
             await vm.updateUser(updated);
-            
+
             // Reload dashboard user to reflect changes
             final email = locator<AuthRepository>().currentUser?.email;
             if (email != null && context.mounted) {
@@ -218,7 +218,7 @@ class _ProfileDetails extends StatelessWidget {
                 debugPrint('Error reloading dashboard: $e');
               }
             }
-            
+
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -228,7 +228,7 @@ class _ProfileDetails extends StatelessWidget {
               );
             }
           },
-        )
+        ),
       ],
     );
   }

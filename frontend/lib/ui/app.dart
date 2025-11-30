@@ -1,13 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
-import 'package:frontend/data/repositories/auth_repository.dart';
 import 'package:frontend/core/routing/app_router.dart';
+import 'package:frontend/data/repositories/auth_repository.dart';
 import 'package:frontend/di/locator.dart';
 import 'package:frontend/ui/settings/viewmodel/theme_view_model.dart';
+import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class VibeCheckApp extends StatefulWidget {
   const VibeCheckApp({super.key});
@@ -42,8 +41,9 @@ class _VibeCheckAppState extends State<VibeCheckApp> {
     final navigator = AppRouter.navigatorKey.currentState;
     if (navigator == null) return;
 
-    final targetRoute =
-        session == null ? AppRouter.loginRoute : AppRouter.dashboardRoute;
+    final targetRoute = session == null
+        ? AppRouter.loginRoute
+        : AppRouter.dashboardRoute;
     if (_currentRoute == targetRoute) {
       return;
     }
@@ -66,7 +66,9 @@ class _VibeCheckAppState extends State<VibeCheckApp> {
           title: 'VibeCheck',
           theme: ThemeData.light(),
           darkTheme: ThemeData.dark(),
-          themeMode: themeViewModel.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          themeMode: themeViewModel.isDarkMode
+              ? ThemeMode.dark
+              : ThemeMode.light,
           navigatorKey: AppRouter.navigatorKey,
           initialRoute: AppRouter.initialRoute,
           onGenerateRoute: AppRouter.generateRoute,

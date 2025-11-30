@@ -1,11 +1,9 @@
 package com.zeroping.vibecheckbe.controller;
 
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
-import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
-import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
 import com.zeroping.vibecheckbe.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,18 +11,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
     private final UserService userService;
+
     public UserController(UserService userService) {
         this.userService = userService;
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getUser(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getUser(@PathVariable UUID id) {
         Map<String, Object> response = userService.getUserById(id);
         return ResponseEntity.ok(response);
     }
@@ -35,24 +35,13 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(
-            @PathVariable Long id,
-            @RequestBody UserUpdateDTO payload) {
-
-        return ResponseEntity.ok(userService.updateUser(id, payload));
-    }
-
     @PostMapping("/preferences")
     public ResponseEntity<Map<String, Object>> savePreferences(@RequestBody UserPreferencesDTO preferences) {
-        // Check if user id is present
-        if (preferences.getUserId() == null) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "User ID is required."));
-        }
+        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
+        UUID userId = UUID.fromString(userIdString);
 
         try {
-            userService.updateUserPreferences(preferences);
+            userService.updateUserPreferences(userId, preferences);
             return ResponseEntity.ok()
                     .body(Map.of("success", true, "message", "Preferences updated successfully."));
         } catch (Exception e) {

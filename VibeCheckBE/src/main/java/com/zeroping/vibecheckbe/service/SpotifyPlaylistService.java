@@ -57,7 +57,7 @@ public class SpotifyPlaylistService {
                     // new song, create and add it to db
                     songEntity = new Song();
 
-                    songEntity.setArtist_name(spotifyTrack.getArtists()[0].getName());
+                    songEntity.setArtistName(spotifyTrack.getArtists()[0].getName());
                     songEntity.setName(spotifyTrack.getName());
                     songEntity.setUrl(spotifyTrack.getExternalUrls().get("spotify"));
 

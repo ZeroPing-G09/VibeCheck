@@ -1,56 +1,65 @@
 class User {
-  final int id;
-  final String username;
+  final String id;
+  final String displayName;
   final String email;
-  final String profilePicture;
+  final String avatarUrl;
+  final String? lastLogIn;
   final List<String> genres;
 
   User({
     required this.id,
-    required this.username,
+    required this.displayName,
     required this.email,
-    required this.profilePicture,
+    required this.avatarUrl,
+    this.lastLogIn,
     required this.genres,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'] as int? ?? 0,
-      username: json['username'] as String? ?? '',
+      id: json['id'] as String? ?? '',
+      displayName: json['display_name'] as String? ?? '',
       email: json['email'] as String? ?? '',
-      profilePicture: json['profile_picture'] as String? ?? '',
-      genres: (json['genres'] as List<dynamic>?)?.map((g) => g.toString()).toList() ?? [],
+      avatarUrl: json['avatar_url'] as String? ?? '',
+      lastLogIn: json['last_log_in'] as String?, // Nullable
+      // Assumes 'genres' is returned as a list of strings (names or IDs)
+      genres:
+          (json['genres'] as List<dynamic>?)
+              ?.map((g) => g.toString())
+              .toList() ??
+          [],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'username': username,
+      'display_name': displayName,
       'email': email,
-      'profile_picture': profilePicture,
+      'avatar_url': avatarUrl,
       'genres': genres,
     };
   }
 
   Map<String, dynamic> toUpdateJson() => {
-    'username': username,
-    'profile_picture': profilePicture,
+    'display_name': displayName,
+    'avatar_url': avatarUrl,
     'genres': genres,
   };
 
   User copyWith({
-    int? id,
-    String? username,
+    String? id,
+    String? displayName,
     String? email,
-    String? profilePicture,
+    String? avatarUrl,
+    String? lastLogIn,
     List<String>? genres,
   }) {
     return User(
       id: id ?? this.id,
-      username: username ?? this.username,
+      displayName: displayName ?? this.displayName,
       email: email ?? this.email,
-      profilePicture: profilePicture ?? this.profilePicture,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      lastLogIn: lastLogIn ?? this.lastLogIn,
       genres: genres ?? this.genres,
     );
   }
