@@ -11,5 +11,5 @@ public class SongDTO {
     private Long id;
     private String name;
     private String url;
-    private String artist_name;
+    private String artistName;
 }

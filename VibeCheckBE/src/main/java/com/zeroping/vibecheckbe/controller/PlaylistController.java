@@ -9,6 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -33,8 +34,7 @@ public class PlaylistController {
 
     @PostMapping("/generate")
     public PlaylistDTO generate(@RequestBody PlaylistRequest req) throws Exception {
-        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
-        UUID authenticatedUserId = UUID.fromString(userIdString);
+        UUID authenticatedUserId = getAuthenticatedUserId();
 
         PlaylistAgentResponse playlistAgentResponse = geminiPlaylistService.generatePlaylist(req.getMood(), req.getGenres());
 
@@ -59,16 +59,14 @@ public class PlaylistController {
     // Get all distinct moods of authenticated user, sorted by createdAt ascending
     @GetMapping("/moods")
     public List<String> getUserMoods() {
-        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
-        UUID userId = UUID.fromString(userIdString);
+        UUID userId = getAuthenticatedUserId();
         return playlistService.getUserMoods(userId);
     }
 
     // Get total number of playlists of authenticated user
     @GetMapping("/playlist-count")
     public Map<String, Long> getUserPlaylistCount() {
-        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
-        UUID userId = UUID.fromString(userIdString);
+        UUID userId = getAuthenticatedUserId();
         long count = playlistService.getNumberOfPlaylists(userId);
         return Map.of("playlistCount", count);
     }
@@ -76,26 +74,28 @@ public class PlaylistController {
     // Get all the user's playlists
     @GetMapping("/playlists")
     public List<PlaylistDTO> getUserPlaylists() {
-        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
-        UUID userId = UUID.fromString(userIdString);
+        UUID userId = getAuthenticatedUserId();
         return playlistService.getUserPlaylists(userId);
     }
 
     // Get the latest playlist for the user
     @GetMapping("/last-playlist")
     public PlaylistDTO getLastPlaylist() {
-        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
-        UUID userId = UUID.fromString(userIdString);
+        UUID userId = getAuthenticatedUserId();
         return playlistService.getLastPlaylist(userId);
     }
 
     // Get timestamp of the latest playlist generation
     @GetMapping("/last-playlist-timestamp")
     public Map<String, Instant> getLastGenerationTimestamp() {
-        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
-        UUID userId = UUID.fromString(userIdString);
+        UUID userId = getAuthenticatedUserId();
         Instant timestamp = playlistService.getLastPlaylistTimestamp(userId);
 
-        return Map.of("lastGeneration", timestamp);
+        return Collections.singletonMap("lastGeneration", timestamp);
+    }
+
+    private UUID getAuthenticatedUserId() {
+        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
+        return UUID.fromString(userIdString);
     }
 }

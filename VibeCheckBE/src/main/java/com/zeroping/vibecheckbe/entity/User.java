@@ -20,7 +20,8 @@ public class User {
     @Id
     private UUID id;
 
-    private String display_name;
+    @Column(name = "display_name")
+    private String displayName;
     private String email;
 
     @Column(name = "last_log_in")

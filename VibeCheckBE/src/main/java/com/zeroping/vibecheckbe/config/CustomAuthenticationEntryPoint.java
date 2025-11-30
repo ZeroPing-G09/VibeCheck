@@ -23,7 +23,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
                         "title": "Unauthorized",
                         "status": 401,
                         "detail": "Access to this resource requires authentication.",
-                        "instance": "%s",
+                        "instance": "%s"
                     }
                 """.formatted(request.getRequestURI());
         response.getWriter().write(problemDetail);

@@ -23,8 +23,8 @@ public class Song {
     @Column(nullable = false)
     private String url;
 
-    @Column(nullable = false)
-    private String artist_name;
+    @Column(name = "artist_name", nullable = false)
+    private String artistName;
 
     @ManyToMany(mappedBy = "songs")
     @JsonIgnoreProperties("songs")

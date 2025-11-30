@@ -34,14 +34,18 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter, AuthenticationEntryPoint customAuthenticationEntryPoint, AccessDeniedHandler customAccessDeniedHandler
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            AuthenticationEntryPoint customAuthenticationEntryPoint,
+            AccessDeniedHandler customAccessDeniedHandler
         ) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)// disable CSRF for API testing
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(customAuthenticationEntryPoint).accessDeniedHandler(customAccessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("users/by-email").permitAll() // allow unauthenticated access to this endpoint
-                        .anyRequest().authenticated() // allow all requests
+                        .requestMatchers("/users/by-email").permitAll() // allow unauthenticated access to this endpoint
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

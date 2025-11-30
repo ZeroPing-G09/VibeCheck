@@ -62,7 +62,7 @@ public class PlaylistMetadataService {
                 song.getId(),
                 song.getName(),
                 song.getUrl(),
-                song.getArtist_name()
+                song.getArtistName()
         );
     }
 }

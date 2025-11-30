@@ -1,7 +1,6 @@
 package com.zeroping.vibecheckbe.service;
 
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
-import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
 import com.zeroping.vibecheckbe.entity.User;
 import com.zeroping.vibecheckbe.entity.Genre;
 import com.zeroping.vibecheckbe.exception.genre.GenreNotFoundException;
@@ -13,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Service
 public class UserService {
@@ -43,8 +43,8 @@ public class UserService {
         Map<String, Object> response = new HashMap<>();
         response.put("id", user.getId());
         response.put("email", user.getEmail());
-        response.put("username", user.getDisplay_name());
-        response.put("profile_picture", user.getAvatarUrl());
+        response.put("display_name", user.getDisplayName());
+        response.put("avatar_url", user.getAvatarUrl());
         response.put("genres", extractGenres(user));
         return response;
     }
@@ -72,11 +72,14 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
 
         // Collect the three genre IDs
-        List<Long> genreIds = List.of(
-                dto.getTop1GenreId(),
-                dto.getTop2GenreId(),
-                dto.getTop3GenreId()
-        );
+        // Do this using streams or array as list
+        List<Long> genreIds = Stream.of(
+                        dto.getTop1GenreId(),
+                        dto.getTop2GenreId(),
+                        dto.getTop3GenreId()
+                )
+                .filter(Objects::nonNull)
+                .toList();
 
         // Convert them to Genre entities, skip nulls, max 3
         Set<Genre> newGenres = genreIds.stream()

@@ -30,7 +30,6 @@ public class JwtUtils {
                     .parseClaimsJws(token);
             return true;
         } catch (Exception e) {
-            System.err.println("JWT validation failed for token: " + token);
             throw new InvalidTokenException("Invalid JWT token");
         }
     }
@@ -45,7 +44,6 @@ public class JwtUtils {
             String userIdString = claims.getSubject();
             return UUID.fromString(userIdString);
         } catch (Exception e) {
-            System.err.println("Failed to extract user ID from token: " + token);
             throw new InvalidTokenException("Invalid JWT token");
         }
     }
