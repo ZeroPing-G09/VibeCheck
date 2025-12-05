@@ -1,7 +1,10 @@
 package com.zeroping.vibecheckbe.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.Set;
 
 @Entity
 @Table(name = "\"Songs\"", schema = "public")
@@ -20,6 +23,10 @@ public class Song {
     @Column(nullable = false)
     private String url;
 
-    @Column(nullable = false)
-    private String artist_name;
+    @Column(name = "artist_name", nullable = false)
+    private String artistName;
+
+    @ManyToMany(mappedBy = "songs")
+    @JsonIgnoreProperties("songs")
+    private Set<Playlist> playlists;
 }

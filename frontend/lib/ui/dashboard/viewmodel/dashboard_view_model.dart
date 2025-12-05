@@ -16,7 +16,6 @@ class DashboardViewModel extends ChangeNotifier {
   Future<void> loadUserByEmail(String email) async {
     _isLoading = true;
     _error = null;
-    notifyListeners();
 
     try {
       _user = await _userRepository.getUserByEmail(email);

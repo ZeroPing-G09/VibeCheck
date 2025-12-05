@@ -2,7 +2,11 @@ package com.zeroping.vibecheckbe.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
+
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "\"Users\"", schema = "public")
@@ -10,41 +14,28 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "display_name")
+    private String displayName;
     private String email;
 
-    @Column(nullable = false)
-    private String username;
+    @Column(name = "last_log_in")
+    private Instant lastLogIn;
 
-    @Column(nullable = false)
-    private String password;
+    @Column(name = "avatar_url")
+    private String avatarUrl;
 
-    @Column(name = "profile_picture")
-    private String profilePicture;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "top1_genre_id", referencedColumnName = "id")
-    private Genre top1Genre;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "top2_genre_id", referencedColumnName = "id")
-    private Genre top2Genre;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "top3_genre_id", referencedColumnName = "id")
-    private Genre top3Genre;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
+    // Mapping the Join Table
+    @ManyToMany
+    @JoinTable(
+            name = "user_genres", // The name of the join table in Supabase
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "genre_id")
+    )
+    private Set<Genre> genres = new HashSet<>();
 }

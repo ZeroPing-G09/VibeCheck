@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class UserUpdateDTO {
-    private String username;
+    private String display_name;
     private String profilePicture;
     private UserPreferencesDTO preferences;
 }

@@ -1,8 +1,8 @@
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
-import '../models/user.dart';
-import '../services/user_service.dart';
+import 'package:frontend/data/models/user.dart';
+import 'package:frontend/data/services/user_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserRepository {
   final UserService _service = UserService();
@@ -34,9 +34,8 @@ class UserRepository {
     final prefs = await SharedPreferences.getInstance();
     final stored = prefs.getString('genres');
     if (stored != null) {
-      return List<String>.from(jsonDecode(stored));
+      return List<String>.from(jsonDecode(stored) as Iterable<dynamic>);
     }
     return [];
   }
-
 }
