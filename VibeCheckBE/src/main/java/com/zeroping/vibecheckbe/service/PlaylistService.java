@@ -53,6 +53,7 @@ public class PlaylistService {
         dto.setName(playlist.getName());
         dto.setMood(playlist.getMood());
         dto.setCreatedAt(playlist.getCreatedAt());
+        dto.setSpotifyPlaylistId(playlist.getSpotifyPlaylistId());
         return dto;
     }
 }

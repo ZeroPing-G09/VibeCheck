@@ -3,6 +3,7 @@ import 'package:frontend/core/routing/app_router.dart';
 import 'package:frontend/data/repositories/auth_repository.dart';
 import 'package:frontend/di/locator.dart';
 import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
+import 'package:frontend/ui/dashboard/widgets/last_playlist_section.dart';
 import 'package:frontend/ui/dashboard/widgets/user_chip.dart';
 import 'package:frontend/ui/home/view/home_view.dart';
 import 'package:provider/provider.dart';
@@ -24,6 +25,8 @@ class _DashboardViewState extends State<DashboardView> {
     if (email != null) {
       context.read<DashboardViewModel>().loadUserByEmail(email);
     }
+    // Load the last playlist for the authenticated user
+    context.read<DashboardViewModel>().loadLastPlaylist();
   }
 
   @override
@@ -109,9 +112,10 @@ class _DashboardViewState extends State<DashboardView> {
           : viewModel.error != null
           ? Center(child: Text('Error: ${viewModel.error}'))
           : viewModel.user != null
-          ? Center(
+          ? SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     // 3. UPDATED: Use viewModel.user!.displayName
@@ -134,6 +138,16 @@ class _DashboardViewState extends State<DashboardView> {
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text('Last login: ${viewModel.user!.lastLogIn}'),
                     ),
+                  const SizedBox(height: 24),
+                  // Last Playlist Section
+                  LastPlaylistSection(
+                    playlistState: viewModel.playlistState,
+                    playlist: viewModel.lastPlaylist,
+                    errorMessage: viewModel.playlistError,
+                    onCreatePlaylist: () {
+                      // TODO: Navigate to playlist creation screen
+                    },
+                  ),
                 ],
               ),
             )
