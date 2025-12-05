@@ -16,5 +16,6 @@ public class PlaylistDTO {
     private String mood;
     private UUID userId;
     private Instant createdAt;
+    private String spotifyPlaylistId;
     private Set<SongDTO> songs;
 }

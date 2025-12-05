@@ -1,10 +1,13 @@
 package com.zeroping.vibecheckbe.service;
 
+import com.zeroping.vibecheckbe.dto.LastPlaylistResponseDTO;
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
+import com.zeroping.vibecheckbe.entity.Playlist;
 import com.zeroping.vibecheckbe.entity.User;
 import com.zeroping.vibecheckbe.entity.Genre;
 import com.zeroping.vibecheckbe.exception.genre.GenreNotFoundException;
 import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
+import com.zeroping.vibecheckbe.repository.PlaylistRepository;
 import com.zeroping.vibecheckbe.repository.UserRepository;
 import com.zeroping.vibecheckbe.repository.GenreRepository;
 import org.springframework.stereotype.Service;
@@ -19,10 +22,13 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final GenreRepository genreRepository;
+    private final PlaylistRepository playlistRepository;
 
-    public UserService(UserRepository userRepository, GenreRepository genreRepository) {
+    public UserService(UserRepository userRepository, GenreRepository genreRepository, 
+                       PlaylistRepository playlistRepository) {
         this.userRepository = userRepository;
         this.genreRepository = genreRepository;
+        this.playlistRepository = playlistRepository;
     }
 
     public Map<String, Object> getUserById(UUID id) {
@@ -93,5 +99,24 @@ public class UserService {
         user.setGenres(newGenres);
 
         return userRepository.save(user);
+    }
+
+    /**
+     * Get the most recent playlist for a user.
+     * 
+     * @param userId The user's UUID
+     * @return LastPlaylistResponseDTO with playlist info, or empty Optional if no playlist exists
+     */
+    public Optional<LastPlaylistResponseDTO> getLastPlaylist(UUID userId) {
+        return playlistRepository.findFirstByUserIdOrderByCreatedAtDesc(userId)
+                .map(this::toLastPlaylistResponse);
+    }
+
+    private LastPlaylistResponseDTO toLastPlaylistResponse(Playlist playlist) {
+        return new LastPlaylistResponseDTO(
+                playlist.getSpotifyPlaylistId(),
+                playlist.getName(),
+                playlist.getCreatedAt()
+        );
     }
 }

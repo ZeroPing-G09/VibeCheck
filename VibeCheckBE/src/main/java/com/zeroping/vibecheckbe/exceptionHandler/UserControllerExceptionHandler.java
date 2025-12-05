@@ -1,6 +1,7 @@
 package com.zeroping.vibecheckbe.exceptionHandler;
 
 import com.zeroping.vibecheckbe.controller.UserController;
+import com.zeroping.vibecheckbe.exception.playlist.PlaylistNotFoundException;
 import com.zeroping.vibecheckbe.exception.user.GenreNotFoundForUserException;
 import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
 import org.slf4j.Logger;
@@ -17,6 +18,11 @@ public class UserControllerExceptionHandler {
 
     @ExceptionHandler(UserNotFoundException.class)
     public ProblemDetail handleUserNotFoundException(UserNotFoundException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    @ExceptionHandler(PlaylistNotFoundException.class)
+    public ProblemDetail handlePlaylistNotFoundException(PlaylistNotFoundException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
@@ -39,4 +45,3 @@ public class UserControllerExceptionHandler {
         );
     }
 }
-
