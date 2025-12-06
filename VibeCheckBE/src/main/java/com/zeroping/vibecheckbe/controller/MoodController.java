@@ -48,8 +48,27 @@ public class MoodController {
             @RequestBody Map<String, Object> payload) {
         UUID userId = UUID.fromString(payload.get("userId").toString());
         Long moodId = Long.valueOf(payload.get("moodId").toString());
-        Map<String, Object> response = moodService.createMoodEntry(userId, moodId);
+        Integer intensity = payload.containsKey("intensity") && payload.get("intensity") != null
+                ? Integer.valueOf(payload.get("intensity").toString())
+                : 50;
+        String notes = payload.containsKey("notes") && payload.get("notes") != null
+                ? payload.get("notes").toString()
+                : null;
+        Map<String, Object> response = moodService.createMoodEntry(userId, moodId, intensity, notes);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/entries/batch")
+    public ResponseEntity<List<Map<String, Object>>> createMultipleMoodEntries(
+            @RequestBody Map<String, Object> payload) {
+        UUID userId = UUID.fromString(payload.get("userId").toString());
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> moodEntries = (List<Map<String, Object>>) payload.get("moodEntries");
+        String generalNotes = payload.containsKey("notes") && payload.get("notes") != null
+                ? payload.get("notes").toString()
+                : null;
+        List<Map<String, Object>> responses = moodService.createMultipleMoodEntries(userId, moodEntries, generalNotes);
+        return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/entries/user/{userId}")

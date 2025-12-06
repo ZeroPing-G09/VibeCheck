@@ -43,8 +43,30 @@ class MoodRepository {
     return [];
   }
 
-  Future<MoodEntry> createMoodEntry(String userId, int moodId) async {
-    return await _service.createMoodEntry(userId, moodId);
+  Future<MoodEntry> createMoodEntry(
+    String userId,
+    int moodId, {
+    int intensity = 50,
+    String? notes,
+  }) async {
+    return await _service.createMoodEntry(
+      userId,
+      moodId,
+      intensity: intensity,
+      notes: notes,
+    );
+  }
+
+  Future<List<MoodEntry>> createMultipleMoodEntries(
+    String userId,
+    List<Map<String, dynamic>> moodEntries,
+    String? generalNotes,
+  ) async {
+    return await _service.createMultipleMoodEntries(
+      userId,
+      moodEntries,
+      generalNotes,
+    );
   }
 
   Future<List<MoodEntry>> getUserMoodEntries(String userId) async {

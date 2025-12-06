@@ -41,9 +41,12 @@ class Mood {
 class MoodEntry {
   final int id; 
   final String userId; 
+  final int moodId;
   final String moodName;
   final String moodEmoji;
   final String createdAt;
+  final int? intensity; // 0-100, percentage
+  final String? notes; // Additional user notes
 
   MoodEntry({
     required this.id,
@@ -52,6 +55,8 @@ class MoodEntry {
     required this.moodName,
     required this.moodEmoji,
     required this.createdAt,
+    this.intensity,
+    this.notes,
   });
 
   factory MoodEntry.fromJson(Map<String, dynamic> json) {
@@ -62,6 +67,8 @@ class MoodEntry {
       moodName: json['moodName'] as String? ?? '',
       moodEmoji: json['moodEmoji'] as String? ?? '',
       createdAt: json['createdAt'] as String? ?? '',
+      intensity: json['intensity'] as int?,
+      notes: json['notes'] as String?,
     );
   }
 
@@ -73,6 +80,29 @@ class MoodEntry {
       'moodName': moodName,
       'moodEmoji': moodEmoji,
       'createdAt': createdAt,
+      'intensity': intensity,
+      'notes': notes,
+    };
+  }
+}
+
+// Helper class for creating mood entries with intensity
+class MoodEntryData {
+  final int moodId;
+  final int intensity; // 0-100
+  final String? notes;
+
+  MoodEntryData({
+    required this.moodId,
+    required this.intensity,
+    this.notes,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'moodId': moodId,
+      'intensity': intensity,
+      if (notes != null && notes!.isNotEmpty) 'notes': notes,
     };
   }
 }

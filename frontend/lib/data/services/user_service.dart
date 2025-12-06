@@ -1,21 +1,12 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/user.dart';
 import 'api_service.dart';
 
 class UserService {
-  String get baseUrl {
-    if (kIsWeb) return 'http://localhost:8080';
-    try {
-      if (Platform.isAndroid) return 'http://10.0.2.2:8080';
-    } catch (_) {}
-    return 'http://localhost:8080';
-  }
-
   Future<User> fetchUserById(int id) async {
-    final url = Uri.parse('$baseUrl/users/$id');
+    final url = ApiService.buildBackendUrl('/users/$id');
     debugPrint('UserService.fetchUserById GET $url');
     final response = await http.get(
       url,
@@ -35,7 +26,7 @@ class UserService {
   }
 
   Future<User> fetchUserByEmail(String email) async {
-    final url = Uri.parse('$baseUrl/users/by-email?email=${Uri.encodeQueryComponent(email)}');
+    final url = ApiService.buildBackendUrl('/users/by-email?email=${Uri.encodeQueryComponent(email)}');
     debugPrint('UserService.fetchUserByEmail GET $url');
     final response = await http.get(
       url,
@@ -54,7 +45,7 @@ class UserService {
   }
 
   Future<User> updateUser(User user) async {
-    final url = Uri.parse('$baseUrl/users/${user.id}');
+    final url = ApiService.buildBackendUrl('/users/${user.id}');
     final body = jsonEncode(user.toUpdateJson());
     debugPrint('UserService.updateUser PUT $url');
     debugPrint('Request body: $body');

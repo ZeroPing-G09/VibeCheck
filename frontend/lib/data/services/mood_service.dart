@@ -1,21 +1,12 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/mood.dart';
 import 'api_service.dart';
 
 class MoodService {
-  String get baseUrl {
-    if (kIsWeb) return 'http://localhost:8080';
-    try {
-      if (Platform.isAndroid) return 'http://10.0.2.2:8080';
-    } catch (_) {}
-    return 'http://localhost:8080';
-  }
-
   Future<List<Mood>> fetchAllMoods() async {
-    final url = Uri.parse('$baseUrl/moods');
+    final url = ApiService.buildBackendUrl('/moods');
     
     try {
       final response = await http.get(
@@ -42,11 +33,18 @@ class MoodService {
     }
   }
 
-  Future<MoodEntry> createMoodEntry(String userId, int moodId) async {
-    final url = Uri.parse('$baseUrl/moods/entries');
+  Future<MoodEntry> createMoodEntry(
+    String userId,
+    int moodId, {
+    int intensity = 50,
+    String? notes,
+  }) async {
+    final url = ApiService.buildBackendUrl('/moods/entries');
     final body = jsonEncode({
       'userId': userId,
       'moodId': moodId,
+      'intensity': intensity,
+      if (notes != null && notes.isNotEmpty) 'notes': notes,
     });
 
     final headers = ApiService.getAuthHeaders();
@@ -64,8 +62,35 @@ class MoodService {
     }
   }
 
+  Future<List<MoodEntry>> createMultipleMoodEntries(
+    String userId,
+    List<Map<String, dynamic>> moodEntries,
+    String? generalNotes,
+  ) async {
+    final url = ApiService.buildBackendUrl('/moods/entries/batch');
+    final body = jsonEncode({
+      'userId': userId,
+      'moodEntries': moodEntries,
+      if (generalNotes != null && generalNotes.isNotEmpty) 'generalNotes': generalNotes,
+    });
+
+    final headers = ApiService.getAuthHeaders();
+    final response = await http.post(
+      url,
+      headers: headers,
+      body: body,
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
+      return data.map((e) => MoodEntry.fromJson(e as Map<String, dynamic>)).toList();
+    } else {
+      throw Exception('Failed to create mood entries: ${response.statusCode} - ${response.body}');
+    }
+  }
+
   Future<List<MoodEntry>> fetchUserMoodEntries(String userId) async {
-    final url = Uri.parse('$baseUrl/moods/entries/user/$userId');
+    final url = ApiService.buildBackendUrl('/moods/entries/user/$userId');
     final response = await http.get(
       url,
       headers: ApiService.getAuthHeaders(),

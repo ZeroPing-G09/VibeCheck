@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 @Service
 public class MoodService {
@@ -73,7 +74,7 @@ public class MoodService {
     }
 
     @Transactional
-    public Map<String, Object> createMoodEntry(UUID userId, Long moodId) {
+    public Map<String, Object> createMoodEntry(UUID userId, Long moodId, Integer intensity, String notes) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
         
@@ -83,7 +84,8 @@ public class MoodService {
         MoodEntry entry = new MoodEntry();
         entry.setUser(user);
         entry.setMood(mood);
-        entry.setCreatedAt(java.time.LocalDateTime.now());
+        entry.setIntensity(intensity != null ? intensity : 50); // Default to 50 if not provided
+        entry.setNotes(notes);
 
         MoodEntry saved = moodEntryRepository.save(entry);
 
@@ -93,8 +95,55 @@ public class MoodService {
         response.put("moodId", saved.getMood().getId());
         response.put("moodName", saved.getMood().getName());
         response.put("moodEmoji", MoodEmojiMapper.getEmoji(saved.getMood().getName()));
+        response.put("intensity", saved.getIntensity());
+        response.put("notes", saved.getNotes());
         response.put("createdAt", saved.getCreatedAt().toString());
         return response;
+    }
+
+    @Transactional
+    public List<Map<String, Object>> createMultipleMoodEntries(UUID userId, List<Map<String, Object>> moodEntriesData, String generalNotes) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+
+        List<Map<String, Object>> savedEntries = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+
+        for (Map<String, Object> moodData : moodEntriesData) {
+            Long moodId = Long.valueOf(moodData.get("moodId").toString());
+            Integer intensity = moodData.containsKey("intensity") && moodData.get("intensity") != null
+                    ? Integer.valueOf(moodData.get("intensity").toString())
+                    : 50;
+            // Use individual notes if provided, otherwise use general notes
+            String notes = moodData.containsKey("notes") && moodData.get("notes") != null
+                    ? moodData.get("notes").toString()
+                    : generalNotes; // Fallback to general notes
+
+            Mood mood = moodRepository.findById(moodId)
+                    .orElseThrow(() -> new MoodNotFoundException(moodId));
+
+            MoodEntry entry = new MoodEntry();
+            entry.setUser(user);
+            entry.setMood(mood);
+            entry.setIntensity(intensity);
+            entry.setNotes(notes);
+            entry.setCreatedAt(now); // Same timestamp for all entries in batch
+
+            MoodEntry saved = moodEntryRepository.save(entry);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", saved.getId());
+            response.put("userId", saved.getUser().getId());
+            response.put("moodId", saved.getMood().getId());
+            response.put("moodName", saved.getMood().getName());
+            response.put("moodEmoji", MoodEmojiMapper.getEmoji(saved.getMood().getName()));
+            response.put("intensity", saved.getIntensity());
+            response.put("notes", saved.getNotes());
+            response.put("createdAt", saved.getCreatedAt().toString());
+            savedEntries.add(response);
+        }
+
+        return savedEntries;
     }
 
     @Transactional(readOnly = true)
@@ -110,6 +159,8 @@ public class MoodService {
                     entryMap.put("moodId", e.getMood().getId());
                     entryMap.put("moodName", e.getMood().getName());
                     entryMap.put("moodEmoji", MoodEmojiMapper.getEmoji(e.getMood().getName()));
+                    entryMap.put("intensity", e.getIntensity() != null ? e.getIntensity() : 50);
+                    entryMap.put("notes", e.getNotes());
                     entryMap.put("createdAt", e.getCreatedAt().toString());
                     return entryMap;
                 })

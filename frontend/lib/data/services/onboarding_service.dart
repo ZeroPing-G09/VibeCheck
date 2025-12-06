@@ -1,23 +1,14 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/user.dart';
 import 'api_service.dart';
 
 class OnboardingService {
-  String get baseUrl {
-    if (kIsWeb) return 'http://localhost:8080';
-    try {
-      if (Platform.isAndroid) return 'http://10.0.2.2:8080';
-    } catch (_) {}
-    return 'http://localhost:8080';
-  }
-
   Future<List<int>> _convertGenreNamesToIds(List<String> genreNames) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/genres'),
+        ApiService.buildBackendUrl('/genres'),
         headers: ApiService.getAuthHeaders(),
       );
       if (response.statusCode == 200) {
@@ -44,7 +35,7 @@ class OnboardingService {
   }
 
   Future<bool> checkOnboardingNeeded(String email) async {
-    final url = Uri.parse('$baseUrl/users/by-email?email=${Uri.encodeQueryComponent(email)}');
+    final url = ApiService.buildBackendUrl('/users/by-email?email=${Uri.encodeQueryComponent(email)}');
     final response = await http.get(
       url,
       headers: ApiService.getAuthHeaders(),
@@ -66,7 +57,7 @@ class OnboardingService {
 
     final genreIds = await _convertGenreNamesToIds(genreNames);
 
-    final url = Uri.parse('$baseUrl/users/preferences');
+    final url = ApiService.buildBackendUrl('/users/preferences');
     final body = jsonEncode({
       'top1GenreId': genreIds[0],
       'top2GenreId': genreIds[1],

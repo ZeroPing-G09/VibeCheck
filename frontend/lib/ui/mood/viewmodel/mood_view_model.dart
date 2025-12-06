@@ -45,7 +45,7 @@ class MoodViewModel extends ChangeNotifier {
   }
 
   /// Command: Saves a mood entry (handles user fetching internally)
-  Future<void> saveMoodEntry(int moodId) async {
+  Future<void> saveMoodEntry(int moodId, {int intensity = 50, String? notes}) async {
     _isSaving = true;
     _error = null;
     notifyListeners();
@@ -57,11 +57,49 @@ class MoodViewModel extends ChangeNotifier {
       }
 
       final user = await _userRepository.getUserByEmail(email);
-      await _moodRepository.createMoodEntry(user.id, moodId);
-      debugPrint('MoodViewModel.saveMoodEntry: Saved mood $moodId for user ${user.id}');
+      await _moodRepository.createMoodEntry(
+        user.id,
+        moodId,
+        intensity: intensity,
+        notes: notes,
+      );
+      debugPrint('MoodViewModel.saveMoodEntry: Saved mood $moodId with intensity $intensity for user ${user.id}');
     } catch (e) {
       _error = e.toString();
       debugPrint('MoodViewModel.saveMoodEntry error: $e');
+      notifyListeners();
+      rethrow;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  /// Command: Saves multiple mood entries in batch
+  Future<void> saveMultipleMoodEntries(
+    List<Map<String, dynamic>> moodEntries,
+    String? generalNotes,
+  ) async {
+    _isSaving = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final email = _authRepository.currentUser?.email;
+      if (email == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final user = await _userRepository.getUserByEmail(email);
+      await _moodRepository.createMultipleMoodEntries(
+        user.id,
+        moodEntries,
+        generalNotes,
+      );
+      debugPrint('MoodViewModel.saveMultipleMoodEntries: Saved ${moodEntries.length} moods for user ${user.id}');
+    } catch (e) {
+      _error = e.toString();
+      debugPrint('MoodViewModel.saveMultipleMoodEntries error: $e');
       notifyListeners();
       rethrow;
     } finally {
