@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/data/models/user.dart';
-import 'package:frontend/data/repositories/auth_repository.dart';
-import 'package:frontend/di/locator.dart';
 import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
 import 'package:frontend/ui/profile/viewmodel/profile_view_model.dart';
 import 'package:frontend/ui/profile/widgets/custom_text_field.dart';
@@ -9,6 +7,7 @@ import 'package:frontend/ui/profile/widgets/genres_section.dart';
 import 'package:frontend/ui/profile/widgets/profile_picture_section.dart';
 import 'package:frontend/ui/profile/widgets/profile_sidebar.dart';
 import 'package:frontend/ui/profile/widgets/save_button.dart';
+import 'package:frontend/core/utils/snackbar_helper.dart';
 import 'package:provider/provider.dart';
 
 class ProfileView extends StatefulWidget {
@@ -33,7 +32,7 @@ class _ProfileViewState extends State<ProfileView> {
 
   void _loadUserData() {
     final vm = context.read<ProfileViewModel>();
-    final email = locator<AuthRepository>().currentUser?.email;
+    final email = vm.currentUserEmail;
     if (email != null) {
       vm
           .loadUserByEmail(email)
@@ -42,7 +41,7 @@ class _ProfileViewState extends State<ProfileView> {
               final user = vm.user;
               if (user != null) {
                 _usernameController.text = user.displayName;
-                _profilePicController.text = user.avatarUrl;
+                _profilePicController.text = user.avatarUrl ?? '';
                 setState(() {});
               }
             }
@@ -183,6 +182,37 @@ class _ProfileDetails extends StatelessWidget {
     required this.user,
   });
 
+  Future<void> _handleSave(BuildContext context) async {
+    final updated = user.copyWith(
+      displayName: usernameController.text,
+      avatarUrl: profilePicController.text,
+      genres: user.genres,
+    );
+    
+    try {
+      await vm.updateUser(updated);
+
+      // Reload dashboard user to reflect changes
+      final email = vm.currentUserEmail;
+      if (email != null && context.mounted) {
+        try {
+          final dashboardVm = context.read<DashboardViewModel>();
+          await dashboardVm.loadUserByEmail(email);
+        } catch (e) {
+          debugPrint('Error reloading dashboard: $e');
+        }
+      }
+
+      if (context.mounted) {
+        SnackbarHelper.showSuccess(context, 'Profile updated successfully!');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        SnackbarHelper.showError(context, 'Failed to update profile: $e');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -200,34 +230,7 @@ class _ProfileDetails extends StatelessWidget {
         GenresSection(user: user),
         const SizedBox(height: 40),
         SaveButton(
-          onSave: () async {
-            final updated = user.copyWith(
-              displayName: usernameController.text,
-              avatarUrl: profilePicController.text,
-              genres: user.genres,
-            );
-            await vm.updateUser(updated);
-
-            // Reload dashboard user to reflect changes
-            final email = locator<AuthRepository>().currentUser?.email;
-            if (email != null && context.mounted) {
-              try {
-                final dashboardVm = context.read<DashboardViewModel>();
-                await dashboardVm.loadUserByEmail(email);
-              } catch (e) {
-                debugPrint('Error reloading dashboard: $e');
-              }
-            }
-
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Profile updated successfully!"),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            }
-          },
+          onSave: () => _handleSave(context),
         ),
       ],
     );

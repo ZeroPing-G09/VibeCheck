@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/user.dart';
+import 'api_service.dart';
 
 class UserService {
   String get baseUrl {
@@ -16,7 +17,10 @@ class UserService {
   Future<User> fetchUserById(int id) async {
     final url = Uri.parse('$baseUrl/users/$id');
     debugPrint('UserService.fetchUserById GET $url');
-    final response = await http.get(url);
+    final response = await http.get(
+      url,
+      headers: ApiService.getAuthHeaders(),
+    );
 
     debugPrint('fetchUserById status: ${response.statusCode}');
     debugPrint('fetchUserById body: ${response.body}');
@@ -33,7 +37,10 @@ class UserService {
   Future<User> fetchUserByEmail(String email) async {
     final url = Uri.parse('$baseUrl/users/by-email?email=${Uri.encodeQueryComponent(email)}');
     debugPrint('UserService.fetchUserByEmail GET $url');
-    final response = await http.get(url);
+    final response = await http.get(
+      url,
+      headers: ApiService.getAuthHeaders(),
+    );
 
     debugPrint('fetchUserByEmail status: ${response.statusCode}');
     debugPrint('fetchUserByEmail body: ${response.body}');
@@ -54,7 +61,7 @@ class UserService {
 
     final response = await http.put(
       url,
-      headers: {'Content-Type': 'application/json'},
+      headers: ApiService.getAuthHeaders(),
       body: body,
     );
 

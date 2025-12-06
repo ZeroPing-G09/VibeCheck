@@ -40,13 +40,8 @@ public class UserController {
         String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
         UUID userId = UUID.fromString(userIdString);
 
-        try {
-            userService.updateUserPreferences(userId, preferences);
-            return ResponseEntity.ok()
-                    .body(Map.of("success", true, "message", "Preferences updated successfully."));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("success", false, "message", "Internal error updating preferences."));
-        }
+        userService.updateUserPreferences(userId, preferences);
+        return ResponseEntity.ok()
+                .body(Map.of("success", true, "message", "Preferences updated successfully."));
     }
 }

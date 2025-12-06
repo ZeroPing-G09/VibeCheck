@@ -33,8 +33,13 @@ class UserChip extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 14,
-              backgroundImage: NetworkImage(imageUrl),
+              backgroundImage: imageUrl.isNotEmpty && imageUrl.startsWith('http')
+                  ? NetworkImage(imageUrl)
+                  : null,
               backgroundColor: Colors.grey.shade200,
+              child: imageUrl.isEmpty || !imageUrl.startsWith('http')
+                  ? Icon(Icons.person, size: 14, color: Colors.grey.shade600)
+                  : null,
             ),
             const SizedBox(width: 8),
             Text(username, style: const TextStyle(fontWeight: FontWeight.w600)),

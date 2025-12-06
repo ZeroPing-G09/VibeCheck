@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/data/repositories/auth_repository.dart';
 import 'package:frontend/core/routing/app_router.dart';
-import 'package:frontend/di/locator.dart';
-import '../viewmodel/profile_view_model.dart';
+import 'package:frontend/ui/profile/viewmodel/profile_view_model.dart';
+import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
 import 'package:provider/provider.dart';
 
 class ProfileSidebar extends StatelessWidget {
@@ -59,9 +58,15 @@ class ProfileSidebar extends StatelessWidget {
 
   Future<void> _handleLogout(BuildContext context) async {
     onClose?.call();
-    await locator<AuthRepository>().signOut();
+    final profileVm = context.read<ProfileViewModel>();
+    final dashboardVm = context.read<DashboardViewModel>();
+    
+    // Use ProfileViewModel's auth repository to sign out
+    await profileVm.signOut();
+    
     if (context.mounted) {
-      context.read<ProfileViewModel>().clear();
+      profileVm.clear();
+      dashboardVm.clear();
       AppRouter.navigatorKey.currentState?.pushNamedAndRemoveUntil(
         AppRouter.loginRoute,
         (route) => false,
