@@ -87,6 +87,59 @@ class UserServiceTest {
 
     @Test
     @DisplayName("""
+            Given an existing user email
+            When getUserByEmail is called
+            Then it returns a successful response with user details
+            """)
+    void givenExistingEmail_WhenGetUserByEmail_ThenReturnsMappedResponse() {
+        // Given
+        String email = "test@example.com";
+        User u = new User();
+        UUID userId = UUID.randomUUID();
+        u.setId(userId);
+        u.setDisplayName("Test User");
+        u.setAvatarUrl("avatar.png");
+        u.setEmail(email);
+        
+        Set<Genre> genres = new HashSet<>();
+        genres.add(genre(1L, "Pop"));
+        u.setGenres(genres);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(u));
+
+        // When
+        Map<String, Object> out = userService.getUserByEmail(email);
+
+        // Then
+        assertEquals("Test User", out.get("display_name"));
+        assertEquals("avatar.png", out.get("avatar_url"));
+        assertEquals(email, out.get("email"));
+        @SuppressWarnings("unchecked")
+        List<String> genreNames = (List<String>) out.get("genres");
+        assertTrue(genreNames.contains("Pop"));
+        verify(userRepository).findByEmail(email);
+    }
+
+    @Test
+    @DisplayName("""
+            Given a non-existent user email
+            When getUserByEmail is called
+            Then it throws UserNotFoundException
+            """)
+    void givenMissingEmail_WhenGetUserByEmail_ThenThrowsUserNotFound() {
+        // Given
+        String email = "nonexistent@example.com";
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(UserNotFoundException.class, () -> userService.getUserByEmail(email));
+
+        // Verify the interaction happened
+        verify(userRepository).findByEmail(email);
+    }
+
+    @Test
+    @DisplayName("""
             Given valid user preferences with genre IDs
             When updateUserPreferences is called
             Then it should update user preferences with genre entities
@@ -269,6 +322,180 @@ class UserServiceTest {
         // When & Then
         assertThrows(GenreNotFoundException.class, () -> userService.updateUserPreferences(userId, preferences));
         verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("""
+            Given valid update data with display name, avatar URL, and genres
+            When updateUser is called
+            Then it should update user and return response map
+            """)
+    void updateUser_WhenValidData_ShouldUpdateAndReturnResponse() {
+        // Given
+        UUID userId = UUID.randomUUID();
+        User existingUser = new User();
+        existingUser.setId(userId);
+        existingUser.setDisplayName("OldName");
+        existingUser.setAvatarUrl("old-avatar.png");
+        existingUser.setEmail("test@example.com");
+        existingUser.setGenres(new HashSet<>());
+
+        Map<String, Object> updateData = Map.of(
+                "display_name", "NewName",
+                "avatar_url", "new-avatar.png",
+                "genres", List.of("Rock", "Jazz")
+        );
+
+        Genre rockGenre = genre(1L, "Rock");
+        Genre jazzGenre = genre(2L, "Jazz");
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(genreRepository.findByNameIgnoreCase("Rock")).thenReturn(Optional.of(rockGenre));
+        when(genreRepository.findByNameIgnoreCase("Jazz")).thenReturn(Optional.of(jazzGenre));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User saved = invocation.getArgument(0);
+            return saved;
+        });
+
+        // When
+        Map<String, Object> result = userService.updateUser(userId, updateData);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("NewName", result.get("display_name"));
+        assertEquals("new-avatar.png", result.get("avatar_url"));
+        @SuppressWarnings("unchecked")
+        List<String> genres = (List<String>) result.get("genres");
+        assertTrue(genres.contains("Rock"));
+        assertTrue(genres.contains("Jazz"));
+        verify(userRepository).findById(userId);
+        verify(userRepository).save(existingUser);
+    }
+
+    @Test
+    @DisplayName("""
+            Given update data with empty avatar URL
+            When updateUser is called
+            Then it should set avatar URL to null
+            """)
+    void updateUser_WhenEmptyAvatarUrl_ShouldSetToNull() {
+        // Given
+        UUID userId = UUID.randomUUID();
+        User existingUser = new User();
+        existingUser.setId(userId);
+        existingUser.setAvatarUrl("old-avatar.png");
+        existingUser.setEmail("test@example.com");
+
+        Map<String, Object> updateData = Map.of("avatar_url", "");
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        userService.updateUser(userId, updateData);
+
+        // Then
+        assertNull(existingUser.getAvatarUrl());
+        verify(userRepository).save(existingUser);
+    }
+
+    @Test
+    @DisplayName("""
+            Given update data with empty genres list
+            When updateUser is called
+            Then it should clear all genres
+            """)
+    void updateUser_WhenEmptyGenresList_ShouldClearGenres() {
+        // Given
+        UUID userId = UUID.randomUUID();
+        User existingUser = new User();
+        existingUser.setId(userId);
+        existingUser.setEmail("test@example.com");
+        Set<Genre> existingGenres = new HashSet<>();
+        existingGenres.add(genre(1L, "Rock"));
+        existingUser.setGenres(existingGenres);
+
+        Map<String, Object> updateData = Map.of("genres", List.of());
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        userService.updateUser(userId, updateData);
+
+        // Then
+        assertTrue(existingUser.getGenres().isEmpty());
+        verify(userRepository).save(existingUser);
+    }
+
+    @Test
+    @DisplayName("""
+            Given update data with non-existent genre name
+            When updateUser is called
+            Then it should throw GenreNotFoundException
+            """)
+    void updateUser_WhenGenreNotFound_ShouldThrowException() {
+        // Given
+        UUID userId = UUID.randomUUID();
+        User existingUser = new User();
+        existingUser.setId(userId);
+        existingUser.setEmail("test@example.com");
+
+        Map<String, Object> updateData = Map.of("genres", List.of("NonExistentGenre"));
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(genreRepository.findByNameIgnoreCase("NonExistentGenre")).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(GenreNotFoundException.class, () -> userService.updateUser(userId, updateData));
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("""
+            Given user not found
+            When updateUser is called
+            Then it should throw UserNotFoundException
+            """)
+    void updateUser_WhenUserNotFound_ShouldThrowException() {
+        // Given
+        UUID userId = UUID.randomUUID();
+        Map<String, Object> updateData = Map.of("display_name", "NewName");
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(UserNotFoundException.class, () -> userService.updateUser(userId, updateData));
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("""
+            Given update data with only display name
+            When updateUser is called
+            Then it should update only display name
+            """)
+    void updateUser_WhenOnlyDisplayName_ShouldUpdateOnlyDisplayName() {
+        // Given
+        UUID userId = UUID.randomUUID();
+        User existingUser = new User();
+        existingUser.setId(userId);
+        existingUser.setDisplayName("OldName");
+        existingUser.setAvatarUrl("old-avatar.png");
+        existingUser.setEmail("test@example.com");
+
+        Map<String, Object> updateData = Map.of("display_name", "NewName");
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        Map<String, Object> result = userService.updateUser(userId, updateData);
+
+        // Then
+        assertEquals("NewName", result.get("display_name"));
+        assertEquals("old-avatar.png", result.get("avatar_url")); // Should remain unchanged
+        verify(userRepository).save(existingUser);
     }
 
     private Genre genre(Long id, String name) {
