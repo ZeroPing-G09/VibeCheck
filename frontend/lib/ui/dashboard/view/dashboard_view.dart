@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/routing/app_router.dart';
-import 'package:frontend/data/repositories/auth_repository.dart';
-import 'package:frontend/di/locator.dart';
 import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
 import 'package:frontend/ui/dashboard/widgets/user_chip.dart';
 import 'package:frontend/ui/home/view/home_view.dart';
+import 'package:frontend/ui/mood/view/mood_selection_dialog.dart';
+import 'package:frontend/core/widgets/loading_state.dart';
+import 'package:frontend/core/widgets/error_state.dart';
+import 'package:frontend/core/utils/snackbar_helper.dart';
 import 'package:provider/provider.dart';
 
 class DashboardView extends StatefulWidget {
@@ -15,22 +17,147 @@ class DashboardView extends StatefulWidget {
 }
 
 class _DashboardViewState extends State<DashboardView> {
+  bool _hasShownMoodDialog = false;
+
   @override
   void initState() {
     super.initState();
-    // The loadUserByEmail method is likely correct if the view model is responsible
-    // for fetching the 'public.users' record based on the Supabase user's email.
-    final email = locator<AuthRepository>().currentUser?.email;
-    if (email != null) {
-      context.read<DashboardViewModel>().loadUserByEmail(email);
+    
+    // Defer async operations until after the build phase
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final viewModel = context.read<DashboardViewModel>();
+      final email = viewModel.currentUserEmail;
+      if (email != null) {
+        viewModel.loadUserByEmail(email);
+      }
+      
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted && !_hasShownMoodDialog) {
+          _showMoodDialog();
+        }
+      });
+    });
+  }
+
+  void _showMoodDialog() {
+    if (_hasShownMoodDialog) return;
+    _hasShownMoodDialog = true;
+    
+    showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => const MoodSelectionDialog(),
+    ).then((moodSaved) {
+      if (moodSaved == true && mounted) {
+        SnackbarHelper.showSuccess(context, 'Mood saved successfully!');
+      }
+    });
+  }
+
+  void _handleActionSelected(String value) async {
+    final viewModel = context.read<DashboardViewModel>();
+    
+    if (value == 'profile') {
+      final homeViewState = HomeView.of(context);
+      if (homeViewState != null) {
+        homeViewState.switchToTab(0);
+      } else {
+        AppRouter.navigatorKey.currentState?.pushNamed(
+          AppRouter.profileRoute,
+        );
+      }
+    } else if (value == 'settings') {
+      final homeViewState = HomeView.of(context);
+      if (homeViewState != null) {
+        homeViewState.switchToTab(2);
+      } else {
+        AppRouter.navigatorKey.currentState?.pushNamed(
+          AppRouter.settingsRoute,
+        );
+      }
+    } else if (value == 'logout') {
+      await viewModel.handleUserAction('logout');
+      if (mounted) {
+        AppRouter.navigatorKey.currentState?.pushNamedAndRemoveUntil(
+          AppRouter.loginRoute,
+          (route) => false,
+        );
+      }
     }
+  }
+
+  Widget _buildUserChip(DashboardViewModel viewModel) {
+    if (viewModel.isLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(8.0),
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+
+    return UserChip(
+      username: viewModel.getDisplayName(),
+      imageUrl: viewModel.getAvatarUrl(),
+      onActionSelected: _handleActionSelected,
+    );
+  }
+
+  Widget _buildBody(DashboardViewModel viewModel) {
+    if (viewModel.isLoading) {
+      return const LoadingState();
+    }
+
+    if (viewModel.error != null) {
+      return ErrorState(
+        message: viewModel.error!,
+        onRetry: () {
+          final email = viewModel.currentUserEmail;
+          if (email != null) {
+            viewModel.loadUserByEmail(email);
+          }
+        },
+      );
+    }
+
+    final user = viewModel.user;
+    if (user == null) {
+      return const Center(child: Text('No user loaded'));
+    }
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Welcome, ${user.displayName}!',
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            children: user.genres
+                .map<Widget>((String genre) => Chip(label: Text(genre)))
+                .toList(),
+          ),
+          if (user.lastLogIn != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text('Last login: ${user.lastLogIn}'),
+            ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<DashboardViewModel>();
-    final authRepo = locator<AuthRepository>();
-    final supabaseUser = authRepo.currentUser;
 
     return Scaffold(
       appBar: AppBar(
@@ -42,102 +169,11 @@ class _DashboardViewState extends State<DashboardView> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
-            child: viewModel.isLoading
-                ? const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    ),
-                  )
-                : supabaseUser != null
-                ? UserChip(
-                    // 1. UPDATED: Use viewModel.user?.displayName
-                    username:
-                        viewModel.user?.displayName ??
-                        (supabaseUser.userMetadata?['full_name'] as String?) ??
-                        (supabaseUser.email != null &&
-                                supabaseUser.email!.contains('@')
-                            ? supabaseUser.email!.split('@')[0]
-                            : 'User'),
-                    // 2. UPDATED: Use viewModel.user?.avatarUrl
-                    imageUrl:
-                        viewModel.user?.avatarUrl ??
-                        (supabaseUser.userMetadata?['avatar_url'] as String?) ??
-                        '',
-                    onActionSelected: (value) async {
-                      if (value == 'profile') {
-                        final homeViewState = HomeView.of(context);
-                        if (homeViewState != null) {
-                          homeViewState.switchToTab(0);
-                        } else {
-                          AppRouter.navigatorKey.currentState?.pushNamed(
-                            AppRouter.profileRoute,
-                          );
-                        }
-                      } else if (value == 'settings') {
-                        final homeViewState = HomeView.of(context);
-                        if (homeViewState != null) {
-                          homeViewState.switchToTab(2);
-                        } else {
-                          AppRouter.navigatorKey.currentState?.pushNamed(
-                            AppRouter.settingsRoute,
-                          );
-                        }
-                      } else if (value == 'logout') {
-                        await locator<AuthRepository>().signOut();
-                        if (mounted) {
-                          context.read<DashboardViewModel>().clear();
-                          AppRouter.navigatorKey.currentState
-                              ?.pushNamedAndRemoveUntil(
-                                AppRouter.loginRoute,
-                                (route) => false,
-                              );
-                        }
-                      }
-                    },
-                  )
-                : const Icon(Icons.error_outline),
+            child: _buildUserChip(viewModel),
           ),
         ],
       ),
-      body: viewModel.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : viewModel.error != null
-          ? Center(child: Text('Error: ${viewModel.error}'))
-          : viewModel.user != null
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    // 3. UPDATED: Use viewModel.user!.displayName
-                    'Welcome, ${viewModel.user!.displayName}!',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    children: viewModel.user!.genres
-                        .map((g) => Chip(label: Text(g)))
-                        .toList(),
-                  ),
-                  // Optional: Display last login time
-                  if (viewModel.user!.lastLogIn != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text('Last login: ${viewModel.user!.lastLogIn}'),
-                    ),
-                ],
-              ),
-            )
-          : const Center(child: Text('No user loaded')),
+      body: _buildBody(viewModel),
     );
   }
 }

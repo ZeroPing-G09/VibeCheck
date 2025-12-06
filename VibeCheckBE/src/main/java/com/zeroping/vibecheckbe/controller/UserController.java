@@ -35,18 +35,28 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> updateUser(
+            @PathVariable UUID id,
+            @RequestBody Map<String, Object> updateData) {
+        // Verify the authenticated user matches the requested user ID
+        String authenticatedUserId = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!authenticatedUserId.equals(id.toString())) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "You can only update your own profile"));
+        }
+
+        Map<String, Object> updatedUser = userService.updateUser(id, updateData);
+        return ResponseEntity.ok(updatedUser);
+    }
+
     @PostMapping("/preferences")
     public ResponseEntity<Map<String, Object>> savePreferences(@RequestBody UserPreferencesDTO preferences) {
         String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
         UUID userId = UUID.fromString(userIdString);
 
-        try {
-            userService.updateUserPreferences(userId, preferences);
-            return ResponseEntity.ok()
-                    .body(Map.of("success", true, "message", "Preferences updated successfully."));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("success", false, "message", "Internal error updating preferences."));
-        }
+        userService.updateUserPreferences(userId, preferences);
+        return ResponseEntity.ok()
+                .body(Map.of("success", true, "message", "Preferences updated successfully."));
     }
 }

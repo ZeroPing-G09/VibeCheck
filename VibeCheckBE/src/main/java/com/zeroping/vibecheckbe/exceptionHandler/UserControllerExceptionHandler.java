@@ -1,6 +1,7 @@
 package com.zeroping.vibecheckbe.exceptionHandler;
 
 import com.zeroping.vibecheckbe.controller.UserController;
+import com.zeroping.vibecheckbe.exception.genre.GenreNotFoundException;
 import com.zeroping.vibecheckbe.exception.user.GenreNotFoundForUserException;
 import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
 import org.slf4j.Logger;
@@ -23,6 +24,12 @@ public class UserControllerExceptionHandler {
     @ExceptionHandler(GenreNotFoundForUserException.class)
     public ProblemDetail handleInvalidGenreException(GenreNotFoundForUserException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(GenreNotFoundException.class)
+    public ProblemDetail handleGenreNotFoundException(GenreNotFoundException e) {
+        log.error("Genre not found: {}", e.getMessage());
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

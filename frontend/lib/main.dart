@@ -5,6 +5,9 @@ import 'package:frontend/ui/app.dart';
 import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
 import 'package:frontend/ui/profile/viewmodel/profile_view_model.dart';
 import 'package:frontend/ui/settings/viewmodel/theme_view_model.dart';
+import 'package:frontend/ui/onboarding/viewmodel/onboarding_view_model.dart';
+import 'package:frontend/ui/mood/viewmodel/mood_view_model.dart';
+import 'package:frontend/ui/auth/viewmodel/auth_view_model.dart';
 import 'package:provider/provider.dart';
 
 Future<void> main() async {
@@ -15,9 +18,12 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => DashboardViewModel()),
-        ChangeNotifierProvider(create: (_) => ProfileViewModel()),
-        ChangeNotifierProvider(create: (_) => ThemeViewModel()),
+        ChangeNotifierProvider(create: (_) => locator<AuthViewModel>()),
+        ChangeNotifierProvider(create: (_) => locator<DashboardViewModel>()),
+        ChangeNotifierProvider(create: (_) => locator<ProfileViewModel>()),
+        ChangeNotifierProvider(create: (_) => locator<ThemeViewModel>()),
+        ChangeNotifierProvider(create: (_) => locator<OnboardingViewModel>()),
+        ChangeNotifierProvider(create: (_) => locator<MoodViewModel>()),
       ],
       child: const VibeCheckApp(),
     ),

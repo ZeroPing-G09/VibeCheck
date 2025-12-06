@@ -45,13 +45,10 @@ class SpotifyPlaylistServiceTest {
     void givenRequestWithNewSong_WhenSearchAndSaveSongsFromPlaylist_ThenSongIsFoundAndSavedToDB() {
 
         // Given
-        TrackSpotifyRequest trackRequest = new TrackSpotifyRequest();
-        trackRequest.setTitle("Sunroof");
-        trackRequest.setArtist("Nicky Youre");
+        TrackSpotifyRequest trackRequest = new TrackSpotifyRequest("Sunroof", "Nicky Youre");
 
         // test data
-        PlaylistSpotifyRequest playlistSpotifyRequest = new PlaylistSpotifyRequest();
-        playlistSpotifyRequest.setTracks(List.of(trackRequest));
+        PlaylistSpotifyRequest playlistSpotifyRequest = new PlaylistSpotifyRequest(List.of(trackRequest));
 
         Track mockSpotifyTrack = mock(Track.class);
         ArtistSimplified mockArtist = mock(ArtistSimplified.class);
@@ -99,12 +96,9 @@ class SpotifyPlaylistServiceTest {
     void givenRequestWithExistingSong_WhenSearchAndSaveSongsFromPlaylist_ThenSongIsFoundAndReturnedFromDB() {
 
         // Given
-        TrackSpotifyRequest trackRequest = new TrackSpotifyRequest();
-        trackRequest.setTitle("Sunroof");
-        trackRequest.setArtist("Nicky Youre");
+        TrackSpotifyRequest trackRequest = new TrackSpotifyRequest("Sunroof", "Nicky Youre");
 
-        PlaylistSpotifyRequest playlistRequest = new PlaylistSpotifyRequest();
-        playlistRequest.setTracks(List.of(trackRequest));
+        PlaylistSpotifyRequest playlistRequest = new PlaylistSpotifyRequest(List.of(trackRequest));
         ExternalUrl mockUrls = mock(ExternalUrl.class);
 
         Track mockSpotifyTrack = mock(Track.class);
@@ -144,11 +138,8 @@ class SpotifyPlaylistServiceTest {
     void givenRequestWithSongNotFound_WhenSearchAndSaveSongsFromPlaylist_ThenNothingIsReturnedAndSavedToDB() {
 
         // Given
-        TrackSpotifyRequest trackRequest = new TrackSpotifyRequest();
-        trackRequest.setTitle("NonExistentSong");
-        trackRequest.setArtist("Nobody");
-        PlaylistSpotifyRequest playlistRequest = new PlaylistSpotifyRequest();
-        playlistRequest.setTracks(List.of(trackRequest));
+        TrackSpotifyRequest trackRequest = new TrackSpotifyRequest("NonExistentSong", "Nobody");
+        PlaylistSpotifyRequest playlistRequest = new PlaylistSpotifyRequest(List.of(trackRequest));
 
 
         when(spotifyService.searchSong("NonExistentSong", "Nobody"))
@@ -175,20 +166,13 @@ class SpotifyPlaylistServiceTest {
     void givenRequestWithMixedTracks_WhenSearchAndSaveSongsFromPlaylist_ThenHandlesAllCasesCorrectly() {
 
         // Given
-        TrackSpotifyRequest newTrackReq = new TrackSpotifyRequest();
-        newTrackReq.setTitle("Sunroof");
-        newTrackReq.setArtist("Nicky Youre");
+        TrackSpotifyRequest newTrackReq = new TrackSpotifyRequest("Sunroof", "Nicky Youre");
 
-        TrackSpotifyRequest existingTrackReq = new TrackSpotifyRequest();
-        existingTrackReq.setTitle("As It Was");
-        existingTrackReq.setArtist("Harry Styles");
+        TrackSpotifyRequest existingTrackReq = new TrackSpotifyRequest("As It Was", "Harry Styles");
 
-        TrackSpotifyRequest notFoundTrackReq = new TrackSpotifyRequest();
-        notFoundTrackReq.setTitle("NonExistentSong");
-        notFoundTrackReq.setArtist("Nobody");
+        TrackSpotifyRequest notFoundTrackReq = new TrackSpotifyRequest("NonExistentSong", "Nobody");
 
-        PlaylistSpotifyRequest playlistRequest = new PlaylistSpotifyRequest();
-        playlistRequest.setTracks(List.of(newTrackReq, existingTrackReq, notFoundTrackReq));
+        PlaylistSpotifyRequest playlistRequest = new PlaylistSpotifyRequest(List.of(newTrackReq, existingTrackReq, notFoundTrackReq));
 
         Track mockSpotifyTrackNew = mock(Track.class);
         when(mockSpotifyTrackNew.getName()).thenReturn("Sunroof");
