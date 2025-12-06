@@ -64,8 +64,8 @@ public class MoodController {
         UUID userId = UUID.fromString(payload.get("userId").toString());
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> moodEntries = (List<Map<String, Object>>) payload.get("moodEntries");
-        String generalNotes = payload.containsKey("notes") && payload.get("notes") != null
-                ? payload.get("notes").toString()
+        String generalNotes = payload.containsKey("generalNotes") && payload.get("generalNotes") != null
+                ? payload.get("generalNotes").toString()
                 : null;
         List<Map<String, Object>> responses = moodService.createMultipleMoodEntries(userId, moodEntries, generalNotes);
         return ResponseEntity.ok(responses);

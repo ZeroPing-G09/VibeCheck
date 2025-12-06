@@ -16,7 +16,7 @@ class MoodService {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
-        final moods = data.map((m) {
+        return data.map((m) {
           try {
             return Mood.fromJson(m as Map<String, dynamic>);
           } catch (e) {
@@ -24,11 +24,11 @@ class MoodService {
             rethrow;
           }
         }).toList();
-        return moods;
       } else {
         throw Exception('Failed to load moods: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
+      debugPrint('MoodService.fetchAllMoods error: $e');
       rethrow;
     }
   }
