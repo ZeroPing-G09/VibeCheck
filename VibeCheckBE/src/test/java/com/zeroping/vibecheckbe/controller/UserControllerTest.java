@@ -1,11 +1,9 @@
 package com.zeroping.vibecheckbe.controller;
 
-import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
-import com.zeroping.vibecheckbe.entity.Genre;
-import com.zeroping.vibecheckbe.entity.User;
-import com.zeroping.vibecheckbe.exception.user.GenreNotFoundForUserException;
-import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
+import com.zeroping.vibecheckbe.dto.UserDTO;
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
+import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
+import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
 import com.zeroping.vibecheckbe.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,13 +11,19 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class UserControllerTest {
@@ -43,86 +47,37 @@ class UserControllerTest {
             """)
     void givenValidId_WhenGetUserIsCalled_ThenReturnsUserDetails() {
         // Given
-        Map<String, Object> mockUser = Map.of(
-                "id", 1L,
-                "username", "Andreea",
-                "profile_picture", "andreea.png",
-                "genres", List.of("Pop", "Jazz")
-        );
+        UUID userId = UUID.randomUUID();
+        UserDTO mockUser = new UserDTO();
+        mockUser.setId(userId);
+        mockUser.setDisplay_name("Andreea");
+        mockUser.setAvatar_url("andreea.png");
+        mockUser.setEmail("andreea@example.com");
+        mockUser.setGenres(List.of("Pop", "Jazz"));
 
-        when(userService.getUserById(1L)).thenReturn(mockUser);
+        when(userService.getUserById(userId)).thenReturn(mockUser);
 
         // When
-        ResponseEntity<Map<String, Object>> response = userController.getUser(1L);
+        ResponseEntity<UserDTO> response = userController.getUser(userId);
 
         // Then
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
-        assertEquals("Andreea", response.getBody().get("username"));
-        assertEquals(List.of("Pop", "Jazz"), response.getBody().get("genres"));
-        verify(userService, times(1)).getUserById(1L);
-    }
-
-    @Test
-    @DisplayName("""
-            Given a valid ID and valid payload
-            When updateUser is called
-            Then it returns a successful response with updated details
-            """)
-    void givenValidIdAndPayload_WhenUpdateUserIsCalled_ThenReturnsUpdatedUser() {
-        // Given
-        Long userId = 1L;
-
-        UserUpdateDTO payload = new UserUpdateDTO();
-        payload.setUsername("UpdatedUser");
-        payload.setProfilePicture("updated.png");
-
-        UserPreferencesDTO prefs = new UserPreferencesDTO();
-        prefs.setUserId(userId);
-        prefs.setTop1GenreId(1L); // Rock
-        prefs.setTop2GenreId(2L); // Pop
-        payload.setPreferences(prefs);
-
-        // Mocked response from service
-        Map<String, Object> updatedUser = Map.of(
-                "id", 1L,
-                "username", "UpdatedUser",
-                "profile_picture", "updated.png", // make sure key matches toUserResponse
-                "genres", List.of("Rock", "Pop")
-        );
-
-        when(userService.updateUser(userId, payload)).thenReturn(updatedUser);
-
-        // When
-        ResponseEntity<?> response = userController.updateUser(userId, payload);
-
-        // Then
-        assertNotNull(response.getBody());
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> body = (Map<String, Object>) response.getBody();
-
-        assertEquals("UpdatedUser", body.get("username"));
-        assertEquals("updated.png", body.get("profile_picture"));
-
-        @SuppressWarnings("unchecked")
-        List<String> genres = (List<String>) body.get("genres");
-        assertEquals(List.of("Rock", "Pop"), genres);
-
-        // Verify service call
-        verify(userService, times(1)).updateUser(userId, payload);
+        assertEquals("Andreea", response.getBody().getDisplay_name());
+        assertEquals(List.of("Pop", "Jazz"), response.getBody().getGenres());
+        verify(userService, times(1)).getUserById(userId);
     }
 
     @Test
     @DisplayName("""
             Given an invalid user ID
             When getUser is called
-            Then it returns a 404 not found error
+            Then it throws UserNotFoundException
             """)
     void givenInvalidId_WhenGetUserIsCalled_ThenThrowsUserNotFoundException() {
         // Given
-        Long invalidId = 999L;
-        when(userService.getUserById(invalidId)).thenThrow(new UserNotFoundException(invalidId));
+        UUID invalidId = UUID.randomUUID();
+        when(userService.getUserById(invalidId)).thenThrow(new UserNotFoundException("User not found: " + invalidId));
 
         // When / Then
         UserNotFoundException exception = assertThrows(
@@ -130,82 +85,157 @@ class UserControllerTest {
                 () -> userController.getUser(invalidId)
         );
 
-        assertTrue(exception.getMessage().contains("999"));
+        assertTrue(exception.getMessage().contains(invalidId.toString()));
         verify(userService, times(1)).getUserById(invalidId);
     }
 
     @Test
     @DisplayName("""
-            Given a valid user ID but invalid genres
-            When updateUser is called
-            Then it returns a 400 bad request error
+            Given a valid user email
+            When getUserByEmail is called
+            Then it returns a successful response with user details
             """)
-    void givenInvalidGenres_WhenUpdateUserIsCalled_ThenThrowsGenreNotFoundForUserException() {
+    void givenValidEmail_WhenGetUserByEmailIsCalled_ThenReturnsUserDetails() {
         // Given
-        Long userId = 1L;
+        String email = "test@example.com";
+        UUID userId = UUID.randomUUID();
+        UserDTO mockUser = new UserDTO();
+        mockUser.setId(userId);
+        mockUser.setDisplay_name("Test User");
+        mockUser.setAvatar_url("avatar.png");
+        mockUser.setEmail(email);
+        mockUser.setGenres(List.of("Rock", "Pop"));
 
-        // Build DTO payload instead of Map
-        UserUpdateDTO invalidPayload = new UserUpdateDTO();
-        invalidPayload.setUsername("TestUser");
+        when(userService.getUserByEmail(email)).thenReturn(mockUser);
 
-        UserPreferencesDTO prefs = new UserPreferencesDTO();
-        prefs.setUserId(userId);
-        prefs.setTop1GenreId(999L); // invalid/non-existent genre ID
-        invalidPayload.setPreferences(prefs);
+        // When
+        ResponseEntity<UserDTO> response = userController.getUserByEmail(email);
 
-        // Mock service to throw the exception when called with this payload
-        when(userService.updateUser(userId, invalidPayload))
-                .thenThrow(new GenreNotFoundForUserException("Genre not found: 999"));
+        // Then
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals("Test User", response.getBody().getDisplay_name());
+        assertEquals(email, response.getBody().getEmail());
+        assertEquals(List.of("Rock", "Pop"), response.getBody().getGenres());
+        verify(userService, times(1)).getUserByEmail(email);
+    }
+
+    @Test
+    @DisplayName("""
+            Given an invalid user email
+            When getUserByEmail is called
+            Then it throws UserNotFoundException
+            """)
+    void givenInvalidEmail_WhenGetUserByEmailIsCalled_ThenThrowsUserNotFoundException() {
+        // Given
+        String email = "nonexistent@example.com";
+        when(userService.getUserByEmail(email)).thenThrow(new UserNotFoundException("User not found for email: " + email));
 
         // When / Then
-        GenreNotFoundForUserException exception = assertThrows(
-                GenreNotFoundForUserException.class,
-                () -> userController.updateUser(userId, invalidPayload)
+        UserNotFoundException exception = assertThrows(
+                UserNotFoundException.class,
+                () -> userController.getUserByEmail(email)
         );
 
-        assertTrue(exception.getMessage().contains("999"));
-
-        // Verify service was called once with the DTO
-        verify(userService, times(1)).updateUser(userId, invalidPayload);
+        assertTrue(exception.getMessage().contains(email));
+        verify(userService, times(1)).getUserByEmail(email);
     }
 
     @Test
     @DisplayName("""
-            Given a non-numeric ID input
-            When calling getUser
-            Then it returns a type conversion error before service execution
+            Given a valid user ID and update data
+            When updateUser is called with matching authenticated user
+            Then it returns updated user data
             """)
-    void givenInvalidTypeId_WhenGetUserIsCalled_ThenThrowsException() {
-        assertThrows(NumberFormatException.class, () -> {
-            Long invalidId = Long.valueOf("abc");
-            userController.getUser(invalidId);
-        });
+    void givenValidUpdateData_WhenUpdateUserIsCalled_ThenReturnsUpdatedUser() {
+        // Given
+        UUID userId = UUID.randomUUID();
+        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        updateDTO.setDisplay_name("UpdatedName");
+        updateDTO.setAvatar_url("new-avatar.png");
+        updateDTO.setGenres(List.of("Rock", "Jazz"));
+        
+        UserDTO updatedUserDTO = new UserDTO();
+        updatedUserDTO.setId(userId);
+        updatedUserDTO.setDisplay_name("UpdatedName");
+        updatedUserDTO.setAvatar_url("new-avatar.png");
+        updatedUserDTO.setEmail("test@example.com");
+        updatedUserDTO.setGenres(List.of("Rock", "Jazz"));
 
-        verify(userService, never()).getUserById(any());
+        // Mock SecurityContext
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn(userId.toString());
+        SecurityContextHolder.setContext(securityContext);
+
+        when(userService.updateUser(eq(userId), any(UserUpdateDTO.class))).thenReturn(updatedUserDTO);
+
+        // When
+        ResponseEntity<?> response = userController.updateUser(userId, updateDTO);
+
+        // Then
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody() instanceof UserDTO);
+        UserDTO responseBody = (UserDTO) response.getBody();
+        assertEquals("UpdatedName", responseBody.getDisplay_name());
+        verify(userService, times(1)).updateUser(eq(userId), any(UserUpdateDTO.class));
     }
 
     @Test
     @DisplayName("""
-        Given a valid preferences payload
-        When savePreferences is called
-        Then it returns a success message
-        """)
+            Given a user ID that doesn't match authenticated user
+            When updateUser is called
+            Then it returns 403 Forbidden
+            """)
+    void givenMismatchedUserId_WhenUpdateUserIsCalled_ThenReturnsForbidden() {
+        // Given
+        UUID requestedUserId = UUID.randomUUID();
+        UUID authenticatedUserId = UUID.randomUUID();
+        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        updateDTO.setDisplay_name("UpdatedName");
+
+        // Mock SecurityContext with different user ID
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn(authenticatedUserId.toString());
+        SecurityContextHolder.setContext(securityContext);
+
+        // When
+        ResponseEntity<?> response = userController.updateUser(requestedUserId, updateDTO);
+
+        // Then
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody() instanceof Map);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+        assertTrue(responseBody.containsKey("error"));
+        verify(userService, never()).updateUser(any(), any());
+    }
+
+    @Test
+    @DisplayName("""
+            Given a valid preferences payload
+            When savePreferences is called
+            Then it returns a success message
+            """)
     void givenValidPreferences_WhenSavePreferencesIsCalled_ThenReturnsSuccess() {
-// Given
+        // Given
+        UUID userId = UUID.randomUUID();
         UserPreferencesDTO dto = new UserPreferencesDTO();
-        dto.setUserId(1L);
         dto.setTop1GenreId(5L);
         dto.setTop2GenreId(10L);
         dto.setTop3GenreId(15L);
 
-        User mockUser = new User();
-        mockUser.setId(1L);
-        mockUser.setTop1Genre(new Genre(5L, "Genre5"));
-        mockUser.setTop2Genre(new Genre(10L, "Genre10"));
-        mockUser.setTop3Genre(new Genre(15L, "Genre15"));
-
-        when(userService.updateUserPreferences(any(UserPreferencesDTO.class)))
-                .thenReturn(mockUser);  // return the mocked User
+        // Mock SecurityContext
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn(userId.toString());
+        SecurityContextHolder.setContext(securityContext);
 
         // When
         ResponseEntity<Map<String, Object>> response = userController.savePreferences(dto);
@@ -216,58 +246,7 @@ class UserControllerTest {
         assertTrue((Boolean) response.getBody().get("success"));
         assertEquals("Preferences updated successfully.", response.getBody().get("message"));
 
-        verify(userService, times(1)).updateUserPreferences(any(UserPreferencesDTO.class));
+        verify(userService, times(1)).updateUserPreferences(eq(userId), any(UserPreferencesDTO.class));
     }
 
-    @Test
-    @DisplayName("""
-        Given a preferences payload without userId
-        When savePreferences is called
-        Then it returns a bad request error
-        """)
-    void givenMissingUserId_WhenSavePreferencesIsCalled_ThenReturnsBadRequest() {
-        // Given
-        UserPreferencesDTO dto = new UserPreferencesDTO();
-        dto.setTop1GenreId(5L);
-        dto.setTop2GenreId(10L);
-        dto.setTop3GenreId(15L);
-
-        // When
-        ResponseEntity<Map<String, Object>> response = userController.savePreferences(dto);
-
-        // Then
-        assertEquals(400, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-        assertFalse((Boolean) response.getBody().get("success"));
-        assertEquals("User ID is required.", response.getBody().get("message"));
-        verify(userService, never()).updateUserPreferences(any());
-    }
-
-    @Test
-    @DisplayName("""
-        Given a valid preferences payload
-        When the service throws an exception
-        Then it returns internal server error
-        """)
-    void givenValidPreferences_WhenServiceThrowsException_ThenReturnsInternalError() {
-        // Given
-        UserPreferencesDTO dto = new UserPreferencesDTO();
-        dto.setUserId(1L);
-        dto.setTop1GenreId(5L);
-        dto.setTop2GenreId(10L);
-        dto.setTop3GenreId(15L);
-
-        doThrow(new RuntimeException("DB error"))
-                .when(userService).updateUserPreferences(any(UserPreferencesDTO.class));
-
-        // When
-        ResponseEntity<Map<String, Object>> response = userController.savePreferences(dto);
-
-        // Then
-        assertEquals(500, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-        assertFalse((Boolean) response.getBody().get("success"));
-        assertEquals("Internal error updating preferences.", response.getBody().get("message"));
-        verify(userService, times(1)).updateUserPreferences(any());
-    }
 }

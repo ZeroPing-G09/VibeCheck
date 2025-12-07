@@ -5,7 +5,10 @@ import 'package:frontend/data/services/user_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserRepository {
-  final UserService _service = UserService();
+  final UserService _service;
+
+  UserRepository({UserService? userService})
+      : _service = userService ?? UserService();
 
   Future<User> getUserById(int id) async {
     final user = await _service.fetchUserById(id);
