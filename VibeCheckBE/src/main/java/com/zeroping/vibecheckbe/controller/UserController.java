@@ -1,6 +1,8 @@
 package com.zeroping.vibecheckbe.controller;
 
+import com.zeroping.vibecheckbe.dto.UserDTO;
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
+import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
 import com.zeroping.vibecheckbe.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,21 +26,21 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getUser(@PathVariable UUID id) {
-        Map<String, Object> response = userService.getUserById(id);
+    public ResponseEntity<UserDTO> getUser(@PathVariable UUID id) {
+        UserDTO response = userService.getUserById(id);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/by-email")
-    public ResponseEntity<Map<String, Object>> getUserByEmail(@RequestParam String email) {
-        Map<String, Object> response = userService.getUserByEmail(email);
+    public ResponseEntity<UserDTO> getUserByEmail(@RequestParam String email) {
+        UserDTO response = userService.getUserByEmail(email);
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> updateUser(
+    public ResponseEntity<?> updateUser(
             @PathVariable UUID id,
-            @RequestBody Map<String, Object> updateData) {
+            @RequestBody UserUpdateDTO updateDTO) {
         // Verify the authenticated user matches the requested user ID
         String authenticatedUserId = SecurityContextHolder.getContext().getAuthentication().getName();
         if (!authenticatedUserId.equals(id.toString())) {
@@ -46,7 +48,7 @@ public class UserController {
                     .body(Map.of("error", "You can only update your own profile"));
         }
 
-        Map<String, Object> updatedUser = userService.updateUser(id, updateData);
+        UserDTO updatedUser = userService.updateUser(id, updateDTO);
         return ResponseEntity.ok(updatedUser);
     }
 

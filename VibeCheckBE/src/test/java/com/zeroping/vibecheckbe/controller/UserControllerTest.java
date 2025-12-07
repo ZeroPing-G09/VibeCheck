@@ -1,6 +1,8 @@
 package com.zeroping.vibecheckbe.controller;
 
+import com.zeroping.vibecheckbe.dto.UserDTO;
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
+import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
 import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
 import com.zeroping.vibecheckbe.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,24 +48,23 @@ class UserControllerTest {
     void givenValidId_WhenGetUserIsCalled_ThenReturnsUserDetails() {
         // Given
         UUID userId = UUID.randomUUID();
-        Map<String, Object> mockUser = Map.of(
-                "id", userId,
-                "display_name", "Andreea",
-                "avatar_url", "andreea.png",
-                "email", "andreea@example.com",
-                "genres", List.of("Pop", "Jazz")
-        );
+        UserDTO mockUser = new UserDTO();
+        mockUser.setId(userId);
+        mockUser.setDisplay_name("Andreea");
+        mockUser.setAvatar_url("andreea.png");
+        mockUser.setEmail("andreea@example.com");
+        mockUser.setGenres(List.of("Pop", "Jazz"));
 
         when(userService.getUserById(userId)).thenReturn(mockUser);
 
         // When
-        ResponseEntity<Map<String, Object>> response = userController.getUser(userId);
+        ResponseEntity<UserDTO> response = userController.getUser(userId);
 
         // Then
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
-        assertEquals("Andreea", response.getBody().get("display_name"));
-        assertEquals(List.of("Pop", "Jazz"), response.getBody().get("genres"));
+        assertEquals("Andreea", response.getBody().getDisplay_name());
+        assertEquals(List.of("Pop", "Jazz"), response.getBody().getGenres());
         verify(userService, times(1)).getUserById(userId);
     }
 
@@ -97,25 +98,25 @@ class UserControllerTest {
     void givenValidEmail_WhenGetUserByEmailIsCalled_ThenReturnsUserDetails() {
         // Given
         String email = "test@example.com";
-        Map<String, Object> mockUser = Map.of(
-                "id", UUID.randomUUID(),
-                "display_name", "Test User",
-                "avatar_url", "avatar.png",
-                "email", email,
-                "genres", List.of("Rock", "Pop")
-        );
+        UUID userId = UUID.randomUUID();
+        UserDTO mockUser = new UserDTO();
+        mockUser.setId(userId);
+        mockUser.setDisplay_name("Test User");
+        mockUser.setAvatar_url("avatar.png");
+        mockUser.setEmail(email);
+        mockUser.setGenres(List.of("Rock", "Pop"));
 
         when(userService.getUserByEmail(email)).thenReturn(mockUser);
 
         // When
-        ResponseEntity<Map<String, Object>> response = userController.getUserByEmail(email);
+        ResponseEntity<UserDTO> response = userController.getUserByEmail(email);
 
         // Then
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
-        assertEquals("Test User", response.getBody().get("display_name"));
-        assertEquals(email, response.getBody().get("email"));
-        assertEquals(List.of("Rock", "Pop"), response.getBody().get("genres"));
+        assertEquals("Test User", response.getBody().getDisplay_name());
+        assertEquals(email, response.getBody().getEmail());
+        assertEquals(List.of("Rock", "Pop"), response.getBody().getGenres());
         verify(userService, times(1)).getUserByEmail(email);
     }
 
@@ -149,18 +150,17 @@ class UserControllerTest {
     void givenValidUpdateData_WhenUpdateUserIsCalled_ThenReturnsUpdatedUser() {
         // Given
         UUID userId = UUID.randomUUID();
-        Map<String, Object> updateData = Map.of(
-                "display_name", "UpdatedName",
-                "avatar_url", "new-avatar.png",
-                "genres", List.of("Rock", "Jazz")
-        );
-        Map<String, Object> updatedUser = Map.of(
-                "id", userId,
-                "display_name", "UpdatedName",
-                "avatar_url", "new-avatar.png",
-                "email", "test@example.com",
-                "genres", List.of("Rock", "Jazz")
-        );
+        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        updateDTO.setDisplay_name("UpdatedName");
+        updateDTO.setAvatar_url("new-avatar.png");
+        updateDTO.setGenres(List.of("Rock", "Jazz"));
+        
+        UserDTO updatedUserDTO = new UserDTO();
+        updatedUserDTO.setId(userId);
+        updatedUserDTO.setDisplay_name("UpdatedName");
+        updatedUserDTO.setAvatar_url("new-avatar.png");
+        updatedUserDTO.setEmail("test@example.com");
+        updatedUserDTO.setGenres(List.of("Rock", "Jazz"));
 
         // Mock SecurityContext
         Authentication authentication = mock(Authentication.class);
@@ -169,16 +169,18 @@ class UserControllerTest {
         when(authentication.getName()).thenReturn(userId.toString());
         SecurityContextHolder.setContext(securityContext);
 
-        when(userService.updateUser(eq(userId), any(Map.class))).thenReturn(updatedUser);
+        when(userService.updateUser(eq(userId), any(UserUpdateDTO.class))).thenReturn(updatedUserDTO);
 
         // When
-        ResponseEntity<Map<String, Object>> response = userController.updateUser(userId, updateData);
+        ResponseEntity<?> response = userController.updateUser(userId, updateDTO);
 
         // Then
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
-        assertEquals("UpdatedName", response.getBody().get("display_name"));
-        verify(userService, times(1)).updateUser(eq(userId), any(Map.class));
+        assertTrue(response.getBody() instanceof UserDTO);
+        UserDTO responseBody = (UserDTO) response.getBody();
+        assertEquals("UpdatedName", responseBody.getDisplay_name());
+        verify(userService, times(1)).updateUser(eq(userId), any(UserUpdateDTO.class));
     }
 
     @Test
@@ -191,7 +193,8 @@ class UserControllerTest {
         // Given
         UUID requestedUserId = UUID.randomUUID();
         UUID authenticatedUserId = UUID.randomUUID();
-        Map<String, Object> updateData = Map.of("display_name", "UpdatedName");
+        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        updateDTO.setDisplay_name("UpdatedName");
 
         // Mock SecurityContext with different user ID
         Authentication authentication = mock(Authentication.class);
@@ -201,12 +204,15 @@ class UserControllerTest {
         SecurityContextHolder.setContext(securityContext);
 
         // When
-        ResponseEntity<Map<String, Object>> response = userController.updateUser(requestedUserId, updateData);
+        ResponseEntity<?> response = userController.updateUser(requestedUserId, updateDTO);
 
         // Then
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertTrue(response.getBody().containsKey("error"));
+        assertTrue(response.getBody() instanceof Map);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+        assertTrue(responseBody.containsKey("error"));
         verify(userService, never()).updateUser(any(), any());
     }
 
@@ -242,4 +248,5 @@ class UserControllerTest {
 
         verify(userService, times(1)).updateUserPreferences(eq(userId), any(UserPreferencesDTO.class));
     }
+
 }

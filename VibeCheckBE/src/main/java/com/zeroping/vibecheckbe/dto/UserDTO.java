@@ -1,13 +1,18 @@
 package com.zeroping.vibecheckbe.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
-public class UserUpdateDTO {
+@AllArgsConstructor
+public class UserDTO {
+    private UUID id;
+    private String email;
     private String display_name;
     private String avatar_url;
     private List<String> genres;
