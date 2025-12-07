@@ -1,5 +1,9 @@
 package com.zeroping.vibecheckbe.service;
 
+import com.zeroping.vibecheckbe.dto.BatchMoodEntryDTO;
+import com.zeroping.vibecheckbe.dto.CreateBatchMoodEntriesDTO;
+import com.zeroping.vibecheckbe.dto.CreateMoodEntryDTO;
+import com.zeroping.vibecheckbe.dto.MoodEntryResponseDTO;
 import com.zeroping.vibecheckbe.entity.Mood;
 import com.zeroping.vibecheckbe.entity.MoodEntry;
 import com.zeroping.vibecheckbe.entity.User;
@@ -9,16 +13,19 @@ import com.zeroping.vibecheckbe.repository.MoodRepository;
 import com.zeroping.vibecheckbe.repository.MoodEntryRepository;
 import com.zeroping.vibecheckbe.repository.UserRepository;
 import com.zeroping.vibecheckbe.util.MoodEmojiMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 
 @Service
 public class MoodService {
+
+    private static final Logger log = LoggerFactory.getLogger(MoodService.class);
 
     private final MoodRepository moodRepository;
     private final MoodEntryRepository moodEntryRepository;
@@ -34,137 +41,96 @@ public class MoodService {
 
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getAllMoods() {
-        try {
-            System.out.println("MoodService.getAllMoods: Starting to fetch moods from repository");
-            System.out.println("MoodService.getAllMoods: Repository is null? " + (moodRepository == null));
-            
-            List<Mood> moods = moodRepository.findAll();
-            System.out.println("MoodService.getAllMoods: Found " + moods.size() + " moods in database");
-            
-            if (moods.isEmpty()) {
-                System.out.println("MoodService.getAllMoods: No moods found in database");
-                return new ArrayList<>();
-            }
-            
-            return moods.stream()
-                    .map(m -> {
-                        try {
-                            Map<String, Object> moodMap = new HashMap<>();
-                            moodMap.put("id", m.getId());
-                            moodMap.put("name", m.getName() != null ? m.getName() : "");
-                            moodMap.put("tempo", m.getTempo() != null ? m.getTempo() : "");
-                            moodMap.put("danceable", m.getDanceable() != null ? m.getDanceable() : "");
-                            // Add emoji and color based on mood name
-                            String moodName = m.getName() != null ? m.getName() : "";
-                            moodMap.put("emoji", MoodEmojiMapper.getEmoji(moodName));
-                            moodMap.put("colorCode", MoodEmojiMapper.getColorCode(moodName));
-                            return moodMap;
-                        } catch (Exception e) {
-                            System.err.println("Error mapping mood: " + m.getId() + ", error: " + e.getMessage());
-                            e.printStackTrace();
-                            throw new RuntimeException("Error processing mood: " + m.getId(), e);
-                        }
-                    })
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            System.err.println("MoodService.getAllMoods error: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Failed to retrieve moods: " + e.getMessage(), e);
+        log.debug("getAllMoods: Fetching moods from repository");
+        
+        List<Mood> moods = moodRepository.findAll();
+        log.debug("getAllMoods: Found {} moods in database", moods.size());
+        
+        if (moods.isEmpty()) {
+            return new ArrayList<>();
         }
+        
+        return moods.stream()
+                .map(m -> {
+                    Map<String, Object> moodMap = new HashMap<>();
+                    moodMap.put("id", m.getId());
+                    moodMap.put("name", m.getName() != null ? m.getName() : "");
+                    moodMap.put("tempo", m.getTempo() != null ? m.getTempo() : "");
+                    moodMap.put("danceable", m.getDanceable() != null ? m.getDanceable() : "");
+                    String moodName = m.getName() != null ? m.getName() : "";
+                    moodMap.put("emoji", MoodEmojiMapper.getEmoji(moodName));
+                    moodMap.put("colorCode", MoodEmojiMapper.getColorCode(moodName));
+                    return moodMap;
+                })
+                .collect(Collectors.toList());
     }
 
     @Transactional
-    public Map<String, Object> createMoodEntry(UUID userId, Long moodId, Integer intensity, String notes) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+    public MoodEntryResponseDTO createMoodEntry(CreateMoodEntryDTO dto) {
+        User user = userRepository.findById(dto.userId())
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + dto.userId()));
         
-        Mood mood = moodRepository.findById(moodId)
-                .orElseThrow(() -> new MoodNotFoundException(moodId));
+        Mood mood = moodRepository.findById(dto.moodId())
+                .orElseThrow(() -> new MoodNotFoundException(dto.moodId()));
 
         MoodEntry entry = new MoodEntry();
         entry.setUser(user);
         entry.setMood(mood);
-        entry.setIntensity(intensity != null ? intensity : 50); // Default to 50 if not provided
-        entry.setNotes(notes);
+        entry.setIntensity(dto.intensity());
+        entry.setNotes(dto.notes());
 
         MoodEntry saved = moodEntryRepository.save(entry);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("id", saved.getId());
-        response.put("userId", saved.getUser().getId());
-        response.put("moodId", saved.getMood().getId());
-        response.put("moodName", saved.getMood().getName());
-        response.put("moodEmoji", MoodEmojiMapper.getEmoji(saved.getMood().getName()));
-        response.put("intensity", saved.getIntensity());
-        response.put("notes", saved.getNotes());
-        response.put("createdAt", saved.getCreatedAt().toString());
-        return response;
+        return toResponseDTO(saved);
     }
 
     @Transactional
-    public List<Map<String, Object>> createMultipleMoodEntries(UUID userId, List<Map<String, Object>> moodEntriesData, String generalNotes) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+    public List<MoodEntryResponseDTO> createMultipleMoodEntries(CreateBatchMoodEntriesDTO dto) {
+        User user = userRepository.findById(dto.userId())
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + dto.userId()));
 
-        List<Map<String, Object>> savedEntries = new ArrayList<>();
+        List<MoodEntryResponseDTO> savedEntries = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
 
-        for (Map<String, Object> moodData : moodEntriesData) {
-            Long moodId = Long.valueOf(moodData.get("moodId").toString());
-            Integer intensity = moodData.containsKey("intensity") && moodData.get("intensity") != null
-                    ? Integer.valueOf(moodData.get("intensity").toString())
-                    : 50;
-            // Use individual notes if provided, otherwise use general notes
-            String notes = moodData.containsKey("notes") && moodData.get("notes") != null
-                    ? moodData.get("notes").toString()
-                    : generalNotes; // Fallback to general notes
-
-            Mood mood = moodRepository.findById(moodId)
-                    .orElseThrow(() -> new MoodNotFoundException(moodId));
+        for (BatchMoodEntryDTO moodData : dto.moodEntries()) {
+            Mood mood = moodRepository.findById(moodData.moodId())
+                    .orElseThrow(() -> new MoodNotFoundException(moodData.moodId()));
 
             MoodEntry entry = new MoodEntry();
             entry.setUser(user);
             entry.setMood(mood);
-            entry.setIntensity(intensity);
-            entry.setNotes(notes);
+            entry.setIntensity(moodData.intensity());
+            // Use individual notes if provided, otherwise use general notes
+            entry.setNotes(moodData.notes() != null ? moodData.notes() : dto.generalNotes());
             entry.setCreatedAt(now); // Same timestamp for all entries in batch
 
             MoodEntry saved = moodEntryRepository.save(entry);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", saved.getId());
-            response.put("userId", saved.getUser().getId());
-            response.put("moodId", saved.getMood().getId());
-            response.put("moodName", saved.getMood().getName());
-            response.put("moodEmoji", MoodEmojiMapper.getEmoji(saved.getMood().getName()));
-            response.put("intensity", saved.getIntensity());
-            response.put("notes", saved.getNotes());
-            response.put("createdAt", saved.getCreatedAt().toString());
-            savedEntries.add(response);
+            savedEntries.add(toResponseDTO(saved));
         }
 
         return savedEntries;
     }
 
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> getUserMoodEntries(UUID userId) {
+    public List<MoodEntryResponseDTO> getUserMoodEntries(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
 
         List<MoodEntry> entries = moodEntryRepository.findByUserOrderByCreatedAtDesc(user);
         return entries.stream()
-                .map(e -> {
-                    Map<String, Object> entryMap = new HashMap<>();
-                    entryMap.put("id", e.getId());
-                    entryMap.put("moodId", e.getMood().getId());
-                    entryMap.put("moodName", e.getMood().getName());
-                    entryMap.put("moodEmoji", MoodEmojiMapper.getEmoji(e.getMood().getName()));
-                    entryMap.put("intensity", e.getIntensity() != null ? e.getIntensity() : 50);
-                    entryMap.put("notes", e.getNotes());
-                    entryMap.put("createdAt", e.getCreatedAt().toString());
-                    return entryMap;
-                })
+                .map(this::toResponseDTO)
                 .collect(Collectors.toList());
     }
-}
 
+    private MoodEntryResponseDTO toResponseDTO(MoodEntry entry) {
+        return new MoodEntryResponseDTO(
+                entry.getId(),
+                entry.getUser().getId(),
+                entry.getMood().getId(),
+                entry.getMood().getName(),
+                MoodEmojiMapper.getEmoji(entry.getMood().getName()),
+                entry.getIntensity() != null ? entry.getIntensity() : 50,
+                entry.getNotes(),
+                entry.getCreatedAt()
+        );
+    }
+}
