@@ -26,8 +26,7 @@ class PlaylistService {
   /// Returns null if no playlist exists (404 response).
   /// Throws an exception for other error responses.
   Future<LastPlaylist?> fetchLastPlaylist() async {
-    final token = await _authService.getAccessToken();
-    if (token == null) {
+    if (await _authService.getAccessToken() == null) {
       throw Exception('Not authenticated');
     }
 
@@ -37,7 +36,7 @@ class PlaylistService {
     final response = await http.get(
       url,
       headers: {
-        'Authorization': 'Bearer $token',
+        'Authorization': 'Bearer ${await _authService.getAccessToken()}',
         'Content-Type': 'application/json',
       },
     );
