@@ -108,7 +108,7 @@ class LastPlaylistSection extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Nu ai încă un playlist generat.',
+                  'You don\'t have any playlists generated yet.',
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 const SizedBox(height: 8),
@@ -116,7 +116,7 @@ class LastPlaylistSection extends StatelessWidget {
                   ElevatedButton.icon(
                     onPressed: onCreatePlaylist,
                     icon: const Icon(Icons.add),
-                    label: const Text('Creează unul nou!'),
+                    label: const Text('Create a new one!'),
                   ),
               ],
             ),
