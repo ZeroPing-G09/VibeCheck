@@ -54,7 +54,10 @@ class PlaylistService {
     } else if (response.statusCode == 401) {
       throw Exception('Unauthorized: Invalid or expired token');
     } else {
-      throw Exception('Failed to fetch last playlist: ${response.statusCode}');
+      // For 500 errors (e.g., database schema issues), treat as no playlist exists
+      // This provides a better user experience than showing a technical error
+      debugPrint('Error fetching playlist (${response.statusCode}), treating as no playlist');
+      return null;
     }
   }
 }

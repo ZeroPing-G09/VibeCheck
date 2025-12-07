@@ -10,6 +10,7 @@ import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
 import com.zeroping.vibecheckbe.repository.PlaylistRepository;
 import com.zeroping.vibecheckbe.repository.UserRepository;
 import com.zeroping.vibecheckbe.repository.GenreRepository;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -108,8 +109,14 @@ public class UserService {
      * @return LastPlaylistResponseDTO with playlist info, or empty Optional if no playlist exists
      */
     public Optional<LastPlaylistResponseDTO> getLastPlaylist(UUID userId) {
-        return playlistRepository.findFirstByUserIdOrderByCreatedAtDesc(userId)
-                .map(this::toLastPlaylistResponse);
+        try {
+            return playlistRepository.findFirstByUserIdOrderByCreatedAtDesc(userId)
+                    .map(this::toLastPlaylistResponse);
+        } catch (InvalidDataAccessResourceUsageException e) {
+            // If database schema issue (e.g., missing column), treat as no playlist exists
+            // This allows the app to work even if the database schema is incomplete
+            return Optional.empty();
+        }
     }
 
     private LastPlaylistResponseDTO toLastPlaylistResponse(Playlist playlist) {

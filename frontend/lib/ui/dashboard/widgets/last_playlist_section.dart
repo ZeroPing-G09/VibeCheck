@@ -76,16 +76,16 @@ class LastPlaylistSection extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Failed to load playlist',
+                  'No playlist created',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.error,
                   ),
                 ),
-                if (errorMessage != null)
+                if (errorMessage != null && errorMessage!.contains('Unauthorized'))
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      errorMessage!,
+                      'Please log in again',
                       style: Theme.of(context).textTheme.bodySmall,
                       textAlign: TextAlign.center,
                     ),

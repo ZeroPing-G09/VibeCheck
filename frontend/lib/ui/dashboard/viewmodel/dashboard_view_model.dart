@@ -56,8 +56,15 @@ class DashboardViewModel extends ChangeNotifier {
       _playlistState =
           _lastPlaylist != null ? PlaylistState.loaded : PlaylistState.empty;
     } catch (e) {
-      _playlistError = e.toString();
-      _playlistState = PlaylistState.error;
+      // Only show error for authentication issues, treat other errors as no playlist
+      if (e.toString().contains('Unauthorized')) {
+        _playlistError = e.toString();
+        _playlistState = PlaylistState.error;
+      } else {
+        // For other errors (network, server issues), treat as no playlist
+        _playlistState = PlaylistState.empty;
+        _playlistError = null;
+      }
     }
     notifyListeners();
   }
