@@ -1,6 +1,8 @@
 package com.zeroping.vibecheckbe.service;
 
+import com.zeroping.vibecheckbe.dto.UserDTO;
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
+import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
 import com.zeroping.vibecheckbe.entity.Genre;
 import com.zeroping.vibecheckbe.entity.User;
 import com.zeroping.vibecheckbe.exception.genre.GenreNotFoundException;
@@ -55,13 +57,12 @@ class UserServiceTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(u));
 
         // When
-        Map<String, Object> out = userService.getUserById(userId);
+        UserDTO out = userService.getUserById(userId);
 
         // Then
-        assertEquals("alex", out.get("display_name"));
-        assertEquals("pic.png", out.get("avatar_url"));
-        @SuppressWarnings("unchecked")
-        List<String> genreNames = (List<String>) out.get("genres");
+        assertEquals("alex", out.getDisplay_name());
+        assertEquals("pic.png", out.getAvatar_url());
+        List<String> genreNames = out.getGenres();
         assertTrue(genreNames.contains("Rock"));
         assertTrue(genreNames.contains("Jazz"));
         verify(userRepository).findById(userId);
@@ -108,14 +109,13 @@ class UserServiceTest {
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(u));
 
         // When
-        Map<String, Object> out = userService.getUserByEmail(email);
+        UserDTO out = userService.getUserByEmail(email);
 
         // Then
-        assertEquals("Test User", out.get("display_name"));
-        assertEquals("avatar.png", out.get("avatar_url"));
-        assertEquals(email, out.get("email"));
-        @SuppressWarnings("unchecked")
-        List<String> genreNames = (List<String>) out.get("genres");
+        assertEquals("Test User", out.getDisplay_name());
+        assertEquals("avatar.png", out.getAvatar_url());
+        assertEquals(email, out.getEmail());
+        List<String> genreNames = out.getGenres();
         assertTrue(genreNames.contains("Pop"));
         verify(userRepository).findByEmail(email);
     }
@@ -340,11 +340,10 @@ class UserServiceTest {
         existingUser.setEmail("test@example.com");
         existingUser.setGenres(new HashSet<>());
 
-        Map<String, Object> updateData = Map.of(
-                "display_name", "NewName",
-                "avatar_url", "new-avatar.png",
-                "genres", List.of("Rock", "Jazz")
-        );
+        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        updateDTO.setDisplay_name("NewName");
+        updateDTO.setAvatar_url("new-avatar.png");
+        updateDTO.setGenres(List.of("Rock", "Jazz"));
 
         Genre rockGenre = genre(1L, "Rock");
         Genre jazzGenre = genre(2L, "Jazz");
@@ -358,14 +357,13 @@ class UserServiceTest {
         });
 
         // When
-        Map<String, Object> result = userService.updateUser(userId, updateData);
+        UserDTO result = userService.updateUser(userId, updateDTO);
 
         // Then
         assertNotNull(result);
-        assertEquals("NewName", result.get("display_name"));
-        assertEquals("new-avatar.png", result.get("avatar_url"));
-        @SuppressWarnings("unchecked")
-        List<String> genres = (List<String>) result.get("genres");
+        assertEquals("NewName", result.getDisplay_name());
+        assertEquals("new-avatar.png", result.getAvatar_url());
+        List<String> genres = result.getGenres();
         assertTrue(genres.contains("Rock"));
         assertTrue(genres.contains("Jazz"));
         verify(userRepository).findById(userId);
@@ -386,13 +384,14 @@ class UserServiceTest {
         existingUser.setAvatarUrl("old-avatar.png");
         existingUser.setEmail("test@example.com");
 
-        Map<String, Object> updateData = Map.of("avatar_url", "");
+        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        updateDTO.setAvatar_url("");
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
-        userService.updateUser(userId, updateData);
+        userService.updateUser(userId, updateDTO);
 
         // Then
         assertNull(existingUser.getAvatarUrl());
@@ -415,13 +414,14 @@ class UserServiceTest {
         existingGenres.add(genre(1L, "Rock"));
         existingUser.setGenres(existingGenres);
 
-        Map<String, Object> updateData = Map.of("genres", List.of());
+        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        updateDTO.setGenres(List.of());
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
-        userService.updateUser(userId, updateData);
+        userService.updateUser(userId, updateDTO);
 
         // Then
         assertTrue(existingUser.getGenres().isEmpty());
@@ -441,13 +441,14 @@ class UserServiceTest {
         existingUser.setId(userId);
         existingUser.setEmail("test@example.com");
 
-        Map<String, Object> updateData = Map.of("genres", List.of("NonExistentGenre"));
+        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        updateDTO.setGenres(List.of("NonExistentGenre"));
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
         when(genreRepository.findByNameIgnoreCase("NonExistentGenre")).thenReturn(Optional.empty());
 
         // When & Then
-        assertThrows(GenreNotFoundException.class, () -> userService.updateUser(userId, updateData));
+        assertThrows(GenreNotFoundException.class, () -> userService.updateUser(userId, updateDTO));
         verify(userRepository, never()).save(any());
     }
 
@@ -460,12 +461,13 @@ class UserServiceTest {
     void updateUser_WhenUserNotFound_ShouldThrowException() {
         // Given
         UUID userId = UUID.randomUUID();
-        Map<String, Object> updateData = Map.of("display_name", "NewName");
+        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        updateDTO.setDisplay_name("NewName");
 
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // When & Then
-        assertThrows(UserNotFoundException.class, () -> userService.updateUser(userId, updateData));
+        assertThrows(UserNotFoundException.class, () -> userService.updateUser(userId, updateDTO));
         verify(userRepository, never()).save(any());
     }
 
@@ -484,17 +486,18 @@ class UserServiceTest {
         existingUser.setAvatarUrl("old-avatar.png");
         existingUser.setEmail("test@example.com");
 
-        Map<String, Object> updateData = Map.of("display_name", "NewName");
+        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        updateDTO.setDisplay_name("NewName");
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
-        Map<String, Object> result = userService.updateUser(userId, updateData);
+        UserDTO result = userService.updateUser(userId, updateDTO);
 
         // Then
-        assertEquals("NewName", result.get("display_name"));
-        assertEquals("old-avatar.png", result.get("avatar_url")); // Should remain unchanged
+        assertEquals("NewName", result.getDisplay_name());
+        assertEquals("old-avatar.png", result.getAvatar_url()); // Should remain unchanged
         verify(userRepository).save(existingUser);
     }
 
