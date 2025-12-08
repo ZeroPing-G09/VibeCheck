@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../data/models/mood.dart';
@@ -19,6 +20,7 @@ class MoodHistoryWidgetState extends State<MoodHistoryWidget> {
   bool _isLoading = false;
   String? _error;
   final MoodService _moodService = MoodService();
+  Timer? _updateTimer;
 
   @override
   void didChangeDependencies() {
@@ -28,9 +30,29 @@ class MoodHistoryWidgetState extends State<MoodHistoryWidget> {
     }
   }
 
+  @override
+  void dispose() {
+    _updateTimer?.cancel();
+    super.dispose();
+  }
+
   /// Public method to refresh the mood history
   void refresh() {
     _loadMoodHistory();
+  }
+
+  void _startUpdateTimer() {
+    _updateTimer?.cancel();
+    // Update every minute to change "just now" to "1m ago"
+    _updateTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          // Force rebuild to update time display
+        });
+      } else {
+        timer.cancel();
+      }
+    });
   }
 
   Future<void> _loadMoodHistory() async {
@@ -58,9 +80,11 @@ class MoodHistoryWidgetState extends State<MoodHistoryWidget> {
       final history = await _moodService.fetchUserMoodHistory(user.id);
       if (mounted) {
         setState(() {
-          _moodHistory = history;
+          // Limit to last 3 moods (already sorted by most recent first)
+          _moodHistory = history.take(3).toList();
           _isLoading = false;
         });
+        _startUpdateTimer();
       }
     } catch (e) {
       if (mounted) {
@@ -107,7 +131,7 @@ class MoodHistoryWidgetState extends State<MoodHistoryWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Mood History',
+            'Recent Mood History',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -216,6 +240,9 @@ class MoodHistoryWidgetState extends State<MoodHistoryWidget> {
 
       if (difference.inDays == 0) {
         if (difference.inHours == 0) {
+          if (difference.inMinutes == 0) {
+            return 'just now';
+          }
           return '${difference.inMinutes}m ago';
         }
         return '${difference.inHours}h ago';
