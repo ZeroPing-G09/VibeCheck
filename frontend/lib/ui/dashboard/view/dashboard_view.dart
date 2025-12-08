@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/core/routing/app_router.dart';
 import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
 import 'package:frontend/ui/dashboard/widgets/user_chip.dart';
+import 'package:frontend/ui/dashboard/widgets/mood_history_widget.dart';
 import 'package:frontend/ui/home/view/home_view.dart';
 import 'package:frontend/ui/mood/view/mood_selection_dialog.dart';
 import 'package:frontend/core/widgets/loading_state.dart';
@@ -18,6 +19,7 @@ class DashboardView extends StatefulWidget {
 
 class _DashboardViewState extends State<DashboardView> {
   bool _hasShownMoodDialog = false;
+  final _moodHistoryKey = GlobalKey<MoodHistoryWidgetState>();
 
   @override
   void initState() {
@@ -50,6 +52,8 @@ class _DashboardViewState extends State<DashboardView> {
     ).then((moodSaved) {
       if (moodSaved == true && mounted) {
         SnackbarHelper.showSuccess(context, 'Mood saved successfully!');
+        // Refresh mood history when a mood is saved
+        _moodHistoryKey.currentState?.refresh();
       }
     });
   }
@@ -127,31 +131,40 @@ class _DashboardViewState extends State<DashboardView> {
       return const Center(child: Text('No user loaded'));
     }
 
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            'Welcome, ${user.displayName}!',
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
+    return Column(
+      children: [
+        // Welcome section
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Text(
+                'Welcome, ${user.displayName}!',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                children: user.genres
+                    .map<Widget>((String genre) => Chip(label: Text(genre)))
+                    .toList(),
+              ),
+              if (user.lastLogIn != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text('Last login: ${user.lastLogIn}'),
+                ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            children: user.genres
-                .map<Widget>((String genre) => Chip(label: Text(genre)))
-                .toList(),
-          ),
-          if (user.lastLogIn != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: Text('Last login: ${user.lastLogIn}'),
-            ),
-        ],
-      ),
+        ),
+        // Mood History Widget
+        Expanded(
+          child: MoodHistoryWidget(key: _moodHistoryKey),
+        ),
+      ],
     );
   }
 
