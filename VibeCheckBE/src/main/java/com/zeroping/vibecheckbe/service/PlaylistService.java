@@ -47,12 +47,22 @@ public class PlaylistService {
                 .orElse(null); // return null if no playlists exist
     }
 
+    public List<PlaylistDTO> getPlaylistsByMood(UUID userId, String mood) {
+        List<Playlist> playlists = playlistRepository.findByUserIdAndMood(userId, mood);
+        return playlists.stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
     private PlaylistDTO mapToDTO(Playlist playlist) {
         PlaylistDTO dto = new PlaylistDTO();
         dto.setId(playlist.getId());
         dto.setName(playlist.getName());
         dto.setMood(playlist.getMood());
+        dto.setUserId(playlist.getUserId());
         dto.setCreatedAt(playlist.getCreatedAt());
+        // Note: songs are not included in this DTO to avoid circular dependencies
+        // If needed, they can be loaded separately
         return dto;
     }
 }
