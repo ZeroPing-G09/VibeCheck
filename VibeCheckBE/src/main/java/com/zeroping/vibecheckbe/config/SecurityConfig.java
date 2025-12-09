@@ -45,6 +45,8 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(customAuthenticationEntryPoint).accessDeniedHandler(customAccessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/users/by-email").permitAll() // allow unauthenticated access to this endpoint
+                        .requestMatchers("/moods").permitAll() // allow unauthenticated access to moods (public reference data)
+                        .requestMatchers("/genres").permitAll() // allow unauthenticated access to genres (public reference data)
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

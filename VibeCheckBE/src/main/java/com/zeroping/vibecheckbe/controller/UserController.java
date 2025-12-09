@@ -3,6 +3,9 @@ package com.zeroping.vibecheckbe.controller;
 import com.zeroping.vibecheckbe.dto.LastPlaylistResponseDTO;
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
 import com.zeroping.vibecheckbe.exception.playlist.PlaylistNotFoundException;
+import com.zeroping.vibecheckbe.dto.UserDTO;
+import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
+import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
 import com.zeroping.vibecheckbe.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,15 +29,30 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getUser(@PathVariable UUID id) {
-        Map<String, Object> response = userService.getUserById(id);
+    public ResponseEntity<UserDTO> getUser(@PathVariable UUID id) {
+        UserDTO response = userService.getUserById(id);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/by-email")
-    public ResponseEntity<Map<String, Object>> getUserByEmail(@RequestParam String email) {
-        Map<String, Object> response = userService.getUserByEmail(email);
+    public ResponseEntity<UserDTO> getUserByEmail(@RequestParam String email) {
+        UserDTO response = userService.getUserByEmail(email);
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateUser(
+            @PathVariable UUID id,
+            @RequestBody UserUpdateDTO updateDTO) {
+        // Verify the authenticated user matches the requested user ID
+        String authenticatedUserId = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!authenticatedUserId.equals(id.toString())) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "You can only update your own profile"));
+        }
+
+        UserDTO updatedUser = userService.updateUser(id, updateDTO);
+        return ResponseEntity.ok(updatedUser);
     }
 
     @PostMapping("/preferences")
@@ -42,14 +60,9 @@ public class UserController {
         String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
         UUID userId = UUID.fromString(userIdString);
 
-        try {
-            userService.updateUserPreferences(userId, preferences);
-            return ResponseEntity.ok()
-                    .body(Map.of("success", true, "message", "Preferences updated successfully."));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("success", false, "message", "Internal error updating preferences."));
-        }
+        userService.updateUserPreferences(userId, preferences);
+        return ResponseEntity.ok()
+                .body(Map.of("success", true, "message", "Preferences updated successfully."));
     }
 
     /**

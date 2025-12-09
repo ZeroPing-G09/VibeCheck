@@ -4,7 +4,10 @@ import 'package:frontend/data/services/genre_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class GenreRepository {
-  final GenreService _service = GenreService();
+  final GenreService _service;
+
+  GenreRepository({GenreService? genreService})
+      : _service = genreService ?? GenreService();
 
   Future<List<String>> getAllGenres() async {
     final genres = await _service.fetchAllGenres();
