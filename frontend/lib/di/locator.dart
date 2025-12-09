@@ -60,6 +60,7 @@ Future<void> setupLocator() async {
   locator.registerFactory(() => DashboardViewModel(
         userRepository: locator<UserRepository>(),
         authRepository: locator<AuthRepository>(),
+        moodRepository: locator<MoodRepository>(),
       ));
   
   locator.registerFactory(() => MoodViewModel(

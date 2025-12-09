@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/data/models/last_playlist.dart';
+import 'package:frontend/data/models/mood.dart';
 import 'package:frontend/data/services/playlist_service.dart';
 import 'package:frontend/di/locator.dart';
 
 import '../../../../data/models/user.dart';
 import '../../../../data/repositories/user_repository.dart';
 import '../../../../data/repositories/auth_repository.dart';
+import '../../../../data/repositories/mood_repository.dart';
 
 /// State for the playlist section of the dashboard.
 enum PlaylistState { loading, loaded, empty, error }
@@ -13,13 +15,16 @@ enum PlaylistState { loading, loaded, empty, error }
 class DashboardViewModel extends ChangeNotifier {
   final UserRepository _userRepository;
   final AuthRepository _authRepository;
+  final MoodRepository _moodRepository;
   final PlaylistService _playlistService = locator<PlaylistService>();
 
   DashboardViewModel({
     UserRepository? userRepository,
     AuthRepository? authRepository,
+    MoodRepository? moodRepository,
   })  : _userRepository = userRepository ?? UserRepository(),
-        _authRepository = authRepository ?? locator<AuthRepository>();
+        _authRepository = authRepository ?? locator<AuthRepository>(),
+        _moodRepository = moodRepository ?? MoodRepository();
 
   User? _user;
   bool _isLoading = false;
@@ -141,8 +146,28 @@ class DashboardViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Generates a new playlist with the specified mood.
-  /// Currently hardcoded to use "happy" mood.
+  /// Gets the last saved mood for the current user.
+  /// Returns null if no mood entries exist.
+  Future<String?> _getLastMoodName() async {
+    try {
+      if (_user == null) {
+        return null;
+      }
+      
+      final moodEntries = await _moodRepository.getUserMoodEntries(_user!.id);
+      if (moodEntries.isEmpty) {
+        return null;
+      }
+      
+      // Entries are sorted by createdAt desc, so first one is the latest
+      return moodEntries.first.moodName;
+    } catch (e) {
+      debugPrint('DashboardViewModel._getLastMoodName error: $e');
+      return null;
+    }
+  }
+
+  /// Generates a new playlist using the last saved mood.
   /// Uses the user's favorite genres if available.
   /// After generation, automatically reloads the last playlist.
   /// Allows multiple simultaneous requests.
@@ -152,12 +177,14 @@ class DashboardViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Hardcoded mood: "happy"
+      // Get the last saved mood, fallback to "happy" if none exists
+      final moodName = await _getLastMoodName() ?? 'happy';
+      
       // Use user's favorite genres if available, otherwise empty list
       final userGenres = _user?.genres ?? [];
       
       await _playlistService.generatePlaylist(
-        mood: 'happy',
+        mood: moodName,
         genres: userGenres,
       );
 
