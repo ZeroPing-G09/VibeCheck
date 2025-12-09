@@ -2,11 +2,10 @@ package com.zeroping.vibecheckbe.service;
 
 import com.zeroping.vibecheckbe.dto.LastPlaylistResponseDTO;
 import com.zeroping.vibecheckbe.dto.SongDTO;
-import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
-import com.zeroping.vibecheckbe.entity.Playlist;
 import com.zeroping.vibecheckbe.dto.UserDTO;
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
 import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
+import com.zeroping.vibecheckbe.entity.Playlist;
 import com.zeroping.vibecheckbe.entity.User;
 import com.zeroping.vibecheckbe.entity.Genre;
 import com.zeroping.vibecheckbe.exception.genre.GenreNotFoundException;
@@ -146,6 +145,8 @@ public class UserService {
                 playlist.getCreatedAt(),
                 songDTOs
         );
+    }
+
     @Transactional
     public UserDTO updateUser(UUID userId, UserUpdateDTO updateDTO) {
         User user = userRepository.findById(userId)

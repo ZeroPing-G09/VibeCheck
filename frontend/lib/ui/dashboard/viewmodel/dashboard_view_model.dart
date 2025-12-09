@@ -11,15 +11,15 @@ import '../../../../data/repositories/auth_repository.dart';
 enum PlaylistState { loading, loaded, empty, error }
 
 class DashboardViewModel extends ChangeNotifier {
-  final UserRepository _userRepository = UserRepository();
-  final PlaylistService _playlistService = locator<PlaylistService>();
   final UserRepository _userRepository;
   final AuthRepository _authRepository;
+  final PlaylistService _playlistService = locator<PlaylistService>();
 
-  DashboardViewModel(
-    this._userRepository,
-    this._authRepository,
-  );
+  DashboardViewModel({
+    UserRepository? userRepository,
+    AuthRepository? authRepository,
+  })  : _userRepository = userRepository ?? UserRepository(),
+        _authRepository = authRepository ?? locator<AuthRepository>();
 
   User? _user;
   bool _isLoading = false;
@@ -119,6 +119,11 @@ class DashboardViewModel extends ChangeNotifier {
         _playlistState = PlaylistState.empty;
         _playlistError = null;
       }
+    } finally {
+      notifyListeners();
+    }
+  }
+
   /// Command: Handle user action (profile, settings, logout)
   Future<void> handleUserAction(String action) async {
     switch (action) {

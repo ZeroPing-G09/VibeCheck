@@ -19,6 +19,7 @@ class DashboardView extends StatefulWidget {
 
 class _DashboardViewState extends State<DashboardView> {
   bool _hasShownMoodDialog = false;
+  bool _hasLoadedPlaylist = false;
 
   @override
   void initState() {
@@ -29,7 +30,13 @@ class _DashboardViewState extends State<DashboardView> {
       final viewModel = context.read<DashboardViewModel>();
       final email = viewModel.currentUserEmail;
       if (email != null) {
-        viewModel.loadUserByEmail(email);
+        viewModel.loadUserByEmail(email).then((_) {
+          // Load playlist after user is loaded
+          if (mounted && !_hasLoadedPlaylist) {
+            _hasLoadedPlaylist = true;
+            viewModel.loadLastPlaylist();
+          }
+        });
       }
       
       Future.delayed(const Duration(milliseconds: 500), () {
@@ -127,12 +134,11 @@ class _DashboardViewState extends State<DashboardView> {
     if (user == null) {
       return const Center(child: Text('No user loaded'));
     }
-    // Load the last playlist for the authenticated user
-    context.read<DashboardViewModel>().loadLastPlaylist();
 
-    return Center(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Welcome, ${user.displayName}!',
@@ -153,6 +159,17 @@ class _DashboardViewState extends State<DashboardView> {
               padding: const EdgeInsets.only(top: 8.0),
               child: Text('Last login: ${user.lastLogIn}'),
             ),
+          const SizedBox(height: 24),
+          // Last Playlist Section
+          LastPlaylistSection(
+            playlistState: viewModel.playlistState,
+            playlist: viewModel.lastPlaylist,
+            errorMessage: viewModel.playlistError,
+            isGeneratingPlaylist: viewModel.isGeneratingPlaylist,
+            onCreatePlaylist: () {
+              viewModel.generatePlaylist();
+            },
+          ),
         ],
       ),
     );
@@ -176,52 +193,6 @@ class _DashboardViewState extends State<DashboardView> {
           ),
         ],
       ),
-      body: viewModel.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : viewModel.error != null
-          ? Center(child: Text('Error: ${viewModel.error}'))
-          : viewModel.user != null
-          ? SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    // 3. UPDATED: Use viewModel.user!.displayName
-                    'Welcome, ${viewModel.user!.displayName}!',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    children: viewModel.user!.genres
-                        .map((g) => Chip(label: Text(g)))
-                        .toList(),
-                  ),
-                  // Optional: Display last login time
-                  if (viewModel.user!.lastLogIn != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text('Last login: ${viewModel.user!.lastLogIn}'),
-                    ),
-                  const SizedBox(height: 24),
-                  // Last Playlist Section
-                  LastPlaylistSection(
-                    playlistState: viewModel.playlistState,
-                    playlist: viewModel.lastPlaylist,
-                    errorMessage: viewModel.playlistError,
-                    isGeneratingPlaylist: viewModel.isGeneratingPlaylist,
-                    onCreatePlaylist: () {
-                      viewModel.generatePlaylist();
-                    },
-                  ),
-                ],
-              ),
-            )
-          : const Center(child: Text('No user loaded')),
       body: _buildBody(viewModel),
     );
   }

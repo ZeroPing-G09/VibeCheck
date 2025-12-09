@@ -58,8 +58,8 @@ Future<void> setupLocator() async {
 
   // Register ViewModels (UI layer) that depend on repositories
   locator.registerFactory(() => DashboardViewModel(
-        locator<UserRepository>(),
-        locator<AuthRepository>(),
+        userRepository: locator<UserRepository>(),
+        authRepository: locator<AuthRepository>(),
       ));
   
   locator.registerFactory(() => MoodViewModel(
