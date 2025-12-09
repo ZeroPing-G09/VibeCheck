@@ -20,8 +20,8 @@ class MoodSelectionDialog extends StatefulWidget {
 }
 
 class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
-  // Map of selected moods: moodId -> {mood, intensity}
-  final Map<int, _SelectedMoodData> _selectedMoods = {};
+  // Single selected mood
+  _SelectedMoodData? _selectedMood;
   final TextEditingController _notesController = TextEditingController();
   bool _isSaving = false;
   bool _showNotes = false;
@@ -42,12 +42,12 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
 
   void _handleMoodToggled(Mood mood) {
     setState(() {
-      if (_selectedMoods.containsKey(mood.id)) {
+      if (_selectedMood?.mood.id == mood.id) {
         // Remove if already selected
-        _selectedMoods.remove(mood.id);
+        _selectedMood = null;
       } else {
-        // Add with default intensity of 50%
-        _selectedMoods[mood.id] = _SelectedMoodData(
+        // Replace with new selection (single selection only)
+        _selectedMood = _SelectedMoodData(
           mood: mood,
           intensity: 50,
         );
@@ -57,21 +57,23 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
 
   void _handleIntensityChanged(int moodId, int intensity) {
     setState(() {
-      if (_selectedMoods.containsKey(moodId)) {
-        _selectedMoods[moodId]!.intensity = intensity;
+      if (_selectedMood?.mood.id == moodId) {
+        _selectedMood!.intensity = intensity;
       }
     });
   }
 
   void _handleRemoveMood(int moodId) {
     setState(() {
-      _selectedMoods.remove(moodId);
+      if (_selectedMood?.mood.id == moodId) {
+        _selectedMood = null;
+      }
     });
   }
 
   Future<void> _handleSave() async {
-    if (_selectedMoods.isEmpty) {
-      SnackbarHelper.showError(context, 'Please select at least one mood');
+    if (_selectedMood == null) {
+      SnackbarHelper.showError(context, 'Please select a mood');
       return;
     }
 
@@ -82,14 +84,13 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
     try {
       final viewModel = context.read<MoodViewModel>();
       
-      // Convert selected moods to API format
-      final moodEntries = _selectedMoods.values.map((data) {
-        return {
-          'moodId': data.mood.id,
-          'intensity': data.intensity,
-          // Individual notes could be added here if needed
-        };
-      }).toList();
+      // Convert selected mood to API format
+      final moodEntries = [
+        {
+          'moodId': _selectedMood!.mood.id,
+          'intensity': _selectedMood!.intensity,
+        }
+      ];
 
       final generalNotes = _notesController.text.trim().isEmpty
           ? null
@@ -101,14 +102,14 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
         Navigator.of(context).pop(true);
         SnackbarHelper.showSuccess(
           context,
-          'Saved ${_selectedMoods.length} mood${_selectedMoods.length > 1 ? 's' : ''}!',
+          'Mood saved successfully!',
         );
       }
     } catch (e, stackTrace) {
-      debugPrint('MoodSelectionDialog._handleSave: Error saving moods: $e');
+      debugPrint('MoodSelectionDialog._handleSave: Error saving mood: $e');
       debugPrint('Stack trace: $stackTrace');
       if (mounted) {
-        SnackbarHelper.showError(context, 'Failed to save moods: $e');
+        SnackbarHelper.showError(context, 'Failed to save mood: $e');
       }
     } finally {
       if (mounted) {
@@ -124,7 +125,9 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
   }
 
   Widget _buildMoodSelector(MoodViewModel viewModel) {
-    final selectedMoodsList = _selectedMoods.values.map((data) => data.mood).toList();
+    final selectedMoodsList = _selectedMood != null 
+        ? [_selectedMood!.mood]
+        : <Mood>[];
     
     return MoodDropdown(
       moods: viewModel.availableMoods,
@@ -135,7 +138,7 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
   }
 
   Widget _buildSelectedMoodsSection() {
-    if (_selectedMoods.isEmpty) {
+    if (_selectedMood == null) {
       return const SizedBox.shrink();
     }
 
@@ -145,23 +148,21 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Text(
-            'Selected Moods (${_selectedMoods.length})',
+            'Selected Mood',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
           ),
         ),
-        ..._selectedMoods.values.map((data) {
-          return MoodMeter(
-            moodName: data.mood.name,
-            emoji: data.mood.emoji,
-            intensity: data.intensity,
-            onIntensityChanged: (intensity) {
-              _handleIntensityChanged(data.mood.id, intensity);
-            },
-            onRemove: () => _handleRemoveMood(data.mood.id),
-          );
-        }).toList(),
+        MoodMeter(
+          moodName: _selectedMood!.mood.name,
+          emoji: _selectedMood!.mood.emoji,
+          intensity: _selectedMood!.intensity,
+          onIntensityChanged: (intensity) {
+            _handleIntensityChanged(_selectedMood!.mood.id, intensity);
+          },
+          onRemove: () => _handleRemoveMood(_selectedMood!.mood.id),
+        ),
       ],
     );
   }
@@ -251,9 +252,9 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
           // Mood selection dropdown with search
           _buildMoodSelector(viewModel),
           const SizedBox(height: 24),
-          // Selected moods with meters
+          // Selected mood with meter
           _buildSelectedMoodsSection(),
-          if (_selectedMoods.isNotEmpty) const SizedBox(height: 24),
+          if (_selectedMood != null) const SizedBox(height: 24),
           // Notes section
           _buildNotesSection(),
         ],
@@ -267,9 +268,9 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
       builder: (context, viewModel, child) {
         return DialogWrapper(
           title: 'How are you feeling?',
-          subtitle: _selectedMoods.isEmpty
-              ? 'Select one or more moods'
-              : 'Adjust intensity for each mood',
+          subtitle: _selectedMood == null
+              ? 'Select a mood'
+              : 'Adjust intensity',
           actions: [
             SecondaryButton(
               label: 'Skip',
@@ -277,8 +278,8 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
             ),
             const SizedBox(width: 8),
             PrimaryButton(
-              label: _selectedMoods.isEmpty ? 'Select a Mood' : 'Save',
-              onPressed: (_selectedMoods.isNotEmpty && !_isSaving)
+              label: _selectedMood == null ? 'Select a Mood' : 'Save',
+              onPressed: (_selectedMood != null && !_isSaving)
                   ? _handleSave
                   : null,
               isLoading: _isSaving,
