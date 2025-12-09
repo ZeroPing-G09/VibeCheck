@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.Set;
 
 /**
  * DTO for the last playlist endpoint response.
@@ -17,4 +18,5 @@ public class LastPlaylistResponseDTO {
     private String playlistId;        // Database ID (as String)
     private String name;              // Playlist name
     private Instant createdAt;        // Creation timestamp
+    private Set<SongDTO> songs;       // Songs in the playlist
 }

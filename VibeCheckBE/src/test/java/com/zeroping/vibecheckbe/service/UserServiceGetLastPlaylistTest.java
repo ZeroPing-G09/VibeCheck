@@ -63,6 +63,7 @@ class UserServiceGetLastPlaylistTest {
         assertEquals("1", dto.getPlaylistId()); // Database ID as String
         assertEquals("My Awesome Playlist", dto.getName());
         assertEquals(createdAt, dto.getCreatedAt());
+        assertNull(dto.getSongs()); // No songs set in test playlist
 
         verify(playlistRepository, times(1)).findFirstByUserIdOrderByCreatedAtDesc(userId);
     }
@@ -117,5 +118,6 @@ class UserServiceGetLastPlaylistTest {
         assertEquals("2", dto.getPlaylistId()); // Database ID as String
         assertEquals("Local Playlist", dto.getName());
         assertEquals(createdAt, dto.getCreatedAt());
+        assertNull(dto.getSongs()); // No songs set in test playlist
     }
 }

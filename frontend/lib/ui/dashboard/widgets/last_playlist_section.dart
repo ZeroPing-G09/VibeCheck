@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/data/models/last_playlist.dart';
 import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
+import 'package:frontend/ui/dashboard/widgets/playlist_songs_dialog.dart';
 
 /// A widget that displays the last playlist section in the dashboard.
 /// Handles loading, error, empty, and loaded states.
@@ -135,13 +136,38 @@ class LastPlaylistSection extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-        // Display playlist name and generate button
+        // Display playlist name (clickable) and generate button
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              playlist!.name,
-              style: Theme.of(context).textTheme.titleMedium,
+            InkWell(
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => PlaylistSongsDialog(
+                    playlistName: playlist!.name,
+                    songs: playlist!.songs,
+                  ),
+                );
+              },
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      playlist!.name,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                            decoration: TextDecoration.underline,
+                          ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ],
+              ),
             ),
             if (onCreatePlaylist != null) ...[
               const SizedBox(height: 16),

@@ -1,7 +1,9 @@
 package com.zeroping.vibecheckbe.service;
 
 import com.zeroping.vibecheckbe.dto.PlaylistDTO;
+import com.zeroping.vibecheckbe.dto.SongDTO;
 import com.zeroping.vibecheckbe.entity.Playlist;
+import com.zeroping.vibecheckbe.entity.Song;
 import com.zeroping.vibecheckbe.repository.PlaylistRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -9,7 +11,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class PlaylistService {
@@ -54,6 +58,24 @@ public class PlaylistService {
         dto.setMood(playlist.getMood());
         dto.setCreatedAt(playlist.getCreatedAt());
         dto.setUserId(playlist.getUserId());
+        
+        // Map songs if available
+        if (playlist.getSongs() != null) {
+            Set<SongDTO> songDTOs = playlist.getSongs().stream()
+                    .map(this::mapToSongDTO)
+                    .collect(Collectors.toSet());
+            dto.setSongs(songDTOs);
+        }
+        
         return dto;
+    }
+    
+    private SongDTO mapToSongDTO(Song song) {
+        return new SongDTO(
+                song.getId(),
+                song.getName(),
+                song.getUrl(),
+                song.getArtistName()
+        );
     }
 }

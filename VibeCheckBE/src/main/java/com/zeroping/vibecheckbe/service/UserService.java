@@ -1,6 +1,7 @@
 package com.zeroping.vibecheckbe.service;
 
 import com.zeroping.vibecheckbe.dto.LastPlaylistResponseDTO;
+import com.zeroping.vibecheckbe.dto.SongDTO;
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
 import com.zeroping.vibecheckbe.entity.Playlist;
 import com.zeroping.vibecheckbe.entity.User;
@@ -120,10 +121,24 @@ public class UserService {
     }
 
     private LastPlaylistResponseDTO toLastPlaylistResponse(Playlist playlist) {
+        // Map songs if available
+        Set<SongDTO> songDTOs = null;
+        if (playlist.getSongs() != null) {
+            songDTOs = playlist.getSongs().stream()
+                    .map(song -> new SongDTO(
+                            song.getId(),
+                            song.getName(),
+                            song.getUrl(),
+                            song.getArtistName()
+                    ))
+                    .collect(Collectors.toSet());
+        }
+        
         return new LastPlaylistResponseDTO(
                 playlist.getId() != null ? playlist.getId().toString() : null,
                 playlist.getName(),
-                playlist.getCreatedAt()
+                playlist.getCreatedAt(),
+                songDTOs
         );
     }
 }
