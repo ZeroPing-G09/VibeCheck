@@ -144,8 +144,9 @@ class _DashboardViewState extends State<DashboardView> {
                     playlistState: viewModel.playlistState,
                     playlist: viewModel.lastPlaylist,
                     errorMessage: viewModel.playlistError,
+                    isGeneratingPlaylist: viewModel.isGeneratingPlaylist,
                     onCreatePlaylist: () {
-                      // TODO: Navigate to playlist creation screen
+                      viewModel.generatePlaylist();
                     },
                   ),
                 ],

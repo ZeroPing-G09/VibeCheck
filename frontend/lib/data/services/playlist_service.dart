@@ -59,4 +59,47 @@ class PlaylistService {
       return null;
     }
   }
+
+  /// Generates a new playlist for the authenticated user.
+  /// [mood] is the mood for the playlist (e.g., "happy", "sad", "energetic").
+  /// [genres] is an optional list of genre names to influence the playlist.
+  /// Throws an exception if the request fails.
+  Future<void> generatePlaylist({
+    required String mood,
+    List<String>? genres,
+  }) async {
+    if (await _authService.getAccessToken() == null) {
+      throw Exception('Not authenticated');
+    }
+
+    final url = Uri.parse('$baseUrl/playlist/generate');
+    debugPrint('PlaylistService.generatePlaylist POST $url');
+
+    final requestBody = jsonEncode({
+      'mood': mood,
+      'genres': genres ?? [],
+    });
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer ${await _authService.getAccessToken()}',
+        'Content-Type': 'application/json',
+      },
+      body: requestBody,
+    );
+
+    debugPrint('generatePlaylist status: ${response.statusCode}');
+    debugPrint('generatePlaylist body: ${response.body}');
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      // Playlist generated successfully
+      return;
+    } else if (response.statusCode == 401) {
+      throw Exception('Unauthorized: Invalid or expired token');
+    } else {
+      throw Exception(
+          'Failed to generate playlist: ${response.statusCode} - ${response.body}');
+    }
+  }
 }

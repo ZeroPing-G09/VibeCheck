@@ -48,7 +48,6 @@ class UserServiceGetLastPlaylistTest {
         Playlist playlist = new Playlist();
         playlist.setId(1L);
         playlist.setName("My Awesome Playlist");
-        playlist.setSpotifyPlaylistId("spotify123");
         playlist.setCreatedAt(createdAt);
         playlist.setUserId(userId);
 
@@ -61,7 +60,7 @@ class UserServiceGetLastPlaylistTest {
         // Then
         assertTrue(result.isPresent());
         LastPlaylistResponseDTO dto = result.get();
-        assertEquals("spotify123", dto.getPlaylistId());
+        assertEquals("1", dto.getPlaylistId()); // Database ID as String
         assertEquals("My Awesome Playlist", dto.getName());
         assertEquals(createdAt, dto.getCreatedAt());
 
@@ -91,11 +90,11 @@ class UserServiceGetLastPlaylistTest {
 
     @Test
     @DisplayName("""
-            Given a playlist without Spotify ID
+            Given a playlist
             When getLastPlaylist is called
-            Then it returns the playlist DTO with null playlistId
+            Then it returns the playlist DTO with correct values
             """)
-    void givenPlaylistWithoutSpotifyId_WhenGetLastPlaylist_ThenReturnsPlaylistWithNullSpotifyId() {
+    void givenPlaylist_WhenGetLastPlaylist_ThenReturnsPlaylistDTO() {
         // Given
         UUID userId = UUID.randomUUID();
         Instant createdAt = Instant.now();
@@ -103,7 +102,6 @@ class UserServiceGetLastPlaylistTest {
         Playlist playlist = new Playlist();
         playlist.setId(2L);
         playlist.setName("Local Playlist");
-        playlist.setSpotifyPlaylistId(null); // No Spotify ID
         playlist.setCreatedAt(createdAt);
         playlist.setUserId(userId);
 
@@ -116,7 +114,7 @@ class UserServiceGetLastPlaylistTest {
         // Then
         assertTrue(result.isPresent());
         LastPlaylistResponseDTO dto = result.get();
-        assertNull(dto.getPlaylistId());
+        assertEquals("2", dto.getPlaylistId()); // Database ID as String
         assertEquals("Local Playlist", dto.getName());
         assertEquals(createdAt, dto.getCreatedAt());
     }

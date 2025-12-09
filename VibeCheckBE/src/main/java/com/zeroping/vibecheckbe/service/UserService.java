@@ -121,7 +121,7 @@ public class UserService {
 
     private LastPlaylistResponseDTO toLastPlaylistResponse(Playlist playlist) {
         return new LastPlaylistResponseDTO(
-                playlist.getSpotifyPlaylistId(),
+                playlist.getId() != null ? playlist.getId().toString() : null,
                 playlist.getName(),
                 playlist.getCreatedAt()
         );

@@ -39,12 +39,7 @@ public class UserControllerExceptionHandler {
 
     @ExceptionHandler(InvalidDataAccessResourceUsageException.class)
     public ProblemDetail handleInvalidDataAccessResourceUsageException(InvalidDataAccessResourceUsageException e) {
-        // If it's a missing column error for playlist queries, treat as no playlist found
-        if (e.getMessage() != null && e.getMessage().contains("spotify_playlist_id")) {
-            log.warn("Database schema issue detected (missing column), treating as no playlist found", e);
-            return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "No playlist found");
-        }
-        // For other database schema issues, return 500
+        // For database schema issues, return 500
         log.error("Database schema error", e);
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.INTERNAL_SERVER_ERROR,

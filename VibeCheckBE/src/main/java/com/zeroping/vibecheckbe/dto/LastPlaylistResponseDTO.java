@@ -8,13 +8,13 @@ import java.time.Instant;
 
 /**
  * DTO for the last playlist endpoint response.
- * Returns the minimal information needed to display the Spotify embed.
+ * Returns the minimal information needed to display the playlist.
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class LastPlaylistResponseDTO {
-    private String playlistId; // Spotify playlist ID
-    private String name;       // Playlist name
-    private Instant createdAt; // Creation timestamp
+    private String playlistId;        // Database ID (as String)
+    private String name;              // Playlist name
+    private Instant createdAt;        // Creation timestamp
 }

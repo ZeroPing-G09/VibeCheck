@@ -1,6 +1,6 @@
 /// Model representing the last playlist response from the API.
 class LastPlaylist {
-  final String? playlistId;
+  final String? playlistId;        // Database ID (as String)
   final String name;
   final DateTime createdAt;
 
@@ -17,7 +17,4 @@ class LastPlaylist {
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }
-
-  /// Check if this playlist has a valid Spotify ID for embedding
-  bool get hasSpotifyId => playlistId != null && playlistId!.isNotEmpty;
 }

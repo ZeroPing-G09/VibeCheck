@@ -1,9 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/data/models/last_playlist.dart';
 import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
-import 'package:frontend/ui/dashboard/widgets/spotify_playlist_embed_stub.dart'
-    if (dart.library.html) 'package:frontend/ui/dashboard/widgets/spotify_playlist_embed.dart';
 
 /// A widget that displays the last playlist section in the dashboard.
 /// Handles loading, error, empty, and loaded states.
@@ -12,12 +9,14 @@ class LastPlaylistSection extends StatelessWidget {
   final LastPlaylist? playlist;
   final String? errorMessage;
   final VoidCallback? onCreatePlaylist;
+  final bool isGeneratingPlaylist;
 
   const LastPlaylistSection({
     required this.playlistState,
     this.playlist,
     this.errorMessage,
     this.onCreatePlaylist,
+    this.isGeneratingPlaylist = false,
     super.key,
   });
 
@@ -101,14 +100,22 @@ class LastPlaylistSection extends StatelessWidget {
             padding: const EdgeInsets.all(32),
             child: Column(
               children: [
-                Icon(
-                  Icons.library_music_outlined,
-                  size: 48,
-                  color: Theme.of(context).colorScheme.secondary,
-                ),
+                if (isGeneratingPlaylist)
+                  const Padding(
+                    padding: EdgeInsets.all(32),
+                    child: CircularProgressIndicator(),
+                  )
+                else
+                  Icon(
+                    Icons.library_music_outlined,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
                 const SizedBox(height: 16),
                 Text(
-                  'You don\'t have any playlists generated yet.',
+                  isGeneratingPlaylist
+                      ? 'Generating your playlist...'
+                      : 'You don\'t have any playlists generated yet.',
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 const SizedBox(height: 8),
@@ -128,69 +135,23 @@ class LastPlaylistSection extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-        // Display playlist name
-        final content = <Widget>[
-          Text(
-            playlist!.name,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 8),
-        ];
-
-        // If we have a Spotify playlist ID, show the embed (web only)
-        if (playlist!.hasSpotifyId && kIsWeb) {
-          content.add(
-            SpotifyPlaylistEmbed(playlistId: playlist!.playlistId!),
-          );
-        } else if (playlist!.hasSpotifyId && !kIsWeb) {
-          // On mobile, show a button to open Spotify
-          content.add(
-            Container(
-              height: 200,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1DB954), // Spotify green
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.music_note,
-                      size: 48,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Playlist disponibil pe Spotify',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.white,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        } else {
-          // No Spotify ID - show info message
-          content.add(
-            Container(
-              height: 100,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Center(
-                child: Text('Playlist saved locally'),
-              ),
-            ),
-          );
-        }
-
+        // Display playlist name and generate button
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: content,
+          children: [
+            Text(
+              playlist!.name,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            if (onCreatePlaylist != null) ...[
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: onCreatePlaylist,
+                icon: const Icon(Icons.add),
+                label: const Text('Generate new playlist'),
+              ),
+            ],
+          ],
         );
     }
   }

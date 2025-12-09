@@ -53,7 +53,6 @@ public class PlaylistMetadataService {
                 playlistEntity.getMood(),
                 playlistEntity.getUserId(),
                 playlistEntity.getCreatedAt(),
-                playlistEntity.getSpotifyPlaylistId(),
                 songs.stream().map(this::mapToSongDTO).collect(Collectors.toSet())
         );
     }

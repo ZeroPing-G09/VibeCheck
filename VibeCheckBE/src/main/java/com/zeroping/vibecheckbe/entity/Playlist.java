@@ -26,9 +26,6 @@ public class Playlist {
     @Column(name = "mood")
     private String mood; // From the PlaylistRequest
 
-    @Column(name = "spotify_playlist_id")
-    private String spotifyPlaylistId; // Spotify playlist ID for embed
-
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
