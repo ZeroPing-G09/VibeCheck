@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/ui/profile/dialogs/change_picture_dialog.dart';
 
 class ProfilePictureSection extends StatelessWidget {
   final TextEditingController controller;
@@ -21,26 +20,6 @@ class ProfilePictureSection extends StatelessWidget {
               // 3. Show the placeholder icon if there is no URL
               ? const Icon(Icons.person, size: 60, color: Colors.grey)
               : null,
-        ),
-        const SizedBox(width: 24),
-        Column(
-          children: [
-            ElevatedButton(
-              onPressed: () => showDialog(
-                context: context,
-                builder: (_) => ChangePictureDialog(controller: controller),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2D3748),
-              ),
-              child: const Text("Change Picture"),
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: () => controller.clear(),
-              child: const Text("Delete Picture"),
-            ),
-          ],
         ),
       ],
     );

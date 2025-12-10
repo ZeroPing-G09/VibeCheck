@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import '../../ui/auth/view/login_view.dart';
-import '../../ui/home/view/home_view.dart';
-import '../../ui/profile/view/profile_view.dart';
-import '../../ui/settings/view/settings_view.dart';
-import '../../ui/onboarding/view/onboarding_view.dart';
+import 'package:frontend/ui/auth/view/login_view.dart';
+import 'package:frontend/ui/home/view/home_view.dart';
+import 'package:frontend/ui/onboarding/view/onboarding_view.dart';
+import 'package:frontend/ui/profile/view/profile_view.dart';
+import 'package:frontend/ui/settings/view/settings_view.dart';
 
 class AppRouter {
   AppRouter._();
 
-  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
 
   static const String loginRoute = '/login';
   static const String dashboardRoute = '/dashboard';
@@ -20,12 +21,12 @@ class AppRouter {
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     debugPrint('Generating route for: ${settings.name}');
-    
+
     if (settings.name == null) {
       debugPrint('Route name is null, defaulting to login');
       return MaterialPageRoute(builder: (_) => const LoginView());
     }
-    
+
     if (settings.name!.startsWith('/?') || settings.name!.contains('code=')) {
       debugPrint('OAuth callback detected, showing loading state');
       return MaterialPageRoute(
@@ -43,7 +44,7 @@ class AppRouter {
         ),
       );
     }
-    
+
     switch (settings.name) {
       case loginRoute:
         return MaterialPageRoute(builder: (_) => const LoginView());
