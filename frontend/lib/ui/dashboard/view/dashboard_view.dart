@@ -157,7 +157,7 @@ class _DashboardViewState extends State<DashboardView> {
       appBar: AppBar(
         titleSpacing: 16,
         title: const Text(
-          'ZeroPing',
+          'VibeCheck',
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
         actions: [
