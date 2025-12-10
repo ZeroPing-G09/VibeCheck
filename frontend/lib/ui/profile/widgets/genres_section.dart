@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/data/models/user.dart';
+import 'package:frontend/ui/profile/viewmodel/profile_view_model.dart';
 import 'package:provider/provider.dart';
-import '../../../data/models/user.dart';
-import '../viewmodel/profile_view_model.dart';
 
 class GenresSection extends StatefulWidget {
   final User user;
@@ -19,7 +19,7 @@ class _GenresSectionState extends State<GenresSection> {
     final user = widget.user;
     final viewModel = context.watch<ProfileViewModel>();
     final availableGenres = viewModel.availableGenres;
-    
+
     // Filter out genres that are already selected
     final selectableGenres = availableGenres
         .where((g) => !user.genres.contains(g))
@@ -28,18 +28,22 @@ class _GenresSectionState extends State<GenresSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Favorite Genres",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        const Text(
+          'Favorite Genres',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: user.genres
-              .map((g) => Chip(
-                    label: Text(g),
-                    deleteIcon: const Icon(Icons.close, size: 18),
-                    onDeleted: () => setState(() => user.genres.remove(g)),
-                  ))
+              .map(
+                (g) => Chip(
+                  label: Text(g),
+                  deleteIcon: const Icon(Icons.close, size: 18),
+                  onDeleted: () => setState(() => user.genres.remove(g)),
+                ),
+              )
               .toList(),
         ),
         const SizedBox(height: 12),
@@ -67,8 +71,8 @@ class _GenresSectionState extends State<GenresSection> {
                       }
                     : null,
                 icon: const Icon(Icons.add),
-                label: const Text("Add"),
-              )
+                label: const Text('Add'),
+              ),
             ],
           )
         else

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/utils/snackbar_helper.dart';
 import 'package:frontend/data/models/user.dart';
 import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
 import 'package:frontend/ui/profile/viewmodel/profile_view_model.dart';
@@ -7,7 +8,6 @@ import 'package:frontend/ui/profile/widgets/genres_section.dart';
 import 'package:frontend/ui/profile/widgets/profile_picture_section.dart';
 import 'package:frontend/ui/profile/widgets/profile_sidebar.dart';
 import 'package:frontend/ui/profile/widgets/save_button.dart';
-import 'package:frontend/core/utils/snackbar_helper.dart';
 import 'package:provider/provider.dart';
 
 class ProfileView extends StatefulWidget {
@@ -48,7 +48,9 @@ class _ProfileViewState extends State<ProfileView> {
           })
           .catchError((error) {
             debugPrint('Error loading user in ProfileView: $error');
-            if (mounted) setState(() {});
+            if (mounted) {
+              setState(() {});
+            }
           });
     }
     vm.loadAvailableGenres();
@@ -170,17 +172,16 @@ class _ProfileViewState extends State<ProfileView> {
 }
 
 class _ProfileDetails extends StatelessWidget {
-  final TextEditingController usernameController;
-  final TextEditingController profilePicController;
-  final ProfileViewModel vm;
-  final User user;
-
   const _ProfileDetails({
     required this.usernameController,
     required this.profilePicController,
     required this.vm,
     required this.user,
   });
+  final TextEditingController usernameController;
+  final TextEditingController profilePicController;
+  final ProfileViewModel vm;
+  final User user;
 
   Future<void> _handleSave(BuildContext context) async {
     final updated = user.copyWith(
@@ -188,7 +189,7 @@ class _ProfileDetails extends StatelessWidget {
       avatarUrl: profilePicController.text,
       genres: user.genres,
     );
-    
+
     try {
       await vm.updateUser(updated);
 
@@ -219,19 +220,17 @@ class _ProfileDetails extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          "My Profile",
+          'My Profile',
           style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 32),
         ProfilePictureSection(controller: profilePicController),
         const SizedBox(height: 40),
-        CustomTextField(label: "Username", controller: usernameController),
+        CustomTextField(label: 'Username', controller: usernameController),
         const SizedBox(height: 32),
         GenresSection(user: user),
         const SizedBox(height: 40),
-        SaveButton(
-          onSave: () => _handleSave(context),
-        ),
+        SaveButton(onSave: () => _handleSave(context)),
       ],
     );
   }

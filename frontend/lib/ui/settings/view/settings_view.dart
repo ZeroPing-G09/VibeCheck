@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frontend/ui/settings/viewmodel/theme_view_model.dart';
 import 'package:provider/provider.dart';
-import '../viewmodel/theme_view_model.dart';
 
 class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
@@ -21,8 +20,8 @@ class _SettingsViewState extends State<SettingsView> {
       padding: const EdgeInsets.all(16),
       child: ListView(
         children: [
-          Center(
-            child: const Text(
+          const Center(
+            child: Text(
               'Settings',
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
@@ -33,9 +32,8 @@ class _SettingsViewState extends State<SettingsView> {
             title: const Text('Dark Mode'),
             secondary: const Icon(Icons.brightness_6_outlined),
             value: themeViewModel.isDarkMode,
-            onChanged: (val) => themeViewModel.toggleTheme(val),
+            onChanged: themeViewModel.toggleTheme,
           ),
-
 
           const Divider(),
 
@@ -47,10 +45,10 @@ class _SettingsViewState extends State<SettingsView> {
           ),
           const ListTile(title: Text('Privacy'), trailing: Text('Standard')),
           ListTile(
-            title: Text('Language'),
+            title: const Text('Language'),
             trailing: DropdownButton<String>(
               value: 'English',
-              items: [
+              items: const [
                 DropdownMenuItem(value: 'English', child: Text('English')),
                 DropdownMenuItem(value: 'Spanish', child: Text('Spanish')),
                 DropdownMenuItem(value: 'French', child: Text('French')),

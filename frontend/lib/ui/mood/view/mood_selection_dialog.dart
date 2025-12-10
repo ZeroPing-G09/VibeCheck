@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/utils/snackbar_helper.dart';
+import 'package:frontend/core/widgets/dialog_wrapper.dart';
+import 'package:frontend/core/widgets/empty_state.dart';
+import 'package:frontend/core/widgets/error_state.dart';
+import 'package:frontend/core/widgets/loading_state.dart';
+import 'package:frontend/core/widgets/mood_dropdown.dart';
+import 'package:frontend/core/widgets/mood_meter.dart';
+import 'package:frontend/core/widgets/primary_button.dart';
+import 'package:frontend/core/widgets/secondary_button.dart';
+import 'package:frontend/data/models/mood.dart';
+import 'package:frontend/ui/mood/viewmodel/mood_view_model.dart';
 import 'package:provider/provider.dart';
-import '../viewmodel/mood_view_model.dart';
-import '../../../data/models/mood.dart';
-import '../../../core/widgets/dialog_wrapper.dart';
-import '../../../core/widgets/loading_state.dart';
-import '../../../core/widgets/error_state.dart';
-import '../../../core/widgets/empty_state.dart';
-import '../../../core/widgets/primary_button.dart';
-import '../../../core/widgets/secondary_button.dart';
-import '../../../core/widgets/mood_dropdown.dart';
-import '../../../core/widgets/mood_meter.dart';
-import '../../../core/utils/snackbar_helper.dart';
 
 class MoodSelectionDialog extends StatefulWidget {
   const MoodSelectionDialog({super.key});
@@ -47,10 +47,7 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
         _selectedMoods.remove(mood.id);
       } else {
         // Add with default intensity of 50%
-        _selectedMoods[mood.id] = _SelectedMoodData(
-          mood: mood,
-          intensity: 50,
-        );
+        _selectedMoods[mood.id] = _SelectedMoodData(mood: mood, intensity: 50);
       }
     });
   }
@@ -81,7 +78,7 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
 
     try {
       final viewModel = context.read<MoodViewModel>();
-      
+
       // Convert selected moods to API format
       final moodEntries = _selectedMoods.values.map((data) {
         return {
@@ -96,7 +93,7 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
           : _notesController.text.trim();
 
       await viewModel.saveMultipleMoodEntries(moodEntries, generalNotes);
-      
+
       if (mounted) {
         Navigator.of(context).pop(true);
         SnackbarHelper.showSuccess(
@@ -124,8 +121,10 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
   }
 
   Widget _buildMoodSelector(MoodViewModel viewModel) {
-    final selectedMoodsList = _selectedMoods.values.map((data) => data.mood).toList();
-    
+    final selectedMoodsList = _selectedMoods.values
+        .map((data) => data.mood)
+        .toList();
+
     return MoodDropdown(
       moods: viewModel.availableMoods,
       selectedMoods: selectedMoodsList,
@@ -146,9 +145,9 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Text(
             'Selected Moods (${_selectedMoods.length})',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
         ),
         ..._selectedMoods.values.map((data) {
@@ -161,7 +160,7 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
             },
             onRemove: () => _handleRemoveMood(data.mood.id),
           );
-        }).toList(),
+        }),
       ],
     );
   }
@@ -178,15 +177,13 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
           },
           child: Row(
             children: [
-              Icon(
-                _showNotes ? Icons.expand_less : Icons.expand_more,
-              ),
+              Icon(_showNotes ? Icons.expand_less : Icons.expand_more),
               const SizedBox(width: 8),
               Text(
                 'Additional Notes (Optional)',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -198,7 +195,7 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
             maxLines: 4,
             maxLength: 500,
             decoration: InputDecoration(
-              hintText: 'Tell us more about how you\'re feeling...',
+              hintText: "Tell us more about how you're feeling...",
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -215,15 +212,12 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
 
   Widget _buildContent(MoodViewModel viewModel) {
     if (viewModel.isLoading) {
-      return const Padding(
-        padding: EdgeInsets.all(32.0),
-        child: LoadingState(),
-      );
+      return const Padding(padding: EdgeInsets.all(32), child: LoadingState());
     }
 
     if (viewModel.error != null && viewModel.availableMoods.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.all(32.0),
+        padding: const EdgeInsets.all(32),
         child: ErrorState(
           title: 'Error loading moods',
           message: viewModel.error!,
@@ -234,7 +228,7 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
 
     if (viewModel.availableMoods.isEmpty) {
       return const Padding(
-        padding: EdgeInsets.all(32.0),
+        padding: EdgeInsets.all(32),
         child: EmptyState(
           title: 'No moods available',
           message: 'Please ensure moods are added to the database',
@@ -293,12 +287,7 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
 
 // Helper class to store selected mood data
 class _SelectedMoodData {
+  _SelectedMoodData({required this.mood, required this.intensity});
   final Mood mood;
   int intensity;
-
-  _SelectedMoodData({
-    required this.mood,
-    required this.intensity,
-  });
 }
-

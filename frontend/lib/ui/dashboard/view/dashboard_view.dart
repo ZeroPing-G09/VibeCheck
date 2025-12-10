@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/routing/app_router.dart';
+import 'package:frontend/core/utils/snackbar_helper.dart';
+import 'package:frontend/core/widgets/error_state.dart';
+import 'package:frontend/core/widgets/loading_state.dart';
 import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
 import 'package:frontend/ui/dashboard/widgets/user_chip.dart';
 import 'package:frontend/ui/home/view/home_view.dart';
 import 'package:frontend/ui/mood/view/mood_selection_dialog.dart';
-import 'package:frontend/core/widgets/loading_state.dart';
-import 'package:frontend/core/widgets/error_state.dart';
-import 'package:frontend/core/utils/snackbar_helper.dart';
 import 'package:provider/provider.dart';
 
 class DashboardView extends StatefulWidget {
@@ -22,7 +22,7 @@ class _DashboardViewState extends State<DashboardView> {
   @override
   void initState() {
     super.initState();
-    
+
     // Defer async operations until after the build phase
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final viewModel = context.read<DashboardViewModel>();
@@ -30,7 +30,7 @@ class _DashboardViewState extends State<DashboardView> {
       if (email != null) {
         viewModel.loadUserByEmail(email);
       }
-      
+
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted && !_hasShownMoodDialog) {
           _showMoodDialog();
@@ -40,15 +40,16 @@ class _DashboardViewState extends State<DashboardView> {
   }
 
   void _showMoodDialog() {
-    if (_hasShownMoodDialog) return;
+    if (_hasShownMoodDialog) {
+      return;
+    }
     _hasShownMoodDialog = true;
-    
+
     showDialog<bool>(
       context: context,
-      barrierDismissible: true,
       builder: (context) => const MoodSelectionDialog(),
     ).then((moodSaved) {
-      if (moodSaved == true && mounted) {
+      if ((moodSaved ?? false) && mounted) {
         SnackbarHelper.showSuccess(context, 'Mood saved successfully!');
       }
     });
@@ -56,24 +57,20 @@ class _DashboardViewState extends State<DashboardView> {
 
   void _handleActionSelected(String value) async {
     final viewModel = context.read<DashboardViewModel>();
-    
+
     if (value == 'profile') {
       final homeViewState = HomeView.of(context);
       if (homeViewState != null) {
         homeViewState.switchToTab(0);
       } else {
-        AppRouter.navigatorKey.currentState?.pushNamed(
-          AppRouter.profileRoute,
-        );
+        AppRouter.navigatorKey.currentState?.pushNamed(AppRouter.profileRoute);
       }
     } else if (value == 'settings') {
       final homeViewState = HomeView.of(context);
       if (homeViewState != null) {
         homeViewState.switchToTab(2);
       } else {
-        AppRouter.navigatorKey.currentState?.pushNamed(
-          AppRouter.settingsRoute,
-        );
+        AppRouter.navigatorKey.currentState?.pushNamed(AppRouter.settingsRoute);
       }
     } else if (value == 'logout') {
       await viewModel.handleUserAction('logout');
@@ -133,10 +130,7 @@ class _DashboardViewState extends State<DashboardView> {
         children: [
           Text(
             'Welcome, ${user.displayName}!',
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           Wrap(

@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../../data/models/user.dart';
-import '../../../../data/repositories/user_repository.dart';
-import '../../../../data/repositories/auth_repository.dart';
+import 'package:frontend/data/models/user.dart';
+import 'package:frontend/data/repositories/auth_repository.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
 
 class DashboardViewModel extends ChangeNotifier {
   final UserRepository _userRepository;
   final AuthRepository _authRepository;
 
-  DashboardViewModel(
-    this._userRepository,
-    this._authRepository,
-  );
+  DashboardViewModel(this._userRepository, this._authRepository);
 
   User? _user;
   bool _isLoading = false;

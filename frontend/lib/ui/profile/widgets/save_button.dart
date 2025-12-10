@@ -14,8 +14,10 @@ class SaveButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
-      child: const Text("Save Changes",
-          style: TextStyle(fontWeight: FontWeight.bold)),
+      child: const Text(
+        'Save Changes',
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
     );
   }
 }
