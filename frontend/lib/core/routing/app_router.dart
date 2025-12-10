@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/routing/oauth-handler.dart';
 import 'package:frontend/ui/auth/view/login_view.dart';
 import 'package:frontend/ui/home/view/home_view.dart';
 import 'package:frontend/ui/onboarding/view/onboarding_view.dart';
@@ -28,24 +29,17 @@ class AppRouter {
     }
 
     if (settings.name!.startsWith('/?') || settings.name!.contains('code=')) {
-      debugPrint('OAuth callback detected, showing loading state');
       return MaterialPageRoute(
-        builder: (_) => Scaffold(
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                const Text('Completing authentication...'),
-              ],
-            ),
-          ),
-        ),
+        builder: (_) => OAuthCallbackHandler(callbackRoute: settings.name!),
       );
     }
 
     switch (settings.name) {
+      case '/':
+        return MaterialPageRoute(
+          builder: (_) =>
+              const Scaffold(body: Center(child: CircularProgressIndicator())),
+        );
       case loginRoute:
         return MaterialPageRoute(builder: (_) => const LoginView());
       case dashboardRoute:
@@ -81,5 +75,20 @@ class AppRouter {
           ),
         );
     }
+  }
+
+  static Future<void> goToRouteAndClearStack(String route) async {
+    await navigatorKey.currentState?.pushNamedAndRemoveUntil(
+      route,
+      (r) => false,
+    );
+  }
+
+  static Future<void> goToLogin() async {
+    await goToRouteAndClearStack(loginRoute);
+  }
+
+  static Future<void> goToDashboard() async {
+    await goToRouteAndClearStack(dashboardRoute);
   }
 }
