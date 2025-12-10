@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/core/routing/oauth-handler.dart';
+import 'package:frontend/core/routing/oauth_handler.dart';
 import 'package:frontend/ui/auth/view/login_view.dart';
 import 'package:frontend/ui/home/view/home_view.dart';
 import 'package:frontend/ui/onboarding/view/onboarding_view.dart';

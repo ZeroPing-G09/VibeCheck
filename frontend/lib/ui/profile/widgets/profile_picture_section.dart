@@ -6,7 +6,7 @@ class ProfilePictureSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Check if the controller has text (i.e., a URL has been loaded)
+    // 1. Check if a valid image URL is provided
     final hasUrl = imageUrl.isNotEmpty && imageUrl.startsWith('http');
 
     return Row(

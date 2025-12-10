@@ -3,16 +3,8 @@ import 'package:flutter/material.dart';
 class CustomTextField extends StatelessWidget {
   final String label;
   final String value;
-  final String? hint;
-  final bool readOnly;
 
-  const CustomTextField({
-    super.key,
-    required this.label,
-    required this.value,
-    this.hint,
-    this.readOnly = false,
-  });
+  const CustomTextField({super.key, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
