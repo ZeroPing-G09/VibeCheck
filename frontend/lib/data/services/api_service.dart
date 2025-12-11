@@ -1,7 +1,8 @@
 import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Centralized API configuration and utilities
 class ApiService {
@@ -21,11 +22,8 @@ class ApiService {
   static Future<void> init() async {
     // Load .env file
     await dotenv.load(fileName: '.env');
-    
-    await Supabase.initialize(
-      url: supabaseUrl,
-      anonKey: supabaseAnonKey,
-    );
+
+    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
   }
 
   static SupabaseClient get client => Supabase.instance.client;
@@ -36,20 +34,23 @@ class ApiService {
   }
 
   /// Gets headers with authentication token for backend API requests
-  static Map<String, String> getAuthHeaders({Map<String, String>? additionalHeaders}) {
+  static Map<String, String> getAuthHeaders({
+    Map<String, String>? additionalHeaders,
+  }) {
     final headers = <String, String>{
       'Content-Type': 'application/json',
       if (additionalHeaders != null) ...additionalHeaders,
     };
-    
+
     final token = accessToken;
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
-      debugPrint('ApiService.getAuthHeaders: Token found, length: ${token.length}');
     } else {
-      debugPrint('ApiService.getAuthHeaders: WARNING - No access token available');
+      debugPrint(
+        'ApiService.getAuthHeaders: WARNING - No access token available',
+      );
     }
-    
+
     return headers;
   }
 

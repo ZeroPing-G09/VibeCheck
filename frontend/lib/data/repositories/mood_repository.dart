@@ -1,14 +1,15 @@
-import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import '../models/mood.dart';
-import '../services/mood_service.dart';
+
+import 'package:flutter/foundation.dart';
+import 'package:frontend/data/models/mood.dart';
+import 'package:frontend/data/services/mood_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MoodRepository {
   final MoodService _service;
 
   MoodRepository({MoodService? moodService})
-      : _service = moodService ?? MoodService();
+    : _service = moodService ?? MoodService();
 
   Future<List<Mood>> getAllMoods() async {
     try {

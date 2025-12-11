@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/widgets/error_state.dart';
+import 'package:frontend/core/widgets/loading_state.dart';
+import 'package:frontend/core/widgets/primary_button.dart';
+import 'package:frontend/ui/auth/viewmodel/auth_view_model.dart';
 import 'package:provider/provider.dart';
-import '../viewmodel/auth_view_model.dart';
-import '../../../core/widgets/loading_state.dart';
-import '../../../core/widgets/error_state.dart';
-import '../../../core/widgets/primary_button.dart';
 
 class LoginView extends StatelessWidget {
   const LoginView({super.key});

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/utils/snackbar_helper.dart';
 import 'package:frontend/data/models/user.dart';
 import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
 import 'package:frontend/ui/profile/viewmodel/profile_view_model.dart';
@@ -7,7 +8,6 @@ import 'package:frontend/ui/profile/widgets/genres_section.dart';
 import 'package:frontend/ui/profile/widgets/profile_picture_section.dart';
 import 'package:frontend/ui/profile/widgets/profile_sidebar.dart';
 import 'package:frontend/ui/profile/widgets/save_button.dart';
-import 'package:frontend/core/utils/snackbar_helper.dart';
 import 'package:provider/provider.dart';
 
 class ProfileView extends StatefulWidget {
@@ -17,14 +17,9 @@ class ProfileView extends StatefulWidget {
 }
 
 class _ProfileViewState extends State<ProfileView> {
-  late final TextEditingController _usernameController;
-  late final TextEditingController _profilePicController;
-
   @override
   void initState() {
     super.initState();
-    _usernameController = TextEditingController();
-    _profilePicController = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadUserData();
     });
@@ -40,15 +35,15 @@ class _ProfileViewState extends State<ProfileView> {
             if (mounted) {
               final user = vm.user;
               if (user != null) {
-                _usernameController.text = user.displayName;
-                _profilePicController.text = user.avatarUrl ?? '';
                 setState(() {});
               }
             }
           })
           .catchError((error) {
             debugPrint('Error loading user in ProfileView: $error');
-            if (mounted) setState(() {});
+            if (mounted) {
+              setState(() {});
+            }
           });
     }
     vm.loadAvailableGenres();
@@ -56,8 +51,6 @@ class _ProfileViewState extends State<ProfileView> {
 
   @override
   void dispose() {
-    _usernameController.dispose();
-    _profilePicController.dispose();
     super.dispose();
   }
 
@@ -124,12 +117,7 @@ class _ProfileViewState extends State<ProfileView> {
                       horizontal: 16,
                       vertical: 24,
                     ),
-                    child: _ProfileDetails(
-                      usernameController: _usernameController,
-                      profilePicController: _profilePicController,
-                      vm: vm,
-                      user: user,
-                    ),
+                    child: _ProfileDetails(vm: vm, user: user),
                   )
                 : Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,12 +139,7 @@ class _ProfileViewState extends State<ProfileView> {
                       Expanded(
                         child: SingleChildScrollView(
                           padding: const EdgeInsets.all(40),
-                          child: _ProfileDetails(
-                            usernameController: _usernameController,
-                            profilePicController: _profilePicController,
-                            vm: vm,
-                            user: user,
-                          ),
+                          child: _ProfileDetails(vm: vm, user: user),
                         ),
                       ),
                     ],
@@ -170,25 +153,13 @@ class _ProfileViewState extends State<ProfileView> {
 }
 
 class _ProfileDetails extends StatelessWidget {
-  final TextEditingController usernameController;
-  final TextEditingController profilePicController;
+  const _ProfileDetails({required this.vm, required this.user});
   final ProfileViewModel vm;
   final User user;
 
-  const _ProfileDetails({
-    required this.usernameController,
-    required this.profilePicController,
-    required this.vm,
-    required this.user,
-  });
-
   Future<void> _handleSave(BuildContext context) async {
-    final updated = user.copyWith(
-      displayName: usernameController.text,
-      avatarUrl: profilePicController.text,
-      genres: user.genres,
-    );
-    
+    final updated = user.copyWith(genres: user.genres);
+
     try {
       await vm.updateUser(updated);
 
@@ -218,20 +189,16 @@ class _ProfileDetails extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "My Profile",
-          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+        Text(
+          user.displayName,
+          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 32),
-        ProfilePictureSection(controller: profilePicController),
-        const SizedBox(height: 40),
-        CustomTextField(label: "Username", controller: usernameController),
+        const SizedBox(height: 16),
+        ProfilePictureSection(imageUrl: user.avatarUrl),
         const SizedBox(height: 32),
         GenresSection(user: user),
         const SizedBox(height: 40),
-        SaveButton(
-          onSave: () => _handleSave(context),
-        ),
+        SaveButton(onSave: () => _handleSave(context)),
       ],
     );
   }

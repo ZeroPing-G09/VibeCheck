@@ -153,12 +153,12 @@ class DashboardViewModel extends ChangeNotifier {
       if (_user == null) {
         return null;
       }
-      
+
       final moodEntries = await _moodRepository.getUserMoodEntries(_user!.id);
       if (moodEntries.isEmpty) {
         return null;
       }
-      
+
       // Entries are sorted by createdAt desc, so first one is the latest
       return moodEntries.first.moodName;
     } catch (e) {
@@ -179,10 +179,10 @@ class DashboardViewModel extends ChangeNotifier {
     try {
       // Get the last saved mood, fallback to "happy" if none exists
       final moodName = await _getLastMoodName() ?? 'happy';
-      
+
       // Use user's favorite genres if available, otherwise empty list
       final userGenres = _user?.genres ?? [];
-      
+
       await _playlistService.generatePlaylist(
         mood: moodName,
         genres: userGenres,

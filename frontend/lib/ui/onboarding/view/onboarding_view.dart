@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:frontend/core/routing/app_router.dart';
-import 'package:frontend/core/widgets/loading_state.dart';
-import 'package:frontend/core/widgets/error_state.dart';
-import 'package:frontend/core/widgets/primary_button.dart';
-import 'package:frontend/core/widgets/genre_selection_chip.dart';
 import 'package:frontend/core/utils/snackbar_helper.dart';
-import '../viewmodel/onboarding_view_model.dart';
+import 'package:frontend/core/widgets/error_state.dart';
+import 'package:frontend/core/widgets/genre_selection_chip.dart';
+import 'package:frontend/core/widgets/loading_state.dart';
+import 'package:frontend/core/widgets/primary_button.dart';
+import 'package:frontend/ui/onboarding/viewmodel/onboarding_view_model.dart';
+import 'package:provider/provider.dart';
 
 class OnboardingView extends StatefulWidget {
   const OnboardingView({super.key});
@@ -29,7 +29,7 @@ class _OnboardingViewState extends State<OnboardingView> {
     try {
       await viewModel.completeOnboarding();
       if (mounted) {
-        AppRouter.navigatorKey.currentState?.pushNamedAndRemoveUntil(
+        await AppRouter.navigatorKey.currentState?.pushNamedAndRemoveUntil(
           AppRouter.dashboardRoute,
           (route) => false,
         );
@@ -69,18 +69,15 @@ class _OnboardingViewState extends State<OnboardingView> {
               children: [
                 const Text(
                   'Choose Your Top 3 Music Genres',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Select exactly 3 genres that best represent your music taste',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
@@ -124,8 +121,8 @@ class _OnboardingViewState extends State<OnboardingView> {
                   runSpacing: 12,
                   children: viewModel.availableGenres.map((genre) {
                     final isSelected = viewModel.selectedGenres.contains(genre);
-                    final isDisabled = !isSelected &&
-                        viewModel.selectedGenres.length >= 3;
+                    final isDisabled =
+                        !isSelected && viewModel.selectedGenres.length >= 3;
                     return GenreSelectionChip(
                       genre: genre,
                       isSelected: isSelected,
@@ -143,15 +140,13 @@ class _OnboardingViewState extends State<OnboardingView> {
                   isLoading: viewModel.isSaving,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                if (!viewModel.canComplete && viewModel.selectedGenres.isNotEmpty)
+                if (!viewModel.canComplete &&
+                    viewModel.selectedGenres.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       'Please select ${3 - viewModel.selectedGenres.length} more genre(s)',
-                      style: TextStyle(
-                        color: Colors.orange[700],
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: Colors.orange[700], fontSize: 12),
                       textAlign: TextAlign.center,
                     ),
                   ),

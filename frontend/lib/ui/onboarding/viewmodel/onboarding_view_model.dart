@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
-import '../../../data/repositories/onboarding_repository.dart';
-import '../../../data/repositories/auth_repository.dart';
-import '../../../data/models/user.dart';
+import 'package:frontend/data/models/user.dart';
+import 'package:frontend/data/repositories/auth_repository.dart';
+import 'package:frontend/data/repositories/onboarding_repository.dart';
 
 class OnboardingViewModel extends ChangeNotifier {
   final OnboardingRepository _onboardingRepository;
   final AuthRepository _authRepository;
 
-  OnboardingViewModel(
-    this._onboardingRepository,
-    this._authRepository,
-  );
+  OnboardingViewModel(this._onboardingRepository, this._authRepository);
 
   List<String> _availableGenres = [];
-  List<String> _selectedGenres = [];
+  final List<String> _selectedGenres = [];
   bool _isLoading = false;
   bool _isSaving = false;
   String? _error;

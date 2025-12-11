@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/routing/app_router.dart';
+import 'package:frontend/core/utils/snackbar_helper.dart';
+import 'package:frontend/core/widgets/error_state.dart';
+import 'package:frontend/core/widgets/loading_state.dart';
 import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
 import 'package:frontend/ui/dashboard/widgets/last_playlist_section.dart';
 import 'package:frontend/ui/dashboard/widgets/user_chip.dart';
@@ -26,7 +29,7 @@ class _DashboardViewState extends State<DashboardView> {
   @override
   void initState() {
     super.initState();
-    
+
     // Defer async operations until after the build phase
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final viewModel = context.read<DashboardViewModel>();
@@ -40,7 +43,7 @@ class _DashboardViewState extends State<DashboardView> {
           }
         });
       }
-      
+
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted && !_hasShownMoodDialog) {
           _showMoodDialog();
@@ -52,7 +55,7 @@ class _DashboardViewState extends State<DashboardView> {
   void _showMoodDialog() {
     if (_hasShownMoodDialog) return;
     _hasShownMoodDialog = true;
-    
+
     showDialog<bool>(
       context: context,
       barrierDismissible: true,
@@ -68,24 +71,20 @@ class _DashboardViewState extends State<DashboardView> {
 
   void _handleActionSelected(String value) async {
     final viewModel = context.read<DashboardViewModel>();
-    
+
     if (value == 'profile') {
       final homeViewState = HomeView.of(context);
       if (homeViewState != null) {
         homeViewState.switchToTab(0);
       } else {
-        AppRouter.navigatorKey.currentState?.pushNamed(
-          AppRouter.profileRoute,
-        );
+        AppRouter.navigatorKey.currentState?.pushNamed(AppRouter.profileRoute);
       }
     } else if (value == 'settings') {
       final homeViewState = HomeView.of(context);
       if (homeViewState != null) {
         homeViewState.switchToTab(2);
       } else {
-        AppRouter.navigatorKey.currentState?.pushNamed(
-          AppRouter.settingsRoute,
-        );
+        AppRouter.navigatorKey.currentState?.pushNamed(AppRouter.settingsRoute);
       }
     } else if (value == 'logout') {
       await viewModel.handleUserAction('logout');
@@ -195,7 +194,7 @@ return SingleChildScrollView(
       appBar: AppBar(
         titleSpacing: 16,
         title: const Text(
-          'ZeroPing',
+          'VibeCheck',
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
         actions: [

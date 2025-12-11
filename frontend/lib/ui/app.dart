@@ -19,7 +19,6 @@ class VibeCheckApp extends StatefulWidget {
 class _VibeCheckAppState extends State<VibeCheckApp> {
   final AuthRepository _authRepo = locator<AuthRepository>();
   final OnboardingRepository _onboardingRepo = locator<OnboardingRepository>();
-  Session? _session;
   StreamSubscription<AuthState>? _authSubscription;
   String? _currentRoute;
   bool _isCheckingOnboarding = false;
@@ -27,18 +26,10 @@ class _VibeCheckAppState extends State<VibeCheckApp> {
   @override
   void initState() {
     super.initState();
-    _session = Supabase.instance.client.auth.currentSession;
     // Initialize route based on session state
-    _currentRoute = _session == null 
-        ? AppRouter.loginRoute 
-        : AppRouter.dashboardRoute;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _syncRouteWithSession(_session);
-    });
+    _currentRoute = null;
 
     _authSubscription = _authRepo.onAuthStateChange.listen((data) {
-      setState(() => _session = data.session);
       _syncRouteWithSession(data.session);
     });
   }
@@ -50,10 +41,10 @@ class _VibeCheckAppState extends State<VibeCheckApp> {
     }
 
     if (session == null) {
-      final targetRoute = AppRouter.loginRoute;
+      const targetRoute = AppRouter.loginRoute;
       if (_currentRoute != targetRoute) {
         debugPrint('Navigating to login route: $targetRoute');
-        navigator.pushNamedAndRemoveUntil(targetRoute, (route) => false);
+        await navigator.pushNamedAndRemoveUntil(targetRoute, (route) => false);
         _currentRoute = targetRoute;
       }
       return;
@@ -65,27 +56,36 @@ class _VibeCheckAppState extends State<VibeCheckApp> {
         final email = session.user.email;
         if (email != null) {
           final needsOnboarding = await _onboardingRepo.needsOnboarding(email);
-          
+
           final targetRoute = needsOnboarding
               ? AppRouter.onboardingRoute
               : AppRouter.dashboardRoute;
-          
+
           if (_currentRoute != targetRoute) {
-            navigator.pushNamedAndRemoveUntil(targetRoute, (route) => false);
+            await navigator.pushNamedAndRemoveUntil(
+              targetRoute,
+              (route) => false,
+            );
             _currentRoute = targetRoute;
           }
         } else {
-          final targetRoute = AppRouter.dashboardRoute;
+          const targetRoute = AppRouter.dashboardRoute;
           if (_currentRoute != targetRoute) {
-            navigator.pushNamedAndRemoveUntil(targetRoute, (route) => false);
+            await navigator.pushNamedAndRemoveUntil(
+              targetRoute,
+              (route) => false,
+            );
             _currentRoute = targetRoute;
           }
         }
       } catch (e) {
         // On error, default to dashboard
-        final targetRoute = AppRouter.dashboardRoute;
+        const targetRoute = AppRouter.dashboardRoute;
         if (_currentRoute != targetRoute) {
-          navigator.pushNamedAndRemoveUntil(targetRoute, (route) => false);
+          await navigator.pushNamedAndRemoveUntil(
+            targetRoute,
+            (route) => false,
+          );
           _currentRoute = targetRoute;
         }
       } finally {
@@ -112,9 +112,7 @@ class _VibeCheckAppState extends State<VibeCheckApp> {
               ? ThemeMode.dark
               : ThemeMode.light,
           navigatorKey: AppRouter.navigatorKey,
-          initialRoute: _session == null 
-              ? AppRouter.loginRoute 
-              : AppRouter.dashboardRoute,
+          initialRoute: '/',
           onGenerateRoute: AppRouter.generateRoute,
         );
       },

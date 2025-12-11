@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../data/models/mood.dart';
-import '../../../data/repositories/mood_repository.dart';
-import '../../../data/repositories/auth_repository.dart';
-import '../../../data/repositories/user_repository.dart';
+import 'package:frontend/data/models/mood.dart';
+import 'package:frontend/data/repositories/auth_repository.dart';
+import 'package:frontend/data/repositories/mood_repository.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
 
 class MoodViewModel extends ChangeNotifier {
   final MoodRepository _moodRepository;
@@ -33,7 +33,9 @@ class MoodViewModel extends ChangeNotifier {
 
     try {
       _availableMoods = await _moodRepository.getAllMoods();
-      debugPrint('MoodViewModel.loadMoods: Loaded ${_availableMoods.length} moods from API');
+      debugPrint(
+        'MoodViewModel.loadMoods: Loaded ${_availableMoods.length} moods from API',
+      );
     } catch (e) {
       _error = e.toString();
       debugPrint('MoodViewModel.loadMoods error: $e');
@@ -45,7 +47,11 @@ class MoodViewModel extends ChangeNotifier {
   }
 
   /// Command: Saves a mood entry (handles user fetching internally)
-  Future<void> saveMoodEntry(int moodId, {int intensity = 50, String? notes}) async {
+  Future<void> saveMoodEntry(
+    int moodId, {
+    int intensity = 50,
+    String? notes,
+  }) async {
     _isSaving = true;
     _error = null;
     notifyListeners();
@@ -63,7 +69,9 @@ class MoodViewModel extends ChangeNotifier {
         intensity: intensity,
         notes: notes,
       );
-      debugPrint('MoodViewModel.saveMoodEntry: Saved mood $moodId with intensity $intensity for user ${user.id}');
+      debugPrint(
+        'MoodViewModel.saveMoodEntry: Saved mood $moodId with intensity $intensity for user ${user.id}',
+      );
     } catch (e) {
       _error = e.toString();
       debugPrint('MoodViewModel.saveMoodEntry error: $e');
@@ -96,7 +104,9 @@ class MoodViewModel extends ChangeNotifier {
         moodEntries,
         generalNotes,
       );
-      debugPrint('MoodViewModel.saveMultipleMoodEntries: Saved ${moodEntries.length} moods for user ${user.id}');
+      debugPrint(
+        'MoodViewModel.saveMultipleMoodEntries: Saved ${moodEntries.length} moods for user ${user.id}',
+      );
     } catch (e) {
       _error = e.toString();
       debugPrint('MoodViewModel.saveMultipleMoodEntries error: $e');

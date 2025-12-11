@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/utils/snackbar_helper.dart';
+import 'package:frontend/core/widgets/dialog_wrapper.dart';
+import 'package:frontend/core/widgets/empty_state.dart';
+import 'package:frontend/core/widgets/error_state.dart';
+import 'package:frontend/core/widgets/loading_state.dart';
+import 'package:frontend/core/widgets/mood_dropdown.dart';
+import 'package:frontend/core/widgets/mood_meter.dart';
+import 'package:frontend/core/widgets/primary_button.dart';
+import 'package:frontend/core/widgets/secondary_button.dart';
+import 'package:frontend/data/models/mood.dart';
+import 'package:frontend/ui/mood/viewmodel/mood_view_model.dart';
 import 'package:provider/provider.dart';
-import '../viewmodel/mood_view_model.dart';
-import '../../../data/models/mood.dart';
-import '../../../core/widgets/dialog_wrapper.dart';
-import '../../../core/widgets/loading_state.dart';
-import '../../../core/widgets/error_state.dart';
-import '../../../core/widgets/empty_state.dart';
-import '../../../core/widgets/primary_button.dart';
-import '../../../core/widgets/secondary_button.dart';
-import '../../../core/widgets/mood_dropdown.dart';
-import '../../../core/widgets/mood_meter.dart';
-import '../../../core/utils/snackbar_helper.dart';
 
 class MoodSelectionDialog extends StatefulWidget {
   const MoodSelectionDialog({super.key});
@@ -20,8 +20,8 @@ class MoodSelectionDialog extends StatefulWidget {
 }
 
 class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
-  // Single selected mood
-  _SelectedMoodData? _selectedMood;
+  // Map of selected moods: moodId -> {mood, intensity}
+  final Map<int, _SelectedMoodData> _selectedMoods = {};
   final TextEditingController _notesController = TextEditingController();
   bool _isSaving = false;
   bool _showNotes = false;
@@ -97,7 +97,7 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
           : _notesController.text.trim();
 
       await viewModel.saveMultipleMoodEntries(moodEntries, generalNotes);
-      
+
       if (mounted) {
         Navigator.of(context).pop(true);
         SnackbarHelper.showSuccess(
@@ -125,7 +125,7 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
   }
 
   Widget _buildMoodSelector(MoodViewModel viewModel) {
-    final selectedMoodsList = _selectedMood != null 
+    final selectedMoodsList = _selectedMood != null
         ? [_selectedMood!.mood]
         : <Mood>[];
     
@@ -199,7 +199,7 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
             maxLines: 4,
             maxLength: 500,
             decoration: InputDecoration(
-              hintText: 'Tell us more about how you\'re feeling...',
+              hintText: "Tell us more about how you're feeling...",
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -216,15 +216,12 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
 
   Widget _buildContent(MoodViewModel viewModel) {
     if (viewModel.isLoading) {
-      return const Padding(
-        padding: EdgeInsets.all(32.0),
-        child: LoadingState(),
-      );
+      return const Padding(padding: EdgeInsets.all(32), child: LoadingState());
     }
 
     if (viewModel.error != null && viewModel.availableMoods.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.all(32.0),
+        padding: const EdgeInsets.all(32),
         child: ErrorState(
           title: 'Error loading moods',
           message: viewModel.error!,
@@ -235,7 +232,7 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
 
     if (viewModel.availableMoods.isEmpty) {
       return const Padding(
-        padding: EdgeInsets.all(32.0),
+        padding: EdgeInsets.all(32),
         child: EmptyState(
           title: 'No moods available',
           message: 'Please ensure moods are added to the database',
