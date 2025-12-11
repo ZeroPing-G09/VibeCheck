@@ -81,6 +81,12 @@ class LastPlaylistSection extends StatelessWidget {
                     color: Theme.of(context).colorScheme.error,
                   ),
                 ),
+                const SizedBox(height: 8),
+                Text(
+                  'Something went wrong while generating your playlist.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
                 if (errorMessage != null && errorMessage!.contains('Unauthorized'))
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
@@ -90,6 +96,24 @@ class LastPlaylistSection extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                   ),
+                if (onCreatePlaylist != null) ...[
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: isGeneratingPlaylist ? null : onCreatePlaylist,
+                    icon: isGeneratingPlaylist
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(Icons.refresh),
+                    label: Text(
+                      isGeneratingPlaylist ? 'Retrying...' : 'Try again',
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -122,9 +146,19 @@ class LastPlaylistSection extends StatelessWidget {
                 const SizedBox(height: 8),
                 if (onCreatePlaylist != null)
                   ElevatedButton.icon(
-                    onPressed: onCreatePlaylist,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Create a new one!'),
+                    onPressed: isGeneratingPlaylist ? null : onCreatePlaylist,
+                    icon: isGeneratingPlaylist
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(Icons.add),
+                    label: Text(
+                      isGeneratingPlaylist ? 'Generating...' : 'Create a new one!',
+                    ),
                   ),
               ],
             ),
@@ -172,9 +206,19 @@ class LastPlaylistSection extends StatelessWidget {
             if (onCreatePlaylist != null) ...[
               const SizedBox(height: 16),
               ElevatedButton.icon(
-                onPressed: onCreatePlaylist,
-                icon: const Icon(Icons.add),
-                label: const Text('Generate new playlist'),
+                onPressed: isGeneratingPlaylist ? null : onCreatePlaylist,
+                icon: isGeneratingPlaylist
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Icon(Icons.add),
+                label: Text(
+                  isGeneratingPlaylist ? 'Generating...' : 'Generate new playlist',
+                ),
               ),
             ],
           ],

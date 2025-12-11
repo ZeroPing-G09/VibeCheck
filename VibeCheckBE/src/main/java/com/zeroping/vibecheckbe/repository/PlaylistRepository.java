@@ -34,4 +34,7 @@ public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
     // Find playlists by userId and mood name
     List<Playlist> findByUserIdAndMood(UUID userId, String mood);
 
+    // Returns the latest playlist for a user with a specific mood, if it exists
+    Optional<Playlist> findFirstByUserIdAndMoodOrderByCreatedAtDesc(UUID userId, String mood);
+
 }

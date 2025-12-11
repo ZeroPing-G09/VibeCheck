@@ -23,14 +23,18 @@ class PlaylistService {
   }
 
   /// Fetches the last playlist for the authenticated user.
+  /// Optionally filters by mood if provided.
   /// Returns null if no playlist exists (404 response).
   /// Throws an exception for other error responses.
-  Future<LastPlaylist?> fetchLastPlaylist() async {
+  Future<LastPlaylist?> fetchLastPlaylist({String? mood}) async {
     if (await _authService.getAccessToken() == null) {
       throw Exception('Not authenticated');
     }
 
-    final url = Uri.parse('$baseUrl/users/last-playlist');
+    final uri = Uri.parse('$baseUrl/users/last-playlist');
+    final url = mood != null && mood.isNotEmpty
+        ? uri.replace(queryParameters: {'mood': mood})
+        : uri;
     debugPrint('PlaylistService.fetchLastPlaylist GET $url');
 
     final response = await http.get(
