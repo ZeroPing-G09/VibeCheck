@@ -4,6 +4,8 @@ import com.zeroping.vibecheckbe.dto.BatchMoodEntryDTO;
 import com.zeroping.vibecheckbe.dto.CreateBatchMoodEntriesDTO;
 import com.zeroping.vibecheckbe.dto.CreateMoodEntryDTO;
 import com.zeroping.vibecheckbe.dto.MoodEntryResponseDTO;
+import com.zeroping.vibecheckbe.dto.MoodHistoryDTO;
+import com.zeroping.vibecheckbe.dto.PlaylistDTO;
 import com.zeroping.vibecheckbe.entity.Mood;
 import com.zeroping.vibecheckbe.entity.MoodEntry;
 import com.zeroping.vibecheckbe.entity.User;
@@ -30,13 +32,16 @@ public class MoodService {
     private final MoodRepository moodRepository;
     private final MoodEntryRepository moodEntryRepository;
     private final UserRepository userRepository;
+    private final PlaylistService playlistService;
 
     public MoodService(MoodRepository moodRepository, 
                        MoodEntryRepository moodEntryRepository,
-                       UserRepository userRepository) {
+                       UserRepository userRepository,
+                       PlaylistService playlistService) {
         this.moodRepository = moodRepository;
         this.moodEntryRepository = moodEntryRepository;
         this.userRepository = userRepository;
+        this.playlistService = playlistService;
     }
 
     @Transactional(readOnly = true)
@@ -118,6 +123,34 @@ public class MoodService {
         List<MoodEntry> entries = moodEntryRepository.findByUserOrderByCreatedAtDesc(user);
         return entries.stream()
                 .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<MoodHistoryDTO> getUserMoodHistory(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+
+        List<MoodEntry> entries = moodEntryRepository.findByUserOrderByCreatedAtDesc(user);
+        
+        return entries.stream()
+                .map(entry -> {
+                    String moodName = entry.getMood().getName();
+                    List<PlaylistDTO> playlists = playlistService.getPlaylistsByMood(userId, moodName);
+                    
+                    MoodHistoryDTO dto = new MoodHistoryDTO();
+                    dto.setId(entry.getId());
+                    dto.setUserId(entry.getUser().getId());
+                    dto.setMoodId(entry.getMood().getId());
+                    dto.setMoodName(moodName);
+                    dto.setMoodEmoji(MoodEmojiMapper.getEmoji(moodName));
+                    dto.setIntensity(entry.getIntensity() != null ? entry.getIntensity() : 50);
+                    dto.setNotes(entry.getNotes());
+                    dto.setCreatedAt(entry.getCreatedAt());
+                    dto.setPlaylists(playlists);
+                    
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 

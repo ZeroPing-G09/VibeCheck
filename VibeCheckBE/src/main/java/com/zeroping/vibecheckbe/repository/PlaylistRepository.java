@@ -31,4 +31,7 @@ public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
     @Query("SELECT p.createdAt FROM Playlist p WHERE p.userId = :userId ORDER BY p.createdAt DESC LIMIT 1")
     Optional<Instant> findLatestTimestamp(UUID userId);
 
+    // Find playlists by userId and mood name
+    List<Playlist> findByUserIdAndMood(UUID userId, String mood);
+
 }

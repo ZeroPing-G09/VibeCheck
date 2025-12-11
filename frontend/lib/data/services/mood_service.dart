@@ -103,5 +103,36 @@ class MoodService {
       throw Exception('Failed to load mood entries: ${response.statusCode}');
     }
   }
+
+  Future<List<MoodHistory>> fetchUserMoodHistory(String userId) async {
+    final url = ApiService.buildBackendUrl('/users/$userId/moods');
+    
+    try {
+      final response = await http.get(
+        url,
+        headers: ApiService.getAuthHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
+        return data.map((h) {
+          try {
+            return MoodHistory.fromJson(h as Map<String, dynamic>);
+          } catch (e) {
+            debugPrint('Error parsing mood history: $h, error: $e');
+            rethrow;
+          }
+        }).toList();
+      } else if (response.statusCode == 404) {
+        // Return empty list if no records found
+        return [];
+      } else {
+        throw Exception('Failed to load mood history: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('MoodService.fetchUserMoodHistory error: $e');
+      rethrow;
+    }
+  }
 }
 
