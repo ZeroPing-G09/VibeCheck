@@ -51,6 +51,13 @@ public class PlaylistService {
                 .orElse(null); // return null if no playlists exist
     }
 
+    public List<PlaylistDTO> getPlaylistsByMood(UUID userId, String mood) {
+        List<Playlist> playlists = playlistRepository.findByUserIdAndMood(userId, mood);
+        return playlists.stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
     private PlaylistDTO mapToDTO(Playlist playlist) {
         PlaylistDTO dto = new PlaylistDTO();
         dto.setId(playlist.getId());
@@ -58,7 +65,7 @@ public class PlaylistService {
         dto.setMood(playlist.getMood());
         dto.setCreatedAt(playlist.getCreatedAt());
         dto.setUserId(playlist.getUserId());
-        
+
         // Map songs if available
         if (playlist.getSongs() != null) {
             Set<SongDTO> songDTOs = playlist.getSongs().stream()
@@ -66,10 +73,10 @@ public class PlaylistService {
                     .collect(Collectors.toSet());
             dto.setSongs(songDTOs);
         }
-        
+
         return dto;
     }
-    
+
     private SongDTO mapToSongDTO(Song song) {
         return new SongDTO(
                 song.getId(),

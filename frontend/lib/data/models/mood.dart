@@ -107,3 +107,72 @@ class MoodEntryData {
   }
 }
 
+// Playlist model for mood history
+class Playlist {
+  final int id;
+  final String name;
+  final String? mood;
+  final String userId;
+  final String createdAt;
+
+  Playlist({
+    required this.id,
+    required this.name,
+    this.mood,
+    required this.userId,
+    required this.createdAt,
+  });
+
+  factory Playlist.fromJson(Map<String, dynamic> json) {
+    return Playlist(
+      id: json['id'] as int? ?? 0,
+      name: json['name'] as String? ?? '',
+      mood: json['mood'] as String?,
+      userId: json['userId']?.toString() ?? '',
+      createdAt: json['createdAt'] as String? ?? '',
+    );
+  }
+}
+
+// Mood History model combining mood entry with playlists
+class MoodHistory {
+  final int id;
+  final String userId;
+  final int moodId;
+  final String moodName;
+  final String moodEmoji;
+  final int? intensity;
+  final String? notes;
+  final String createdAt;
+  final List<Playlist> playlists;
+
+  MoodHistory({
+    required this.id,
+    required this.userId,
+    required this.moodId,
+    required this.moodName,
+    required this.moodEmoji,
+    this.intensity,
+    this.notes,
+    required this.createdAt,
+    required this.playlists,
+  });
+
+  factory MoodHistory.fromJson(Map<String, dynamic> json) {
+    return MoodHistory(
+      id: json['id'] as int? ?? 0,
+      userId: json['userId']?.toString() ?? '',
+      moodId: json['moodId'] as int? ?? 0,
+      moodName: json['moodName'] as String? ?? '',
+      moodEmoji: json['moodEmoji'] as String? ?? '',
+      intensity: json['intensity'] as int?,
+      notes: json['notes'] as String?,
+      createdAt: json['createdAt'] as String? ?? '',
+      playlists: (json['playlists'] as List<dynamic>?)
+              ?.map((p) => Playlist.fromJson(p as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+  }
+}
+
