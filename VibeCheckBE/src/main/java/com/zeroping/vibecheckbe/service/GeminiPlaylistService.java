@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import okhttp3.Dns;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -14,7 +15,11 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class GeminiPlaylistService {
@@ -25,7 +30,33 @@ public class GeminiPlaylistService {
     private static final String GEMINI_URL_TEMPLATE =
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=%s";
 
-    private final OkHttpClient client = new OkHttpClient();
+    // Configure OkHttpClient to prefer IPv4 and handle DNS resolution better
+    private final OkHttpClient client = new OkHttpClient.Builder()
+            .dns(new Dns() {
+                @Override
+                public List<InetAddress> lookup(String hostname) throws UnknownHostException {
+                    try {
+                        // Get all addresses
+                        InetAddress[] addresses = InetAddress.getAllByName(hostname);
+                        // Prefer IPv4 addresses
+                        List<InetAddress> ipv4Addresses = java.util.Arrays.stream(addresses)
+                                .filter(addr -> addr instanceof Inet4Address)
+                                .collect(java.util.stream.Collectors.toList());
+                        
+                        // If we have IPv4 addresses, use them; otherwise use all addresses
+                        return ipv4Addresses.isEmpty() 
+                                ? java.util.Arrays.asList(addresses)
+                                : ipv4Addresses;
+                    } catch (UnknownHostException e) {
+                        throw e;
+                    }
+                }
+            })
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .build();
+    
     private final ObjectMapper mapper = new ObjectMapper();
 
     @PostConstruct

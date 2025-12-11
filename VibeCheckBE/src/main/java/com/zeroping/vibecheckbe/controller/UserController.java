@@ -1,5 +1,8 @@
 package com.zeroping.vibecheckbe.controller;
 
+import com.zeroping.vibecheckbe.dto.LastPlaylistResponseDTO;
+import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
+import com.zeroping.vibecheckbe.exception.playlist.PlaylistNotFoundException;
 import com.zeroping.vibecheckbe.dto.MoodHistoryDTO;
 import com.zeroping.vibecheckbe.dto.UserDTO;
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
@@ -87,5 +90,19 @@ public class UserController {
             return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "User not found"));
         }
+    }
+
+    /**
+     * Get the most recent playlist for the authenticated user.
+     * Returns 404 if the user has no playlists.
+     */
+    @GetMapping("/last-playlist")
+    public ResponseEntity<LastPlaylistResponseDTO> getLastPlaylist() {
+        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
+        UUID userId = UUID.fromString(userIdString);
+
+        return userService.getLastPlaylist(userId)
+                .map(ResponseEntity::ok)
+                .orElseThrow(() -> new PlaylistNotFoundException("No playlist found for user"));
     }
 }

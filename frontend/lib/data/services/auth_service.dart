@@ -27,5 +27,11 @@ class AuthService {
   User? get currentUser => _client.auth.currentUser;
 
   Stream<AuthState> get onAuthStateChange => _client.auth.onAuthStateChange;
+
+  /// Get the current access token for authenticated API requests.
+  Future<String?> getAccessToken() async {
+    final session = _client.auth.currentSession;
+    return session?.accessToken;
+  }
 }
 

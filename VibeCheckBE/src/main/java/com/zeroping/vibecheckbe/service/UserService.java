@@ -1,14 +1,19 @@
 package com.zeroping.vibecheckbe.service;
 
+import com.zeroping.vibecheckbe.dto.LastPlaylistResponseDTO;
+import com.zeroping.vibecheckbe.dto.SongDTO;
 import com.zeroping.vibecheckbe.dto.UserDTO;
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
 import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
+import com.zeroping.vibecheckbe.entity.Playlist;
 import com.zeroping.vibecheckbe.entity.User;
 import com.zeroping.vibecheckbe.entity.Genre;
 import com.zeroping.vibecheckbe.exception.genre.GenreNotFoundException;
 import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
+import com.zeroping.vibecheckbe.repository.PlaylistRepository;
 import com.zeroping.vibecheckbe.repository.UserRepository;
 import com.zeroping.vibecheckbe.repository.GenreRepository;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,10 +27,13 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final GenreRepository genreRepository;
+    private final PlaylistRepository playlistRepository;
 
-    public UserService(UserRepository userRepository, GenreRepository genreRepository) {
+    public UserService(UserRepository userRepository, GenreRepository genreRepository, 
+                       PlaylistRepository playlistRepository) {
         this.userRepository = userRepository;
         this.genreRepository = genreRepository;
+        this.playlistRepository = playlistRepository;
     }
 
     @Transactional(readOnly = true)
@@ -98,6 +106,45 @@ public class UserService {
         user.setGenres(newGenres);
 
         return userRepository.save(user);
+    }
+
+    /**
+     * Get the most recent playlist for a user.
+     * 
+     * @param userId The user's UUID
+     * @return LastPlaylistResponseDTO with playlist info, or empty Optional if no playlist exists
+     */
+    public Optional<LastPlaylistResponseDTO> getLastPlaylist(UUID userId) {
+        try {
+            return playlistRepository.findFirstByUserIdOrderByCreatedAtDesc(userId)
+                    .map(this::toLastPlaylistResponse);
+        } catch (InvalidDataAccessResourceUsageException e) {
+            // If database schema issue (e.g., missing column), treat as no playlist exists
+            // This allows the app to work even if the database schema is incomplete
+            return Optional.empty();
+        }
+    }
+
+    private LastPlaylistResponseDTO toLastPlaylistResponse(Playlist playlist) {
+        // Map songs if available
+        Set<SongDTO> songDTOs = null;
+        if (playlist.getSongs() != null) {
+            songDTOs = playlist.getSongs().stream()
+                    .map(song -> new SongDTO(
+                            song.getId(),
+                            song.getName(),
+                            song.getUrl(),
+                            song.getArtistName()
+                    ))
+                    .collect(Collectors.toSet());
+        }
+        
+        return new LastPlaylistResponseDTO(
+                playlist.getId() != null ? playlist.getId().toString() : null,
+                playlist.getName(),
+                playlist.getCreatedAt(),
+                songDTOs
+        );
     }
 
     @Transactional

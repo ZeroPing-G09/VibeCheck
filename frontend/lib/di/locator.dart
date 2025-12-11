@@ -6,6 +6,7 @@ import '../data/repositories/genre_repository.dart';
 import '../data/repositories/onboarding_repository.dart';
 import '../data/services/api_service.dart';
 import '../data/services/auth_service.dart';
+import '../data/services/playlist_service.dart';
 import '../data/services/user_service.dart';
 import '../data/services/mood_service.dart';
 import '../data/services/genre_service.dart';
@@ -24,6 +25,9 @@ Future<void> setupLocator() async {
   locator.registerLazySingleton(() => ApiService());
   locator.registerLazySingleton(() => AuthService());
   locator.registerLazySingleton(() => UserService());
+  locator.registerLazySingleton(
+    () => PlaylistService(authService: locator<AuthService>()),
+  );
   locator.registerLazySingleton(() => MoodService());
   locator.registerLazySingleton(() => GenreService());
   locator.registerLazySingleton(() => OnboardingService());
@@ -54,8 +58,9 @@ Future<void> setupLocator() async {
 
   // Register ViewModels (UI layer) that depend on repositories
   locator.registerFactory(() => DashboardViewModel(
-        locator<UserRepository>(),
-        locator<AuthRepository>(),
+        userRepository: locator<UserRepository>(),
+        authRepository: locator<AuthRepository>(),
+        moodRepository: locator<MoodRepository>(),
       ));
   
   locator.registerFactory(() => MoodViewModel(
