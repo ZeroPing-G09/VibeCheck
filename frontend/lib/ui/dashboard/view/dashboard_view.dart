@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/routing/app_router.dart';
 import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
+import 'package:frontend/ui/dashboard/widgets/last_playlist_section.dart';
 import 'package:frontend/ui/dashboard/widgets/user_chip.dart';
 import 'package:frontend/ui/home/view/home_view.dart';
 import 'package:frontend/ui/mood/view/mood_selection_dialog.dart';
@@ -18,6 +19,7 @@ class DashboardView extends StatefulWidget {
 
 class _DashboardViewState extends State<DashboardView> {
   bool _hasShownMoodDialog = false;
+  bool _hasLoadedPlaylist = false;
 
   @override
   void initState() {
@@ -28,7 +30,13 @@ class _DashboardViewState extends State<DashboardView> {
       final viewModel = context.read<DashboardViewModel>();
       final email = viewModel.currentUserEmail;
       if (email != null) {
-        viewModel.loadUserByEmail(email);
+        viewModel.loadUserByEmail(email).then((_) {
+          // Load playlist after user is loaded
+          if (mounted && !_hasLoadedPlaylist) {
+            _hasLoadedPlaylist = true;
+            viewModel.loadLastPlaylist();
+          }
+        });
       }
       
       Future.delayed(const Duration(milliseconds: 500), () {
@@ -127,9 +135,10 @@ class _DashboardViewState extends State<DashboardView> {
       return const Center(child: Text('No user loaded'));
     }
 
-    return Center(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Welcome, ${user.displayName}!',
@@ -150,6 +159,17 @@ class _DashboardViewState extends State<DashboardView> {
               padding: const EdgeInsets.only(top: 8.0),
               child: Text('Last login: ${user.lastLogIn}'),
             ),
+          const SizedBox(height: 24),
+          // Last Playlist Section
+          LastPlaylistSection(
+            playlistState: viewModel.playlistState,
+            playlist: viewModel.lastPlaylist,
+            errorMessage: viewModel.playlistError,
+            isGeneratingPlaylist: viewModel.isGeneratingPlaylist,
+            onCreatePlaylist: () {
+              viewModel.generatePlaylist();
+            },
+          ),
         ],
       ),
     );
