@@ -1,13 +1,10 @@
 package com.zeroping.vibecheckbe.controller;
 
-import com.zeroping.vibecheckbe.dto.LastPlaylistResponseDTO;
-import com.zeroping.vibecheckbe.dto.MoodHistoryDTO;
-import com.zeroping.vibecheckbe.dto.UserDTO;
-import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
-import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
+import com.zeroping.vibecheckbe.dto.*;
 import com.zeroping.vibecheckbe.exception.playlist.PlaylistNotFoundException;
 import com.zeroping.vibecheckbe.service.MoodService;
 import com.zeroping.vibecheckbe.service.UserService;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+
+import static org.springframework.http.HttpStatus.*;
 
 @RestController
 @RequestMapping("/users")
@@ -113,5 +112,23 @@ public class UserController {
         return playlist
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new PlaylistNotFoundException("No playlist found for user"));
+    }
+
+    @PatchMapping("/playlist")
+    public ResponseEntity<PlaylistFeedbackResponse> SavePlaylistFeedback(@RequestBody PlaylistFeedbackRequest request) {
+        if(request.getLiked() == null || request.getPlaylistId() == null) {
+            return ResponseEntity.status(BAD_REQUEST)
+                    .body(new PlaylistFeedbackResponse("Some fields are missing", null));
+        }
+        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (userIdString == null) {
+            return ResponseEntity.status(UNAUTHORIZED)
+                    .body(new PlaylistFeedbackResponse("Invalid JWT", null));
+        }
+        UUID userId = UUID.fromString(userIdString);
+
+        PlaylistFeedbackResponse response = userService.savePlaylistFeedback(userId, request);
+        return ResponseEntity.status(OK)
+                .body(response);
     }
 }

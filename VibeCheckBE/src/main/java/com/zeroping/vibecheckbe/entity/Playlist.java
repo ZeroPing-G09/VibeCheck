@@ -37,4 +37,10 @@ public class Playlist {
             inverseJoinColumns = @JoinColumn(name = "song_id")
     )
     private Set<Song> songs;
+
+    @Column(name = "liked")
+    private Boolean liked = false;
+
+    @Column(name = "liked_at")
+    private Instant likedAt;
 }

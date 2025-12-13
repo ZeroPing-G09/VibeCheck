@@ -1,8 +1,6 @@
 package com.zeroping.vibecheckbe.controller;
 
-import com.zeroping.vibecheckbe.dto.UserDTO;
-import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
-import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
+import com.zeroping.vibecheckbe.dto.*;
 import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
 import com.zeroping.vibecheckbe.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -248,5 +246,107 @@ class UserControllerTest {
 
         verify(userService, times(1)).updateUserPreferences(eq(userId), any(UserPreferencesDTO.class));
     }
+
+    @Test
+    @DisplayName("""
+        Given a valid feedback request
+        When SavePlaylistFeedback is called
+        Then it returns 200 OK and persists the feedback
+        """)
+    void givenValidRequest_WhenSavePlaylistFeedbackIsCalled_ThenReturnsSuccess() {
+        // Given
+        UUID userId = UUID.randomUUID();
+        Long playlistId = 123456L;
+
+        PlaylistFeedbackRequest request = new PlaylistFeedbackRequest();
+        request.setPlaylistId(playlistId);
+        request.setLiked(true);
+        PlaylistFeedbackResponse expectedResponse = new PlaylistFeedbackResponse("Feedback received", true);
+
+        // Mock SecurityContext
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn(userId.toString());
+        SecurityContextHolder.setContext(securityContext);
+
+        when(userService.savePlaylistFeedback(eq(userId), eq(request))).thenReturn(expectedResponse);
+
+        // When
+        ResponseEntity<PlaylistFeedbackResponse> response = userController.SavePlaylistFeedback(request);
+
+        // Then
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Feedback received", response.getBody().getMessage());
+
+        verify(userService, times(1)).savePlaylistFeedback(eq(userId), eq(request));
+    }
+
+    @Test
+    @DisplayName("""
+        Given a request with missing fields
+        When SavePlaylistFeedback is called
+        Then it returns 400 Bad Request
+        """)
+    void givenMissingFields_WhenSavePlaylistFeedbackIsCalled_ThenReturnsBadRequest() {
+        // Given
+        // Case 1: Missing playlistId
+        PlaylistFeedbackRequest requestMissingId = new PlaylistFeedbackRequest();
+        requestMissingId.setLiked(true);
+
+        // Case 2: Missing liked status
+        PlaylistFeedbackRequest requestMissingLiked = new PlaylistFeedbackRequest();
+        requestMissingLiked.setPlaylistId(12345L);
+
+        // Mock SecurityContext
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn(UUID.randomUUID().toString());
+        SecurityContextHolder.setContext(securityContext);
+
+        // When & Then for Request 1
+        ResponseEntity<PlaylistFeedbackResponse> response1 = userController.SavePlaylistFeedback(requestMissingId);
+        assertEquals(HttpStatus.BAD_REQUEST, response1.getStatusCode());
+        assertEquals("Some fields are missing", response1.getBody().getMessage());
+
+        // When & Then for Request 2
+        ResponseEntity<PlaylistFeedbackResponse> response2 = userController.SavePlaylistFeedback(requestMissingLiked);
+        assertEquals(HttpStatus.BAD_REQUEST, response2.getStatusCode());
+        assertEquals("Some fields are missing", response2.getBody().getMessage());
+
+        verify(userService, never()).savePlaylistFeedback(any(), any());
+    }
+
+    @Test
+    @DisplayName("""
+        Given an unauthenticated context (null principal)
+        When SavePlaylistFeedback is called
+        Then it returns 401 Unauthorized
+        """)
+    void givenNullPrincipal_WhenSavePlaylistFeedbackIsCalled_ThenReturnsUnauthorized() {
+        // Given
+        PlaylistFeedbackRequest request = new PlaylistFeedbackRequest();
+        request.setPlaylistId(123456L);
+        request.setLiked(true);
+
+        // Mock SecurityContext to return NULL name
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn(null);
+        SecurityContextHolder.setContext(securityContext);
+
+        // When
+        ResponseEntity<PlaylistFeedbackResponse> response = userController.SavePlaylistFeedback(request);
+
+        // Then
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("Invalid JWT", response.getBody().getMessage());
+
+        verify(userService, never()).savePlaylistFeedback(any(), any());
+    }
+
 
 }
