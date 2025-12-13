@@ -11,6 +11,7 @@ import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
 import com.zeroping.vibecheckbe.exception.playlist.PlaylistNotFoundException;
 import com.zeroping.vibecheckbe.service.MoodService;
 import com.zeroping.vibecheckbe.service.UserService;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
