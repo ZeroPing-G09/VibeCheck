@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:frontend/data/local/local_user_storage.dart';
 import 'package:frontend/data/models/user.dart';
 import 'package:frontend/data/services/user_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,7 +9,7 @@ class UserRepository {
   final UserService _service;
 
   UserRepository({UserService? userService})
-      : _service = userService ?? UserService();
+      : _service = userService ?? UserService(LocalUserStorage());
 
   Future<User> getUserById(int id) async {
     final user = await _service.fetchUserById(id);
@@ -18,7 +19,7 @@ class UserRepository {
 
   Future<User> getUserByEmail(String email) async {
     final user = await _service.fetchUserByEmail(email);
-    await _saveGenres(user.genres);
+    await _saveGenres(user!.genres);
     return user;
   }
 
