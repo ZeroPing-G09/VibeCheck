@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.UUID;
 import java.util.Set;
 import java.util.UUID;
 
@@ -41,4 +42,10 @@ public class Playlist {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
+
+    @Column(name = "liked")
+    private Boolean liked = false;
+
+    @Column(name = "liked_at")
+    private Instant likedAt;
 }

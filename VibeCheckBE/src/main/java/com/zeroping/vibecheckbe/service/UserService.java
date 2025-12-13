@@ -1,14 +1,11 @@
 package com.zeroping.vibecheckbe.service;
 
-import com.zeroping.vibecheckbe.dto.LastPlaylistResponseDTO;
-import com.zeroping.vibecheckbe.dto.SongDTO;
-import com.zeroping.vibecheckbe.dto.UserDTO;
-import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
-import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
+import com.zeroping.vibecheckbe.dto.*;
 import com.zeroping.vibecheckbe.entity.Playlist;
 import com.zeroping.vibecheckbe.entity.User;
 import com.zeroping.vibecheckbe.entity.Genre;
 import com.zeroping.vibecheckbe.exception.genre.GenreNotFoundException;
+import com.zeroping.vibecheckbe.exception.playlist.PlaylistNotFoundException;
 import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
 import com.zeroping.vibecheckbe.repository.PlaylistRepository;
 import com.zeroping.vibecheckbe.repository.UserRepository;
@@ -199,5 +196,25 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
         return toUserDTO(savedUser);
+    }
+
+    public PlaylistFeedbackResponse savePlaylistFeedback(UUID userId, PlaylistFeedbackRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+
+        Playlist playlist = playlistRepository.findById(request.getPlaylistId())
+                .orElseThrow(() -> new PlaylistNotFoundException("Playlist not found: " + request.getPlaylistId()));
+
+        playlist.setLiked(request.getLiked());
+        if (request.getLiked() == true)
+            playlist.setLikedAt(new Date().toInstant());
+        else
+            playlist.setLikedAt(null);
+
+        playlistRepository.save(playlist);
+
+        // TO DO: Update user preferences for future AI prompts
+
+        return new PlaylistFeedbackResponse("Feedback received", request.getLiked());
     }
 }

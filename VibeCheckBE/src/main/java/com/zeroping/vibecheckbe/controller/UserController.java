@@ -1,5 +1,6 @@
 package com.zeroping.vibecheckbe.controller;
 
+import com.zeroping.vibecheckbe.dto.*;
 import com.zeroping.vibecheckbe.dto.SavePlaylistToSpotifyRequest;
 import com.zeroping.vibecheckbe.service.PlaylistService;
 import com.zeroping.vibecheckbe.dto.LastPlaylistResponseDTO;
@@ -13,11 +14,17 @@ import com.zeroping.vibecheckbe.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+
+import static org.springframework.http.HttpStatus.*;
 
 @RestController
 @RequestMapping("/users")
@@ -49,6 +56,7 @@ public class UserController {
     public ResponseEntity<?> updateUser(
             @PathVariable UUID id,
             @RequestBody UserUpdateDTO updateDTO) {
+        // Verify the authenticated user matches the requested user ID
         String authenticatedUserId = SecurityContextHolder.getContext().getAuthentication().getName();
         if (!authenticatedUserId.equals(id.toString())) {
             return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
@@ -71,6 +79,7 @@ public class UserController {
 
     @GetMapping("/{id}/moods")
     public ResponseEntity<?> getUserMoodHistory(@PathVariable UUID id) {
+        // Verify the authenticated user matches the requested user ID
         String authenticatedUserId = SecurityContextHolder.getContext().getAuthentication().getName();
         if (!authenticatedUserId.equals(id.toString())) {
             return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
@@ -90,6 +99,11 @@ public class UserController {
         }
     }
 
+    /**
+     * Get the most recent playlist for the authenticated user.
+     * Optionally filters by mood if provided.
+     * Returns 404 if the user has no playlists (matching the mood if specified).
+     */
     @GetMapping("/last-playlist")
     public ResponseEntity<LastPlaylistResponseDTO> getLastPlaylist(
             @RequestParam(required = false) String mood) {
@@ -107,6 +121,25 @@ public class UserController {
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new PlaylistNotFoundException("No playlist found for user"));
     }
+
+    @PatchMapping("/playlist")
+    public ResponseEntity<PlaylistFeedbackResponse> SavePlaylistFeedback(@RequestBody PlaylistFeedbackRequest request) {
+        if(request.getLiked() == null || request.getPlaylistId() == null) {
+            return ResponseEntity.status(BAD_REQUEST)
+                    .body(new PlaylistFeedbackResponse("Some fields are missing", null));
+        }
+        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (userIdString == null) {
+            return ResponseEntity.status(UNAUTHORIZED)
+                    .body(new PlaylistFeedbackResponse("Invalid JWT", null));
+        }
+        UUID userId = UUID.fromString(userIdString);
+
+        PlaylistFeedbackResponse response = userService.savePlaylistFeedback(userId, request);
+        return ResponseEntity.status(OK)
+                .body(response);
+    }
+
 
     @PostMapping("/playlist/save")
     public ResponseEntity<Map<String, Object>> savePlaylistToSpotify(
