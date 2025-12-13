@@ -47,11 +47,13 @@ class _DashboardViewState extends State<DashboardView> {
         });
       }
 
+      // Instead of capturing context inside
       Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted && !_isMoodDialogShowing) {
-          _showMoodDialog();
+        if (mounted) {
+          openMoodDialog(context: context, viewModel: context.read<DashboardViewModel>());
         }
       });
+
     });
   }
 
@@ -62,43 +64,61 @@ class _DashboardViewState extends State<DashboardView> {
     super.dispose();
   }
 
-  void _showMoodDialog() {
-    // Check multiple conditions to prevent duplicate dialogs
-    if (_isMoodDialogShowing || !mounted) {
-      return;
-    }
-    
-    _isMoodDialogShowing = true;
+    void openMoodDialog({
+      required BuildContext context,
+      required DashboardViewModel viewModel,
+    }) async {
+      // Prevent multiple dialogs
+      if (_isMoodDialogShowing) return;
+      _isMoodDialogShowing = true;
 
-    showDialog<Map<String, dynamic>>(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) => const MoodSelectionDialog(),
-    ).then((result) {
-      // Reset static flag when dialog is closed
-      _isMoodDialogShowing = false;
-      
-      if (result != null && mounted) {
-        final moodSaved = result['saved'] as bool? ?? false;
-        final moodName = result['moodName'] as String?;
-        
-        if (moodSaved) {
-          SnackbarHelper.showSuccess(context, 'Mood saved successfully!');
-          // Refresh mood history when a mood is saved
-          _moodHistoryKey.currentState?.refresh();
-          
-          // Generate playlist automatically with the saved mood
-          if (moodName != null && moodName.isNotEmpty) {
-            final viewModel = context.read<DashboardViewModel>();
-            viewModel.generatePlaylist(mood: moodName);
+      if (viewModel.isLoading) {
+        await Future.doWhile(() async {
+          await Future.delayed(const Duration(milliseconds: 50));
+          return viewModel.isLoading;
+        });
+      }
+
+      // Offline check
+      if (viewModel.user == null) {
+        _isMoodDialogShowing = false; // reset flag immediately
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Server is offline. Cannot select a mood right now.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      // Show the mood selection dialog
+      showDialog<Map<String, dynamic>>(
+        context: context,
+        barrierDismissible: true,
+        builder: (context) => const MoodSelectionDialog(),
+      ).then((result) {
+        _isMoodDialogShowing = false;
+
+        if (result != null && mounted) {
+          final moodSaved = result['saved'] as bool? ?? false;
+          final moodName = result['moodName'] as String?;
+
+          if (moodSaved) {
+            SnackbarHelper.showSuccess(context, 'Mood saved successfully!');
+            _moodHistoryKey.currentState?.refresh();
+
+            if (moodName != null && moodName.isNotEmpty) {
+              viewModel.generatePlaylist(mood: moodName);
+            }
           }
         }
-      }
-    }).catchError((error) {
-      // Ensure flag is reset even if there's an error
-      _isMoodDialogShowing = false;
-    });
-  }
+      }).catchError((_) {
+        _isMoodDialogShowing = false;
+      });
+    }
+
+
 
   void _handleActionSelected(String value) async {
     final viewModel = context.read<DashboardViewModel>();
@@ -129,16 +149,6 @@ class _DashboardViewState extends State<DashboardView> {
   }
 
   Widget _buildUserChip(DashboardViewModel viewModel) {
-    if (viewModel.isLoading) {
-      return const Padding(
-        padding: EdgeInsets.all(8.0),
-        child: SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      );
-    }
 
     return UserChip(
       username: viewModel.getDisplayName(),
@@ -147,25 +157,37 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  Widget _buildBody(DashboardViewModel viewModel) {
-    if (viewModel.isLoading || viewModel.user == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
+Widget _buildBody(DashboardViewModel viewModel) {
+  // 1️⃣ Loading state
+  if (viewModel.isLoading) {
+    return const Center(child: CircularProgressIndicator());
+  }
 
+  // 2️⃣ Error / offline state
+  if (viewModel.user == null) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.cloud_off, size: 48),
+          const SizedBox(height: 12),
+          const Text(
+            'Server unreachable',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'You appear to be offline.\nSome features may be unavailable.',
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
 
-    if (viewModel.error != null) {
-      return ErrorState(
-        message: viewModel.error!,
-        onRetry: () {
-          final email = viewModel.currentUserEmail;
-          if (email != null) {
-            viewModel.loadUserByEmail(email);
-          }
-        },
-      );
-    }
+  // 3️⃣ Success state
+  final user = viewModel.user!;
 
-    final user = viewModel.user;
 
 return SingleChildScrollView(
   padding: const EdgeInsets.all(16),
