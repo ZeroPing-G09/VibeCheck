@@ -119,7 +119,7 @@ class MoodHistoryWidgetState extends State<MoodHistoryWidget> {
       return const Padding(
         padding: EdgeInsets.all(16.0),
         child: EmptyState(
-          message: 'Nu există încă mood-uri înregistrate.',
+          message: 'No moods registered yet.',
           icon: Icons.mood_outlined,
         ),
       );
