@@ -95,14 +95,25 @@ class DashboardViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _user = await _userRepository.getUserByEmail(email);
+      _user = await _userRepository
+          .getUserByEmail(email)
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              throw Exception('Server unreachable');
+            },
+          );
     } catch (e) {
-      _error = e.toString();
+      debugPrint('DashboardViewModel.loadUserByEmail error: $e');
+
+      _error = 'Server unreachable. You may be offline.';
+      _user = null;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
+
 
   /// Load the last playlist for the authenticated user.
   /// Optionally filters by mood if provided.

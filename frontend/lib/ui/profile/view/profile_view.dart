@@ -196,9 +196,15 @@ class _ProfileDetails extends StatelessWidget {
         const SizedBox(height: 16),
         ProfilePictureSection(imageUrl: user.avatarUrl),
         const SizedBox(height: 32),
-        GenresSection(user: user),
+        GenresSection(
+          user: user,
+          enabled: vm.isServerAvailable,
+        ),
         const SizedBox(height: 40),
-        SaveButton(onSave: () => _handleSave(context)),
+        SaveButton(
+          enabled: vm.isServerAvailable,
+          onSave: () => _handleSave(context),
+        ),
       ],
     );
   }

@@ -35,64 +35,55 @@ class _VibeCheckAppState extends State<VibeCheckApp> {
   }
 
   Future<void> _syncRouteWithSession(Session? session) async {
-    final navigator = AppRouter.navigatorKey.currentState;
-    if (navigator == null) {
-      return;
-    }
+  final navigator = AppRouter.navigatorKey.currentState;
+  if (navigator == null) return;
 
-    if (session == null) {
-      const targetRoute = AppRouter.loginRoute;
-      if (_currentRoute != targetRoute) {
-        debugPrint('Navigating to login route: $targetRoute');
-        await navigator.pushNamedAndRemoveUntil(targetRoute, (route) => false);
-        _currentRoute = targetRoute;
-      }
-      return;
-    }
-
-    if (!_isCheckingOnboarding) {
-      _isCheckingOnboarding = true;
-      try {
-        final email = session.user.email;
-        if (email != null) {
-          final needsOnboarding = await _onboardingRepo.needsOnboarding(email);
-
-          final targetRoute = needsOnboarding
-              ? AppRouter.onboardingRoute
-              : AppRouter.dashboardRoute;
-
-          if (_currentRoute != targetRoute) {
-            await navigator.pushNamedAndRemoveUntil(
-              targetRoute,
-              (route) => false,
-            );
-            _currentRoute = targetRoute;
-          }
-        } else {
-          const targetRoute = AppRouter.dashboardRoute;
-          if (_currentRoute != targetRoute) {
-            await navigator.pushNamedAndRemoveUntil(
-              targetRoute,
-              (route) => false,
-            );
-            _currentRoute = targetRoute;
-          }
-        }
-      } catch (e) {
-        // On error, default to dashboard
-        const targetRoute = AppRouter.dashboardRoute;
-        if (_currentRoute != targetRoute) {
-          await navigator.pushNamedAndRemoveUntil(
-            targetRoute,
-            (route) => false,
-          );
-          _currentRoute = targetRoute;
-        }
-      } finally {
-        _isCheckingOnboarding = false;
-      }
-    }
+  // 🔓 Not logged in → go to login immediately
+  if (session == null) {
+    _navigateOnce(AppRouter.loginRoute);
+    return;
   }
+
+  // ✅ Logged in → ALWAYS enter app immediately
+  _navigateOnce(AppRouter.dashboardRoute);
+
+  // 🔄 Check onboarding asynchronously (never block UI)
+  _checkOnboardingInBackground(session);
+}
+
+void _navigateOnce(String route) async {
+  if (_currentRoute == route) return;
+
+  await AppRouter.navigatorKey.currentState!
+      .pushNamedAndRemoveUntil(route, (route) => false);
+
+  _currentRoute = route;
+}
+
+Future<void> _checkOnboardingInBackground(Session session) async {
+  if (_isCheckingOnboarding) return;
+
+  _isCheckingOnboarding = true;
+  try {
+    final email = session.user.email;
+    if (email == null) return;
+
+    final needsOnboarding = await _onboardingRepo
+        .needsOnboarding(email)
+        .timeout(const Duration(seconds: 5));
+
+    if (needsOnboarding) {
+      _navigateOnce(AppRouter.onboardingRoute);
+    }
+  } catch (e) {
+    // Backend down? Offline? Timeout?
+    // → Ignore and keep user in app
+    debugPrint('Onboarding check skipped: $e');
+  } finally {
+    _isCheckingOnboarding = false;
+  }
+}
+
 
   @override
   void dispose() {

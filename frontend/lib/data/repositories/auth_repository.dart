@@ -42,6 +42,8 @@ class AuthRepository {
 
   supabase.User? get currentUser => _authService.currentUser;
 
+  UserService get userService => _userService;
+
   Stream<supabase.AuthState> get onAuthStateChange =>
       _authService.onAuthStateChange;
 }
