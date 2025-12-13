@@ -148,9 +148,10 @@ class _DashboardViewState extends State<DashboardView> {
   }
 
   Widget _buildBody(DashboardViewModel viewModel) {
-    if (viewModel.isLoading) {
-      return const LoadingState();
+    if (viewModel.isLoading || viewModel.user == null) {
+      return const Center(child: CircularProgressIndicator());
     }
+
 
     if (viewModel.error != null) {
       return ErrorState(
@@ -165,9 +166,6 @@ class _DashboardViewState extends State<DashboardView> {
     }
 
     final user = viewModel.user;
-    if (user == null) {
-      return const Center(child: Text('No user loaded'));
-    }
 
 return SingleChildScrollView(
   padding: const EdgeInsets.all(16),
@@ -175,7 +173,7 @@ return SingleChildScrollView(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(
-        'Welcome, ${user.displayName}!',
+        'Welcome, ${user!.displayName}!',
         style: const TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.bold,
