@@ -22,13 +22,16 @@ class DashboardView extends StatefulWidget {
 }
 
 class _DashboardViewState extends State<DashboardView> {
-  bool _hasShownMoodDialog = false;
+  // Static flag shared across all instances to prevent duplicate dialogs
+  static bool _isMoodDialogShowing = false;
   bool _hasLoadedPlaylist = false;
   final _moodHistoryKey = GlobalKey<MoodHistoryWidgetState>();
 
   @override
   void initState() {
     super.initState();
+    // Reset playlist flag when widget is recreated
+    _hasLoadedPlaylist = false;
 
     // Defer async operations until after the build phase
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -45,27 +48,55 @@ class _DashboardViewState extends State<DashboardView> {
       }
 
       Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted && !_hasShownMoodDialog) {
+        if (mounted && !_isMoodDialogShowing) {
           _showMoodDialog();
         }
       });
     });
   }
 
-  void _showMoodDialog() {
-    if (_hasShownMoodDialog) return;
-    _hasShownMoodDialog = true;
+  @override
+  void dispose() {
+    // Reset playlist flag when widget is disposed
+    _hasLoadedPlaylist = false;
+    super.dispose();
+  }
 
-    showDialog<bool>(
+  void _showMoodDialog() {
+    // Check multiple conditions to prevent duplicate dialogs
+    if (_isMoodDialogShowing || !mounted) {
+      return;
+    }
+    
+    _isMoodDialogShowing = true;
+
+    showDialog<Map<String, dynamic>>(
       context: context,
       barrierDismissible: true,
       builder: (context) => const MoodSelectionDialog(),
-    ).then((moodSaved) {
-      if (moodSaved == true && mounted) {
-        SnackbarHelper.showSuccess(context, 'Mood saved successfully!');
-        // Refresh mood history when a mood is saved
-        _moodHistoryKey.currentState?.refresh();
+    ).then((result) {
+      // Reset static flag when dialog is closed
+      _isMoodDialogShowing = false;
+      
+      if (result != null && mounted) {
+        final moodSaved = result['saved'] as bool? ?? false;
+        final moodName = result['moodName'] as String?;
+        
+        if (moodSaved) {
+          SnackbarHelper.showSuccess(context, 'Mood saved successfully!');
+          // Refresh mood history when a mood is saved
+          _moodHistoryKey.currentState?.refresh();
+          
+          // Generate playlist automatically with the saved mood
+          if (moodName != null && moodName.isNotEmpty) {
+            final viewModel = context.read<DashboardViewModel>();
+            viewModel.generatePlaylist(mood: moodName);
+          }
+        }
       }
+    }).catchError((error) {
+      // Ensure flag is reset even if there's an error
+      _isMoodDialogShowing = false;
     });
   }
 

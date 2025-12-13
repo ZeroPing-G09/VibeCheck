@@ -125,6 +125,24 @@ public class UserService {
         }
     }
 
+    /**
+     * Get the most recent playlist for a user with a specific mood.
+     * 
+     * @param userId The user's UUID
+     * @param mood The mood name to filter by
+     * @return LastPlaylistResponseDTO with playlist info, or empty Optional if no playlist exists
+     */
+    public Optional<LastPlaylistResponseDTO> getLastPlaylistByMood(UUID userId, String mood) {
+        try {
+            return playlistRepository.findFirstByUserIdAndMoodOrderByCreatedAtDesc(userId, mood)
+                    .map(this::toLastPlaylistResponse);
+        } catch (InvalidDataAccessResourceUsageException e) {
+            // If database schema issue (e.g., missing column), treat as no playlist exists
+            // This allows the app to work even if the database schema is incomplete
+            return Optional.empty();
+        }
+    }
+
     private LastPlaylistResponseDTO toLastPlaylistResponse(Playlist playlist) {
         // Map songs if available
         Set<SongDTO> songDTOs = null;

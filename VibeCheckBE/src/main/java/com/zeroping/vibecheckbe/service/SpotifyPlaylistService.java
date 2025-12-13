@@ -47,7 +47,8 @@ public class SpotifyPlaylistService {
                 // Check if this song is already in db with the url
                 String spotifyURL = spotifyTrack.getExternalUrls().get("spotify");
 
-                Optional<Song> existingSongOpt = songRepository.findByUrl(spotifyURL);
+                // Use findFirstByUrl to handle potential duplicates in the database
+                Optional<Song> existingSongOpt = songRepository.findFirstByUrl(spotifyURL);
 
                 Song songEntity;
                 if (existingSongOpt.isPresent()) {

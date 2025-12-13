@@ -105,13 +105,14 @@ class DashboardViewModel extends ChangeNotifier {
   }
 
   /// Load the last playlist for the authenticated user.
-  Future<void> loadLastPlaylist() async {
+  /// Optionally filters by mood if provided.
+  Future<void> loadLastPlaylist({String? mood}) async {
     _playlistState = PlaylistState.loading;
     _playlistError = null;
     notifyListeners();
 
     try {
-      _lastPlaylist = await _playlistService.fetchLastPlaylist();
+      _lastPlaylist = await _playlistService.fetchLastPlaylist(mood: mood);
       _playlistState =
           _lastPlaylist != null ? PlaylistState.loaded : PlaylistState.empty;
     } catch (e) {
@@ -171,14 +172,14 @@ class DashboardViewModel extends ChangeNotifier {
   /// Uses the user's favorite genres if available.
   /// After generation, automatically reloads the last playlist.
   /// Allows multiple simultaneous requests.
-  Future<void> generatePlaylist() async {
+  Future<void> generatePlaylist({String? mood}) async {
     _isGeneratingPlaylist = true;
     _playlistError = null;
     notifyListeners();
 
     try {
-      // Get the last saved mood, fallback to "happy" if none exists
-      final moodName = await _getLastMoodName() ?? 'happy';
+      // Use provided mood, or get the last saved mood, fallback to "happy" if none exists
+      final moodName = mood ?? await _getLastMoodName() ?? 'happy';
 
       // Use user's favorite genres if available, otherwise empty list
       final userGenres = _user?.genres ?? [];
@@ -188,8 +189,8 @@ class DashboardViewModel extends ChangeNotifier {
         genres: userGenres,
       );
 
-      // After successful generation, reload the last playlist
-      await loadLastPlaylist();
+      // After successful generation, reload the last playlist with the specific mood
+      await loadLastPlaylist(mood: moodName);
     } catch (e) {
       _playlistError = e.toString();
       _playlistState = PlaylistState.error;

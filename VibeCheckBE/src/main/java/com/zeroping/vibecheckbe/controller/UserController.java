@@ -1,12 +1,11 @@
 package com.zeroping.vibecheckbe.controller;
 
 import com.zeroping.vibecheckbe.dto.LastPlaylistResponseDTO;
-import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
-import com.zeroping.vibecheckbe.exception.playlist.PlaylistNotFoundException;
 import com.zeroping.vibecheckbe.dto.MoodHistoryDTO;
 import com.zeroping.vibecheckbe.dto.UserDTO;
 import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
 import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
+import com.zeroping.vibecheckbe.exception.playlist.PlaylistNotFoundException;
 import com.zeroping.vibecheckbe.service.MoodService;
 import com.zeroping.vibecheckbe.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -94,14 +94,23 @@ public class UserController {
 
     /**
      * Get the most recent playlist for the authenticated user.
-     * Returns 404 if the user has no playlists.
+     * Optionally filters by mood if provided.
+     * Returns 404 if the user has no playlists (matching the mood if specified).
      */
     @GetMapping("/last-playlist")
-    public ResponseEntity<LastPlaylistResponseDTO> getLastPlaylist() {
+    public ResponseEntity<LastPlaylistResponseDTO> getLastPlaylist(
+            @RequestParam(required = false) String mood) {
         String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
         UUID userId = UUID.fromString(userIdString);
 
-        return userService.getLastPlaylist(userId)
+        Optional<LastPlaylistResponseDTO> playlist;
+        if (mood != null && !mood.trim().isEmpty()) {
+            playlist = userService.getLastPlaylistByMood(userId, mood.trim());
+        } else {
+            playlist = userService.getLastPlaylist(userId);
+        }
+
+        return playlist
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new PlaylistNotFoundException("No playlist found for user"));
     }
