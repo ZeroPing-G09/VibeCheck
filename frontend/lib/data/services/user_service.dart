@@ -3,8 +3,13 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/user.dart';
 import 'api_service.dart';
+import 'package:frontend/data/local/local_user_storage.dart';
 
 class UserService {
+  final LocalUserStorage _localStorage;
+
+  UserService(this._localStorage);
+
   Future<User> fetchUserById(int id) async {
     final url = ApiService.buildBackendUrl('/users/$id');
     debugPrint('UserService.fetchUserById GET $url');
@@ -25,9 +30,20 @@ class UserService {
     }
   }
 
-  Future<User> fetchUserByEmail(String email) async {
+    Future<User?> fetchUserByEmail(String email, {LocalUserStorage? localStorage}) async {
+    // 1️⃣ Try loading from cache first
+    if (localStorage != null) {
+      final cachedUser = await localStorage.getUser();
+      if (cachedUser != null) {
+        debugPrint('UserService: returning cached user');
+        return cachedUser;
+      }
+    }
+
+    // 2️⃣ If no cache, fetch from server
     final url = ApiService.buildBackendUrl('/users/by-email?email=${Uri.encodeQueryComponent(email)}');
     debugPrint('UserService.fetchUserByEmail GET $url');
+
     final response = await http.get(
       url,
       headers: ApiService.getAuthHeaders(),
@@ -38,7 +54,14 @@ class UserService {
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> json = jsonDecode(response.body) as Map<String, dynamic>;
-      return User.fromJson(json);
+      final user = User.fromJson(json);
+
+      // 3️⃣ Save fetched user to cache if available
+      if (localStorage != null) {
+        await localStorage.saveUser(user);
+      }
+
+      return user;
     } else {
       throw Exception('Failed to load user by email: ${response.statusCode}');
     }
