@@ -3,6 +3,7 @@ package com.zeroping.vibecheckbe.service;
 import com.zeroping.vibecheckbe.dto.*;
 import com.zeroping.vibecheckbe.entity.Genre;
 import com.zeroping.vibecheckbe.entity.Playlist;
+import com.zeroping.vibecheckbe.entity.Song;
 import com.zeroping.vibecheckbe.entity.User;
 import com.zeroping.vibecheckbe.exception.genre.GenreNotFoundException;
 import com.zeroping.vibecheckbe.exception.playlist.PlaylistNotFoundException;
@@ -644,4 +645,66 @@ class UserServiceTest {
         verify(playlistRepository).findById(playlistId);
         verify(playlistRepository, never()).save(any());
     }
+
+    @Test
+    @DisplayName("""
+        Given a liked playlist with songs
+        When buildAiFeedbackPrompt is called
+        Then it returns correct AI prompt for LIKE
+        """)
+    void buildAiFeedbackPrompt_WhenLikedPlaylistWithSongs_ShouldReturnCorrectPrompt() {
+        // Given
+        Playlist playlist = new Playlist();
+        playlist.setName("Chill Vibes");
+        playlist.setLiked(true);
+
+        Song song1 = new Song();
+        song1.setName("Song A");
+
+        Song song2 = new Song();
+        song2.setName("Song B");
+
+        playlist.setSongs(Set.of(song1, song2));
+
+        User user = new User();
+
+        // When
+        String result = userService.buildAiFeedbackPrompt(user, playlist);
+
+        // Then
+        assertTrue(result.startsWith("The user liked the playlist Chill Vibes"));
+        assertTrue(result.contains("(tracks"));
+        assertTrue(result.contains("Song A"));
+        assertTrue(result.contains("Song B"));
+        assertTrue(result.endsWith(
+                "This feedback should be considered for future recommendations."
+        ));
+    }
+
+    @Test
+    @DisplayName("""
+        Given a disliked playlist without songs
+        When buildAiFeedbackPrompt is called
+        Then it returns correct AI prompt for DISLIKE
+        """)
+    void buildAiFeedbackPrompt_WhenDislikedPlaylist_ShouldReturnCorrectPrompt() {
+        // Given
+        Playlist playlist = new Playlist();
+        playlist.setName("Sad Songs");
+        playlist.setLiked(false);
+
+        User user = new User();
+
+        // When
+        String result = userService.buildAiFeedbackPrompt(user, playlist);
+
+        // Then
+        assertEquals(
+                "The user disliked the playlist Sad Songs. " +
+                        "In the future, avoid playlists with a similar musical direction.",
+                result
+        );
+    }
+
+
 }
