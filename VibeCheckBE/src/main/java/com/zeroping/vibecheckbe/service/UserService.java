@@ -219,7 +219,7 @@ public class UserService {
         return new PlaylistFeedbackResponse("Feedback received", request.getLiked());
     }
 
-    private String buildAiFeedbackPrompt(User user, Playlist playlist) {
+    String buildAiFeedbackPrompt(User user, Playlist playlist) {
         StringBuilder prompt = new StringBuilder();
 
         if (Boolean.TRUE.equals(playlist.getLiked())) {
