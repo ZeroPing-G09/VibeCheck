@@ -37,6 +37,9 @@ class UserServiceTest {
     @Mock
     PlaylistRepository playlistRepository;
 
+    @Mock
+    private GeminiPlaylistService geminiPlaylistService;
+
     @InjectMocks
     private UserService userService;
 
@@ -705,6 +708,42 @@ class UserServiceTest {
                 result
         );
     }
+
+    @Test
+    @DisplayName("""
+        Given valid user and playlist
+        When savePlaylistFeedback is called
+        Then AI feedback prompt is sent
+        """)
+    void savePlaylistFeedback_ShouldSendPromptToAI() throws Exception {
+        // Given
+        UUID userId = UUID.randomUUID();
+        Long playlistId = 1L;
+
+        User user = new User();
+        user.setId(userId);
+
+        Playlist playlist = new Playlist();
+        playlist.setId(playlistId);
+        playlist.setName("Focus Beats");
+        playlist.setLiked(false);
+
+        PlaylistFeedbackRequest request = new PlaylistFeedbackRequest();
+        request.setPlaylistId(playlistId);
+        request.setLiked(true);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(playlistRepository.findById(playlistId)).thenReturn(Optional.of(playlist));
+        when(playlistRepository.save(any(Playlist.class))).thenReturn(playlist);
+
+        // When
+        userService.savePlaylistFeedback(userId, request);
+
+        // Then
+        verify(geminiPlaylistService, times(1))
+                .sendPlaylistFeedbackPrompt(anyString());
+    }
+
 
 
 }
