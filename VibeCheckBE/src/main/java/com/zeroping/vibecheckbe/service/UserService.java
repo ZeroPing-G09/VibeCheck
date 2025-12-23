@@ -213,8 +213,39 @@ public class UserService {
 
         playlistRepository.save(playlist);
 
-        // TO DO: Update user preferences for future AI prompts
+        String aiPrompt = buildAiFeedbackPrompt(user, playlist);
+        System.out.println("AI FEEDBACK PROMPT: " + aiPrompt);
 
         return new PlaylistFeedbackResponse("Feedback received", request.getLiked());
     }
+
+    private String buildAiFeedbackPrompt(User user, Playlist playlist) {
+        StringBuilder prompt = new StringBuilder();
+
+        if (Boolean.TRUE.equals(playlist.getLiked())) {
+            prompt.append("The user liked the playlist ");
+        } else {
+            prompt.append("The user disliked the playlist ");
+        }
+
+        prompt.append(playlist.getName());
+
+        if (playlist.getSongs() != null && !playlist.getSongs().isEmpty()) {
+            String tracks = playlist.getSongs().stream()
+                    .map(song -> song.getName())
+                    .collect(Collectors.joining(", "));
+            prompt.append(" (tracks ").append(tracks).append(")");
+        }
+
+        prompt.append(". ");
+
+        if (Boolean.TRUE.equals(playlist.getLiked())) {
+            prompt.append("This feedback should be considered for future recommendations.");
+        } else {
+            prompt.append("In the future, avoid playlists with a similar musical direction.");
+        }
+
+        return prompt.toString();
+    }
+
 }
