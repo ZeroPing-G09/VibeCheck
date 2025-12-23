@@ -25,12 +25,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final GenreRepository genreRepository;
     private final PlaylistRepository playlistRepository;
+    private final GeminiPlaylistService geminiPlaylistService;
 
     public UserService(UserRepository userRepository, GenreRepository genreRepository, 
-                       PlaylistRepository playlistRepository) {
+                       PlaylistRepository playlistRepository, GeminiPlaylistService geminiPlaylistService) {
         this.userRepository = userRepository;
         this.genreRepository = genreRepository;
         this.playlistRepository = playlistRepository;
+        this.geminiPlaylistService = geminiPlaylistService;
     }
 
     @Transactional(readOnly = true)
@@ -214,7 +216,12 @@ public class UserService {
         playlistRepository.save(playlist);
 
         String aiPrompt = buildAiFeedbackPrompt(user, playlist);
-        System.out.println("AI FEEDBACK PROMPT: " + aiPrompt);
+
+        try {
+            geminiPlaylistService.sendPlaylistFeedbackPrompt(aiPrompt);
+        } catch (Exception e) {
+            System.err.println("Failed to send feedback to AI: " + e.getMessage());
+        }
 
         return new PlaylistFeedbackResponse("Feedback received", request.getLiked());
     }

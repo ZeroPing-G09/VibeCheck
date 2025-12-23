@@ -132,6 +132,41 @@ public class GeminiPlaylistService {
         }
     }
 
+    public void sendPlaylistFeedbackPrompt(String feedbackPrompt) throws IOException {
+        String geminiUrl = String.format(GEMINI_URL_TEMPLATE, apiKey);
+
+        String prompt = """
+        You are an AI system that learns user music preferences.
+        The following feedback was received from a user.
+        Use it internally to improve future recommendations.
+        Feedback:
+        "%s"
+        """.formatted(feedbackPrompt);
+
+        String jsonBody = """
+        {
+          "contents": [{
+            "parts": [{
+              "text": %s
+            }]
+          }]
+        }
+        """.formatted(mapper.writeValueAsString(prompt));
+
+        Request request = new Request.Builder()
+                .url(geminiUrl)
+                .post(RequestBody.create(jsonBody, MediaType.parse("application/json")))
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.body() == null) {
+                throw new IllegalStateException("Empty response body from Gemini API");
+            }
+
+            response.body().string();
+        }
+    }
+
     private PlaylistAgentResponse validatePlaylist(String json) throws IOException {
         PlaylistAgentResponse playlist = mapper.readValue(json, PlaylistAgentResponse.class);
 
