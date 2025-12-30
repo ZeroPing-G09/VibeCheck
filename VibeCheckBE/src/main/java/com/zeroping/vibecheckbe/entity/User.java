@@ -40,6 +40,9 @@ public class User {
     @JoinColumn(name = "top3_genre_id", referencedColumnName = "id")
     private Genre top3Genre;
 
+    @Column(name = "spotify_access_token")
+    private String spotifyAccessToken;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
