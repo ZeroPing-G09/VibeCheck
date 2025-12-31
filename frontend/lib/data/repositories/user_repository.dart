@@ -1,11 +1,15 @@
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
-import '../models/user.dart';
-import '../services/user_service.dart';
+import 'package:frontend/data/local/local_user_storage.dart';
+import 'package:frontend/data/models/user.dart';
+import 'package:frontend/data/services/user_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserRepository {
-  final UserService _service = UserService();
+  final UserService _service;
+
+  UserRepository({UserService? userService})
+      : _service = userService ?? UserService(LocalUserStorage());
 
   Future<User> getUserById(int id) async {
     final user = await _service.fetchUserById(id);
@@ -15,7 +19,7 @@ class UserRepository {
 
   Future<User> getUserByEmail(String email) async {
     final user = await _service.fetchUserByEmail(email);
-    await _saveGenres(user.genres);
+    await _saveGenres(user!.genres);
     return user;
   }
 
@@ -34,9 +38,8 @@ class UserRepository {
     final prefs = await SharedPreferences.getInstance();
     final stored = prefs.getString('genres');
     if (stored != null) {
-      return List<String>.from(jsonDecode(stored));
+      return List<String>.from(jsonDecode(stored) as Iterable<dynamic>);
     }
     return [];
   }
-
 }

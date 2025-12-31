@@ -1,9 +1,13 @@
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import '../services/genre_service.dart';
+
+import 'package:frontend/data/services/genre_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GenreRepository {
-  final GenreService _service = GenreService();
+  final GenreService _service;
+
+  GenreRepository({GenreService? genreService})
+      : _service = genreService ?? GenreService();
 
   Future<List<String>> getAllGenres() async {
     final genres = await _service.fetchAllGenres();
@@ -20,7 +24,7 @@ class GenreRepository {
     final prefs = await SharedPreferences.getInstance();
     final stored = prefs.getString('cached_genres');
     if (stored != null) {
-      return List<String>.from(jsonDecode(stored));
+      return List<String>.from(jsonDecode(stored) as List<dynamic>);
     }
     return [];
   }

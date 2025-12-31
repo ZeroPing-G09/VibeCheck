@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:frontend/data/repositories/auth_repository.dart';
 import 'package:frontend/core/routing/app_router.dart';
-import '../../../ui/home/view/home_view.dart';
-import '../viewmodel/dashboard_view_model.dart';
-import '../widgets/user_chip.dart';
+import 'package:frontend/core/utils/snackbar_helper.dart';
+import 'package:frontend/core/widgets/error_state.dart';
+import 'package:frontend/core/widgets/loading_state.dart';
+import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
+import 'package:frontend/ui/dashboard/widgets/last_playlist_section.dart';
+import 'package:frontend/ui/dashboard/widgets/user_chip.dart';
+import 'package:frontend/ui/dashboard/widgets/mood_history_widget.dart';
+import 'package:frontend/ui/home/view/home_view.dart';
+import 'package:frontend/ui/mood/view/mood_selection_dialog.dart';
+import 'package:frontend/core/widgets/loading_state.dart';
+import 'package:frontend/core/widgets/error_state.dart';
+import 'package:frontend/core/utils/snackbar_helper.dart';
+import 'package:provider/provider.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
@@ -14,111 +22,240 @@ class DashboardView extends StatefulWidget {
 }
 
 class _DashboardViewState extends State<DashboardView> {
+  // Static flag shared across all instances to prevent duplicate dialogs
+  static bool _isMoodDialogShowing = false;
+  bool _hasLoadedPlaylist = false;
+  final _moodHistoryKey = GlobalKey<MoodHistoryWidgetState>();
+
   @override
   void initState() {
     super.initState();
-    final email = AuthRepository().currentUser?.email;
-    if (email != null) {
-      context.read<DashboardViewModel>().loadUserByEmail(email);
+    // Reset playlist flag when widget is recreated
+    _hasLoadedPlaylist = false;
+
+    // Defer async operations until after the build phase
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final viewModel = context.read<DashboardViewModel>();
+      final email = viewModel.currentUserEmail;
+      if (email != null) {
+        viewModel.loadUserByEmail(email).then((_) {
+          // Load playlist after user is loaded
+          if (mounted && !_hasLoadedPlaylist) {
+            _hasLoadedPlaylist = true;
+            viewModel.loadLastPlaylist();
+          }
+        });
+      }
+
+      // Instead of capturing context inside
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          openMoodDialog(context: context, viewModel: context.read<DashboardViewModel>());
+        }
+      });
+
+    });
+  }
+
+  @override
+  void dispose() {
+    // Reset playlist flag when widget is disposed
+    _hasLoadedPlaylist = false;
+    super.dispose();
+  }
+
+    void openMoodDialog({
+      required BuildContext context,
+      required DashboardViewModel viewModel,
+    }) async {
+      // Prevent multiple dialogs
+      if (_isMoodDialogShowing) return;
+      _isMoodDialogShowing = true;
+
+      if (viewModel.isLoading) {
+        await Future.doWhile(() async {
+          await Future.delayed(const Duration(milliseconds: 50));
+          return viewModel.isLoading;
+        });
+      }
+
+      // Offline check
+      if (viewModel.user == null) {
+        _isMoodDialogShowing = false; // reset flag immediately
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Server is offline. Cannot select a mood right now.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      // Show the mood selection dialog
+      showDialog<Map<String, dynamic>>(
+        context: context,
+        barrierDismissible: true,
+        builder: (context) => const MoodSelectionDialog(),
+      ).then((result) {
+        _isMoodDialogShowing = false;
+
+        if (result != null && mounted) {
+          final moodSaved = result['saved'] as bool? ?? false;
+          final moodName = result['moodName'] as String?;
+
+          if (moodSaved) {
+            SnackbarHelper.showSuccess(context, 'Mood saved successfully!');
+            _moodHistoryKey.currentState?.refresh();
+
+            if (moodName != null && moodName.isNotEmpty) {
+              viewModel.generatePlaylist(mood: moodName);
+            }
+          }
+        }
+      }).catchError((_) {
+        _isMoodDialogShowing = false;
+      });
     }
+
+
+
+  void _handleActionSelected(String value) async {
+    final viewModel = context.read<DashboardViewModel>();
+
+    if (value == 'profile') {
+      final homeViewState = HomeView.of(context);
+      if (homeViewState != null) {
+        homeViewState.switchToTab(0);
+      } else {
+        AppRouter.navigatorKey.currentState?.pushNamed(AppRouter.profileRoute);
+      }
+    } else if (value == 'settings') {
+      final homeViewState = HomeView.of(context);
+      if (homeViewState != null) {
+        homeViewState.switchToTab(2);
+      } else {
+        AppRouter.navigatorKey.currentState?.pushNamed(AppRouter.settingsRoute);
+      }
+    } else if (value == 'logout') {
+      await viewModel.handleUserAction('logout');
+      if (mounted) {
+        AppRouter.navigatorKey.currentState?.pushNamedAndRemoveUntil(
+          AppRouter.loginRoute,
+          (route) => false,
+        );
+      }
+    }
+  }
+
+  Widget _buildUserChip(DashboardViewModel viewModel) {
+
+    return UserChip(
+      username: viewModel.getDisplayName(),
+      imageUrl: viewModel.getAvatarUrl(),
+      onActionSelected: _handleActionSelected,
+    );
+  }
+
+Widget _buildBody(DashboardViewModel viewModel) {
+  // 1️⃣ Loading state
+  if (viewModel.isLoading) {
+    return const Center(child: CircularProgressIndicator());
+  }
+
+  // 2️⃣ Error / offline state
+  if (viewModel.user == null) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.cloud_off, size: 48),
+          const SizedBox(height: 12),
+          const Text(
+            'Server unreachable',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'You appear to be offline.\nSome features may be unavailable.',
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 3️⃣ Success state
+  final user = viewModel.user!;
+
+
+return SingleChildScrollView(
+  padding: const EdgeInsets.all(16),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        'Welcome, ${user!.displayName}!',
+        style: const TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      const SizedBox(height: 16),
+      Wrap(
+        spacing: 8,
+        children: user.genres
+            .map<Widget>((String genre) => Chip(label: Text(genre)))
+            .toList(),
+      ),
+      if (user.lastLogIn != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Text('Last login: ${user.lastLogIn}'),
+        ),
+
+      const SizedBox(height: 24),
+
+      LastPlaylistSection(
+        playlistState: viewModel.playlistState,
+        playlist: viewModel.lastPlaylist,
+        errorMessage: viewModel.playlistError,
+        isGeneratingPlaylist: viewModel.isGeneratingPlaylist,
+        onCreatePlaylist: () {
+          viewModel.generatePlaylist();
+        },
+      ),
+
+      const SizedBox(height: 24),
+
+      SizedBox(
+        height: 300, // adjust as needed
+        child: MoodHistoryWidget(key: _moodHistoryKey),
+      ),
+    ],
+  ),
+);
   }
 
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<DashboardViewModel>();
-    final authRepo = AuthRepository();
-    final supabaseUser = authRepo.currentUser;
 
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 16,
         title: const Text(
-          'ZeroPing',
+          'VibeCheck',
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
-            child: viewModel.isLoading
-                ? const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    ),
-                  )
-                : supabaseUser != null
-                    ? UserChip(
-                        username: viewModel.user?.username ??
-                            supabaseUser.userMetadata?['full_name'] ??
-                            (supabaseUser.email != null && supabaseUser.email!.contains('@')
-                                ? supabaseUser.email!.split('@')[0]
-                                : 'User'),
-                        imageUrl: viewModel.user?.profilePicture ?? 
-                            supabaseUser.userMetadata?['avatar_url'] ?? 
-                            '',
-                        onActionSelected: (value) async {
-                          if (value == 'profile') {
-                            final homeViewState = HomeView.of(context);
-                            if (homeViewState != null) {
-                              homeViewState.switchToTab(0);
-                            } else {
-                              AppRouter.navigatorKey.currentState
-                                  ?.pushNamed(AppRouter.profileRoute);
-                            }
-                          } else if (value == 'settings') {
-                            final homeViewState = HomeView.of(context);
-                            if (homeViewState != null) {
-                              homeViewState.switchToTab(2);
-                            } else {
-                              AppRouter.navigatorKey.currentState
-                                  ?.pushNamed(AppRouter.settingsRoute);
-                            }
-                          } else if (value == 'logout') {
-                            await AuthRepository().signOut();
-                            if (mounted) {
-                              context.read<DashboardViewModel>().clear();
-                              AppRouter.navigatorKey.currentState
-                                  ?.pushNamedAndRemoveUntil(
-                                AppRouter.loginRoute,
-                                (route) => false,
-                              );
-                            }
-                          }
-                        },
-                      )
-                    : const Icon(Icons.error_outline),
+            child: _buildUserChip(viewModel),
           ),
         ],
       ),
-      body: viewModel.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : viewModel.error != null
-              ? Center(child: Text('Error: ${viewModel.error}'))
-              : viewModel.user != null
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Welcome, ${viewModel.user!.username}! ',
-                            style: const TextStyle(
-                                fontSize: 22, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 16),
-                          Wrap(
-                            spacing: 8,
-                            children: viewModel.user!.genres
-                                .map((g) => Chip(label: Text(g)))
-                                .toList(),
-                          ),
-                        ],
-                      ),
-                    )
-                  : const Center(child: Text('No user loaded')),
+      body: _buildBody(viewModel),
     );
   }
 }

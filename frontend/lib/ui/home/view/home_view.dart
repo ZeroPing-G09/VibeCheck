@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../ui/profile/view/profile_view.dart';
-import '../../../ui/dashboard/view/dashboard_view.dart';
-import '../../../ui/settings/view/settings_view.dart';
-import '../../components/bottom_nav_bar.dart';
+import 'package:frontend/ui/components/bottom_nav_bar.dart';
+import 'package:frontend/ui/dashboard/view/dashboard_view.dart';
+import 'package:frontend/ui/profile/view/profile_view.dart';
+import 'package:frontend/ui/settings/view/settings_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
