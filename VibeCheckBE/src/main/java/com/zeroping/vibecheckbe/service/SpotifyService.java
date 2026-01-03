@@ -28,8 +28,6 @@ public class SpotifyService {
         this.spotifyApi = spotifyApi;  // injected bean from AppConfig (already has clientId & clientSecret)
     }
 
-    // --- Methods from MAIN (App-Level Operations) ---
-
     public Optional<Track> searchSong(String title, String artist) {
         ensureAppAccessToken(); // make sure we have a valid app-level token
         spotifyApi.setAccessToken(appAccessToken);
@@ -90,8 +88,6 @@ public class SpotifyService {
             }
         }
     }
-
-    // --- Methods adapted from SALVARE branch (User-Level Operations) ---
     // These methods require a user-specific access token passed from the frontend
 
     public String getCurrentUserId(String userAccessToken) {

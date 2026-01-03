@@ -15,8 +15,6 @@ import java.util.UUID;
 @Repository
 public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
 
-    // --- Methods from MAIN ---
-
     // Allows retrieving all playlists created by a specific user
     List<Playlist> findByUserId(UUID userId);
 
@@ -41,8 +39,6 @@ public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
 
     // Returns the latest playlist for a user with a specific mood, if it exists
     Optional<Playlist> findFirstByUserIdAndMoodOrderByCreatedAtDesc(UUID userId, String mood);
-
-    // --- Methods adapted from SALVARE branch ---
     
     // Validates that a specific playlist belongs to a specific user (Updated to use UUID)
     Optional<Playlist> findByIdAndUserId(Long id, UUID userId);

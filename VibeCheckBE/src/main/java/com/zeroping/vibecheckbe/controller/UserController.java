@@ -27,7 +27,6 @@ public class UserController {
     private final PlaylistService playlistService;
     private final MoodService moodService;
 
-    // Resolved Conflict: Injected both PlaylistService and MoodService
     public UserController(UserService userService, PlaylistService playlistService, MoodService moodService) {
         this.userService = userService;
         this.playlistService = playlistService;
