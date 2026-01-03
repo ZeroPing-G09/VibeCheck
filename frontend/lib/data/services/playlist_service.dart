@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
+import 'package:frontend/data/services/auth_service.dart';
 import 'package:http/http.dart' as http;
+import 'package:frontend/data/models/last_playlist.dart';
 
-import '../data/services/auth_service.dart';
-import '../models/last_playlist.dart';
 
 /// Service for fetching playlist-related data from the backend.
 class PlaylistService {

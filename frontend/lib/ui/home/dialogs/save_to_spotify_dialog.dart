@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/di/locator.dart';
 import '../../../data/services/playlist_service.dart';
 
 class SaveToSpotifyDialog extends StatefulWidget {
@@ -18,8 +19,15 @@ class SaveToSpotifyDialog extends StatefulWidget {
 class _SaveToSpotifyDialogState extends State<SaveToSpotifyDialog> {
   final _formKey = GlobalKey<FormState>();
   final _playlistNameController = TextEditingController();
-  final _playlistService = PlaylistService();
+  late final PlaylistService _playlistService;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _playlistService = locator<PlaylistService>();
+  }
+
 
   @override
   void dispose() {
@@ -38,10 +46,10 @@ class _SaveToSpotifyDialogState extends State<SaveToSpotifyDialog> {
 
     try {
       await _playlistService.savePlaylistToSpotify(
-        userId: widget.userId,
         playlistId: widget.playlistId,
         spotifyPlaylistName: _playlistNameController.text.trim(),
       );
+
 
       if (mounted) {
         Navigator.pop(context, true);
