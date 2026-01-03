@@ -117,7 +117,7 @@ public class UserController {
 
     @PostMapping("/playlist/save")
     public ResponseEntity<Map<String, Object>> savePlaylistToSpotify(
-            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId,
             @RequestBody SavePlaylistToSpotifyRequest request) {
         
         // For now, we'll get userId from header. In production, extract from JWT

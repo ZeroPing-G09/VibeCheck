@@ -38,7 +38,7 @@ public class Playlist {
     )
     private Set<Song> songs;
 
-    // Added from SALVARE branch: Export flags
+
     @Column(name = "exported_to_spotify")
     private Boolean exportedToSpotify = false;
 
@@ -47,4 +47,6 @@ public class Playlist {
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
+
+    private String spotifyUri;
 }

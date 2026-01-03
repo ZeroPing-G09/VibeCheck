@@ -1,3 +1,27 @@
+package com.zeroping.vibecheckbe.service;
+
+import com.zeroping.vibecheckbe.dto.PlaylistDTO;
+import com.zeroping.vibecheckbe.dto.SavePlaylistToSpotifyRequest;
+import com.zeroping.vibecheckbe.dto.SongDTO;
+import com.zeroping.vibecheckbe.entity.Playlist;
+import com.zeroping.vibecheckbe.entity.Song;
+import com.zeroping.vibecheckbe.entity.User;
+import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
+import com.zeroping.vibecheckbe.repository.PlaylistRepository;
+import com.zeroping.vibecheckbe.repository.UserRepository;
+import jakarta.transaction.Transactional;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 @Service
 @Transactional
 public class PlaylistService {
@@ -24,7 +48,7 @@ public class PlaylistService {
             throws IOException {
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
+                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
 
         if (user.getSpotifyAccessToken() == null || user.getSpotifyAccessToken().isBlank()) {
             throw new IllegalStateException("User does not have a Spotify access token");
@@ -38,9 +62,14 @@ public class PlaylistService {
         if (Boolean.TRUE.equals(playlist.getExportedToSpotify())) {
             throw new IllegalStateException("Playlist has already been exported to Spotify");
         }
+        List<String> trackUris = playlist.getSongs()
+                .stream()
+                .map(Song::getSpotifyUri)
+                .filter(uri -> uri != null && !uri.isBlank())
+                .toList();
 
-        if (playlist.getTrackUris() == null || playlist.getTrackUris().isEmpty()) {
-            throw new IllegalStateException("Playlist has no tracks to export");
+        if (trackUris.isEmpty()) {
+            throw new IllegalStateException("Playlist has no Spotify tracks to export");
         }
 
         String accessToken = user.getSpotifyAccessToken();
@@ -56,7 +85,7 @@ public class PlaylistService {
         spotifyService.addTracksToPlaylist(
                 accessToken,
                 spotifyPlaylistId,
-                playlist.getTrackUris()
+                trackUris
         );
 
         playlist.setExportedToSpotify(true);
