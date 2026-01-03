@@ -29,6 +29,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => locator<ThemeViewModel>()),
         ChangeNotifierProvider(create: (_) => locator<OnboardingViewModel>()),
         ChangeNotifierProvider(create: (_) => locator<MoodViewModel>()),
+        
       ],
       child: const VibeCheckApp(),
     ),

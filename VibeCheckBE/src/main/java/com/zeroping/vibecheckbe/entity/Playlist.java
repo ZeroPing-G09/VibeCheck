@@ -38,15 +38,7 @@ public class Playlist {
     )
     private Set<Song> songs;
 
-
-    @Column(name = "exported_to_spotify")
-    private Boolean exportedToSpotify = false;
-
-    @Column(name = "spotify_playlist_id")
-    private String spotifyPlaylistId;
-
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
-    private String spotifyUri;
 }

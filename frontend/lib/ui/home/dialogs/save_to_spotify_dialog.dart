@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/data/services/playlist_service.dart';
 import 'package:frontend/di/locator.dart';
-import '../../../data/services/playlist_service.dart';
+import 'package:provider/provider.dart';
 
 class SaveToSpotifyDialog extends StatefulWidget {
-  final int userId;
-  final int playlistId;
+  final String userId;
+  final String playlistId;
 
   const SaveToSpotifyDialog({
     super.key,
@@ -17,57 +18,47 @@ class SaveToSpotifyDialog extends StatefulWidget {
 }
 
 class _SaveToSpotifyDialogState extends State<SaveToSpotifyDialog> {
+  final _nameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  final _playlistNameController = TextEditingController();
-  late final PlaylistService _playlistService;
   bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _playlistService = locator<PlaylistService>();
-  }
-
+  String? _errorMessage;
 
   @override
   void dispose() {
-    _playlistNameController.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
   Future<void> _saveToSpotify() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
     try {
-      await _playlistService.savePlaylistToSpotify(
+      final playlistService = locator<PlaylistService>();
+
+      await playlistService.savePlaylistToSpotify(
         playlistId: widget.playlistId,
-        spotifyPlaylistName: _playlistNameController.text.trim(),
+        spotifyPlaylistName: _nameController.text.trim(),
       );
 
-
       if (mounted) {
-        Navigator.pop(context, true);
+        Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Playlist saved successfully!'),
+            content: Text('Playlist saved to Spotify successfully!'),
             backgroundColor: Colors.green,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        setState(() {
+          _errorMessage = e.toString().replaceAll('Exception: ', '');
+        });
       }
     } finally {
       if (mounted) {
@@ -81,60 +72,66 @@ class _SaveToSpotifyDialogState extends State<SaveToSpotifyDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Row(
-        children: [
-          Icon(Icons.music_note, color: Colors.green),
-          SizedBox(width: 8),
-          Text('Save to Spotify'),
-        ],
-      ),
-      content: Form(
-        key: _formKey,
+      title: const Text('Save to Spotify'),
+      // FIX IS HERE: Wrapped Column in SingleChildScrollView
+      content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Do you want to save this playlist to your Spotify account?',
-              style: TextStyle(fontSize: 14),
+            Text(
+              'Enter a name for your new Spotify playlist.',
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: _playlistNameController,
-              decoration: const InputDecoration(
-                labelText: 'Playlist Name',
-                hintText: 'Enter playlist name',
-                border: OutlineInputBorder(),
+            Form(
+              key: _formKey,
+              child: TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Playlist Name',
+                  hintText: 'e.g., My Vibe Mix',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter a name';
+                  }
+                  return null;
+                },
+                autofocus: true, // This triggers the keyboard
               ),
-              enabled: !_isLoading,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a playlist name';
-                }
-                return null;
-              },
             ),
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 16),
+              Text(
+                _errorMessage!,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ],
         ),
       ),
       actions: [
         TextButton(
-          onPressed: _isLoading ? null : () => Navigator.pop(context),
+          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _saveToSpotify,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
+            backgroundColor: const Color(0xFF1DB954), // Spotify Green
             foregroundColor: Colors.white,
           ),
           child: _isLoading
               ? const SizedBox(
-                  width: 20,
-                  height: 20,
+                  width: 16,
+                  height: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    color: Colors.white,
                   ),
                 )
               : const Text('Save'),
@@ -143,4 +140,3 @@ class _SaveToSpotifyDialogState extends State<SaveToSpotifyDialog> {
     );
   }
 }
-

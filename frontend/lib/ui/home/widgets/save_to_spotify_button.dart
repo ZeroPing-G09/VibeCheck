@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../dialogs/save_to_spotify_dialog.dart';
 
 class SaveToSpotifyButton extends StatelessWidget {
-  final int userId;
-  final int playlistId;
+  final String userId;
+  final String playlistId; // <--- FIXED: Now using int
   final bool? exportedToSpotify;
 
   const SaveToSpotifyButton({
@@ -25,7 +25,6 @@ class SaveToSpotifyButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // If already exported, show a disabled button or different state
     if (exportedToSpotify == true) {
       return OutlinedButton.icon(
         onPressed: null,
@@ -42,10 +41,9 @@ class SaveToSpotifyButton extends StatelessWidget {
       icon: const Icon(Icons.music_note, size: 18),
       label: const Text('Save to Spotify'),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.green,
+        backgroundColor: const Color(0xFF1DB954), // Exact Spotify Green
         foregroundColor: Colors.white,
       ),
     );
   }
 }
-

@@ -29,8 +29,6 @@ public class User {
     @Column(name = "last_log_in")
     private Instant lastLogIn;
 
-    @Column(name = "spotify_access_token")
-    private String spotifyAccessToken;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

@@ -49,7 +49,6 @@ public class UserController {
     public ResponseEntity<?> updateUser(
             @PathVariable UUID id,
             @RequestBody UserUpdateDTO updateDTO) {
-        // Verify the authenticated user matches the requested user ID
         String authenticatedUserId = SecurityContextHolder.getContext().getAuthentication().getName();
         if (!authenticatedUserId.equals(id.toString())) {
             return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
@@ -72,7 +71,6 @@ public class UserController {
 
     @GetMapping("/{id}/moods")
     public ResponseEntity<?> getUserMoodHistory(@PathVariable UUID id) {
-        // Verify the authenticated user matches the requested user ID
         String authenticatedUserId = SecurityContextHolder.getContext().getAuthentication().getName();
         if (!authenticatedUserId.equals(id.toString())) {
             return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
@@ -92,11 +90,6 @@ public class UserController {
         }
     }
 
-    /**
-     * Get the most recent playlist for the authenticated user.
-     * Optionally filters by mood if provided.
-     * Returns 404 if the user has no playlists (matching the mood if specified).
-     */
     @GetMapping("/last-playlist")
     public ResponseEntity<LastPlaylistResponseDTO> getLastPlaylist(
             @RequestParam(required = false) String mood) {
@@ -118,12 +111,18 @@ public class UserController {
     @PostMapping("/playlist/save")
     public ResponseEntity<Map<String, Object>> savePlaylistToSpotify(
             @RequestHeader(value = "X-User-Id", required = false) UUID userId,
+            @RequestHeader(value = "X-Spotify-Token") String spotifyToken, // <--- ADDED THIS
             @RequestBody SavePlaylistToSpotifyRequest request) {
-        
+
         // For now, we'll get userId from header. In production, extract from JWT
         if (userId == null) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false, "message", "User ID is required in X-User-Id header."));
+        }
+
+        if (spotifyToken == null || spotifyToken.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "Spotify Access Token is missing."));
         }
 
         if (request.getPlaylistId() == null) {
@@ -137,7 +136,8 @@ public class UserController {
         }
 
         try {
-            playlistService.savePlaylistToSpotify(userId, request);
+            // Pass the token from the header to the service
+            playlistService.savePlaylistToSpotify(userId, request, spotifyToken);
             return ResponseEntity.ok()
                     .body(Map.of("success", true, "message", "Playlist saved to Spotify successfully."));
         } catch (IllegalStateException e) {

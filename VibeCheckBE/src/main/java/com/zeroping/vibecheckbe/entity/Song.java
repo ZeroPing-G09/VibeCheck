@@ -29,7 +29,4 @@ public class Song {
     @ManyToMany(mappedBy = "songs")
     @JsonIgnoreProperties("songs")
     private Set<Playlist> playlists;
-
-    @Column(name = "spotify_uri", nullable = false, unique = true)
-    private String spotifyUri;
 }
