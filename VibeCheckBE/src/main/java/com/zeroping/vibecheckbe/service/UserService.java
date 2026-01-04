@@ -1,14 +1,11 @@
 package com.zeroping.vibecheckbe.service;
 
-import com.zeroping.vibecheckbe.dto.LastPlaylistResponseDTO;
-import com.zeroping.vibecheckbe.dto.SongDTO;
-import com.zeroping.vibecheckbe.dto.UserDTO;
-import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
-import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
+import com.zeroping.vibecheckbe.dto.*;
 import com.zeroping.vibecheckbe.entity.Playlist;
 import com.zeroping.vibecheckbe.entity.User;
 import com.zeroping.vibecheckbe.entity.Genre;
 import com.zeroping.vibecheckbe.exception.genre.GenreNotFoundException;
+import com.zeroping.vibecheckbe.exception.playlist.PlaylistNotFoundException;
 import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
 import com.zeroping.vibecheckbe.repository.PlaylistRepository;
 import com.zeroping.vibecheckbe.repository.UserRepository;
@@ -28,12 +25,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final GenreRepository genreRepository;
     private final PlaylistRepository playlistRepository;
+    private final GeminiPlaylistService geminiPlaylistService;
 
     public UserService(UserRepository userRepository, GenreRepository genreRepository, 
-                       PlaylistRepository playlistRepository) {
+                       PlaylistRepository playlistRepository, GeminiPlaylistService geminiPlaylistService) {
         this.userRepository = userRepository;
         this.genreRepository = genreRepository;
         this.playlistRepository = playlistRepository;
+        this.geminiPlaylistService = geminiPlaylistService;
     }
 
     @Transactional(readOnly = true)
@@ -200,4 +199,60 @@ public class UserService {
         User savedUser = userRepository.save(user);
         return toUserDTO(savedUser);
     }
+
+    public PlaylistFeedbackResponse savePlaylistFeedback(UUID userId, PlaylistFeedbackRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+
+        Playlist playlist = playlistRepository.findById(request.getPlaylistId())
+                .orElseThrow(() -> new PlaylistNotFoundException("Playlist not found: " + request.getPlaylistId()));
+
+        playlist.setLiked(request.getLiked());
+        if (request.getLiked() == true)
+            playlist.setLikedAt(new Date().toInstant());
+        else
+            playlist.setLikedAt(null);
+
+        playlistRepository.save(playlist);
+
+        String aiPrompt = buildAiFeedbackPrompt(user, playlist);
+
+        try {
+            geminiPlaylistService.sendPlaylistFeedbackPrompt(aiPrompt);
+        } catch (Exception e) {
+            System.err.println("Failed to send feedback to AI: " + e.getMessage());
+        }
+
+        return new PlaylistFeedbackResponse("Feedback received", request.getLiked());
+    }
+
+    String buildAiFeedbackPrompt(User user, Playlist playlist) {
+        StringBuilder prompt = new StringBuilder();
+
+        if (Boolean.TRUE.equals(playlist.getLiked())) {
+            prompt.append("The user liked the playlist ");
+        } else {
+            prompt.append("The user disliked the playlist ");
+        }
+
+        prompt.append(playlist.getName());
+
+        if (playlist.getSongs() != null && !playlist.getSongs().isEmpty()) {
+            String tracks = playlist.getSongs().stream()
+                    .map(song -> song.getName())
+                    .collect(Collectors.joining(", "));
+            prompt.append(" (tracks ").append(tracks).append(")");
+        }
+
+        prompt.append(". ");
+
+        if (Boolean.TRUE.equals(playlist.getLiked())) {
+            prompt.append("This feedback should be considered for future recommendations.");
+        } else {
+            prompt.append("In the future, avoid playlists with a similar musical direction.");
+        }
+
+        return prompt.toString();
+    }
+
 }

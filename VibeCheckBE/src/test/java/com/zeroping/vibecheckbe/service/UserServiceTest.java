@@ -1,13 +1,15 @@
 package com.zeroping.vibecheckbe.service;
 
-import com.zeroping.vibecheckbe.dto.UserDTO;
-import com.zeroping.vibecheckbe.dto.UserPreferencesDTO;
-import com.zeroping.vibecheckbe.dto.UserUpdateDTO;
+import com.zeroping.vibecheckbe.dto.*;
 import com.zeroping.vibecheckbe.entity.Genre;
+import com.zeroping.vibecheckbe.entity.Playlist;
+import com.zeroping.vibecheckbe.entity.Song;
 import com.zeroping.vibecheckbe.entity.User;
 import com.zeroping.vibecheckbe.exception.genre.GenreNotFoundException;
+import com.zeroping.vibecheckbe.exception.playlist.PlaylistNotFoundException;
 import com.zeroping.vibecheckbe.exception.user.UserNotFoundException;
 import com.zeroping.vibecheckbe.repository.GenreRepository;
+import com.zeroping.vibecheckbe.repository.PlaylistRepository;
 import com.zeroping.vibecheckbe.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,6 +33,12 @@ class UserServiceTest {
 
     @Mock
     private GenreRepository genreRepository;
+
+    @Mock
+    PlaylistRepository playlistRepository;
+
+    @Mock
+    private GeminiPlaylistService geminiPlaylistService;
 
     @InjectMocks
     private UserService userService;
@@ -507,4 +516,234 @@ class UserServiceTest {
         g.setName(name);
         return g;
     }
+
+    @Test
+    @DisplayName("""
+        Given valid user and playlist
+        When savePlaylistFeedback is called with liked=true
+        Then it should update playlist status and set timestamp
+        """)
+    void savePlaylistFeedback_WhenUserAndPlaylistExist_ShouldLikePlaylist() {
+        // Given
+        UUID userId = UUID.randomUUID();
+        Long playlistId = 123456L;
+
+        User existingUser = new User();
+        existingUser.setId(userId);
+
+        Playlist existingPlaylist = new Playlist();
+        existingPlaylist.setId(playlistId);
+        existingPlaylist.setLiked(false);
+
+        PlaylistFeedbackRequest request = new PlaylistFeedbackRequest();
+        request.setPlaylistId(playlistId);
+        request.setLiked(true);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(playlistRepository.findById(playlistId)).thenReturn(Optional.of(existingPlaylist));
+        when(playlistRepository.save(any(Playlist.class))).thenReturn(existingPlaylist);
+
+        // When
+        PlaylistFeedbackResponse response = userService.savePlaylistFeedback(userId, request);
+
+        // Then
+        assertEquals("Feedback received", response.getMessage());
+        assertTrue(response.getLiked());
+
+        // Verify User check occurred
+        verify(userRepository).findById(userId);
+
+        // Verify Playlist Logic
+        verify(playlistRepository).findById(playlistId);
+        verify(playlistRepository).save(existingPlaylist);
+
+        assertTrue(existingPlaylist.getLiked());
+        assertNotNull(existingPlaylist.getLikedAt(), "LikedAt timestamp should be set when liking");
+    }
+
+    @Test
+    @DisplayName("""
+        Given valid user and playlist
+        When savePlaylistFeedback is called with liked=false
+        Then it should update playlist status and clear timestamp
+        """)
+    void savePlaylistFeedback_WhenUnliking_ShouldClearTimestamp() {
+        // Given
+        UUID userId = UUID.randomUUID();
+        Long playlistId = 123456L;
+
+        User existingUser = new User();
+        Playlist existingPlaylist = new Playlist();
+        existingPlaylist.setId(playlistId);
+        existingPlaylist.setLiked(true);
+        existingPlaylist.setLikedAt(Instant.now());
+
+        PlaylistFeedbackRequest request = new PlaylistFeedbackRequest();
+        request.setPlaylistId(playlistId);
+        request.setLiked(false);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(playlistRepository.findById(playlistId)).thenReturn(Optional.of(existingPlaylist));
+
+        // When
+        PlaylistFeedbackResponse response = userService.savePlaylistFeedback(userId, request);
+
+        // Then
+        assertEquals("Feedback received", response.getMessage());
+        assertFalse(response.getLiked());
+
+        verify(playlistRepository).save(existingPlaylist);
+
+        assertFalse(existingPlaylist.getLiked());
+        assertNull(existingPlaylist.getLikedAt(), "LikedAt timestamp should be null when unliking");
+    }
+
+    @Test
+    @DisplayName("""
+        Given user not found
+        When savePlaylistFeedback is called
+        Then it should throw UserNotFoundException
+        """)
+    void savePlaylistFeedback_WhenUserNotFound_ShouldThrowException() {
+        // Given
+        UUID userId = UUID.randomUUID();
+        PlaylistFeedbackRequest request = new PlaylistFeedbackRequest();
+        request.setPlaylistId(123456L);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(UserNotFoundException.class,
+                () -> userService.savePlaylistFeedback(userId, request));
+
+        verify(userRepository).findById(userId);
+        verify(playlistRepository, never()).findById(any());
+        verify(playlistRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("""
+        Given playlist not found
+        When savePlaylistFeedback is called
+        Then it should throw PlaylistNotFoundException
+        """)
+    void savePlaylistFeedback_WhenPlaylistNotFound_ShouldThrowException() {
+        // Given
+        UUID userId = UUID.randomUUID();
+        Long playlistId = 123456L;
+
+        PlaylistFeedbackRequest request = new PlaylistFeedbackRequest();
+        request.setPlaylistId(playlistId);
+
+        User existingUser = new User();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(playlistRepository.findById(playlistId)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(PlaylistNotFoundException.class,
+                () -> userService.savePlaylistFeedback(userId, request));
+
+        verify(userRepository).findById(userId);
+        verify(playlistRepository).findById(playlistId);
+        verify(playlistRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("""
+        Given a liked playlist with songs
+        When buildAiFeedbackPrompt is called
+        Then it returns correct AI prompt for LIKE
+        """)
+    void buildAiFeedbackPrompt_WhenLikedPlaylistWithSongs_ShouldReturnCorrectPrompt() {
+        // Given
+        Playlist playlist = new Playlist();
+        playlist.setName("Chill Vibes");
+        playlist.setLiked(true);
+
+        Song song1 = new Song();
+        song1.setName("Song A");
+
+        Song song2 = new Song();
+        song2.setName("Song B");
+
+        playlist.setSongs(Set.of(song1, song2));
+
+        User user = new User();
+
+        // When
+        String result = userService.buildAiFeedbackPrompt(user, playlist);
+
+        // Then
+        assertTrue(result.startsWith("The user liked the playlist Chill Vibes"));
+        assertTrue(result.contains("(tracks"));
+        assertTrue(result.contains("Song A"));
+        assertTrue(result.contains("Song B"));
+        assertTrue(result.endsWith(
+                "This feedback should be considered for future recommendations."
+        ));
+    }
+
+    @Test
+    @DisplayName("""
+        Given a disliked playlist without songs
+        When buildAiFeedbackPrompt is called
+        Then it returns correct AI prompt for DISLIKE
+        """)
+    void buildAiFeedbackPrompt_WhenDislikedPlaylist_ShouldReturnCorrectPrompt() {
+        // Given
+        Playlist playlist = new Playlist();
+        playlist.setName("Sad Songs");
+        playlist.setLiked(false);
+
+        User user = new User();
+
+        // When
+        String result = userService.buildAiFeedbackPrompt(user, playlist);
+
+        // Then
+        assertEquals(
+                "The user disliked the playlist Sad Songs. " +
+                        "In the future, avoid playlists with a similar musical direction.",
+                result
+        );
+    }
+
+    @Test
+    @DisplayName("""
+        Given valid user and playlist
+        When savePlaylistFeedback is called
+        Then AI feedback prompt is sent
+        """)
+    void savePlaylistFeedback_ShouldSendPromptToAI() throws Exception {
+        // Given
+        UUID userId = UUID.randomUUID();
+        Long playlistId = 1L;
+
+        User user = new User();
+        user.setId(userId);
+
+        Playlist playlist = new Playlist();
+        playlist.setId(playlistId);
+        playlist.setName("Focus Beats");
+        playlist.setLiked(false);
+
+        PlaylistFeedbackRequest request = new PlaylistFeedbackRequest();
+        request.setPlaylistId(playlistId);
+        request.setLiked(true);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(playlistRepository.findById(playlistId)).thenReturn(Optional.of(playlist));
+        when(playlistRepository.save(any(Playlist.class))).thenReturn(playlist);
+
+        // When
+        userService.savePlaylistFeedback(userId, request);
+
+        // Then
+        verify(geminiPlaylistService, times(1))
+                .sendPlaylistFeedbackPrompt(anyString());
+    }
+
+
+
 }
