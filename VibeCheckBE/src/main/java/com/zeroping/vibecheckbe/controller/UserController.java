@@ -1,5 +1,7 @@
 package com.zeroping.vibecheckbe.controller;
 
+import com.zeroping.vibecheckbe.dto.SavePlaylistToSpotifyRequest;
+import com.zeroping.vibecheckbe.service.PlaylistService;
 import com.zeroping.vibecheckbe.dto.LastPlaylistResponseDTO;
 import com.zeroping.vibecheckbe.dto.MoodHistoryDTO;
 import com.zeroping.vibecheckbe.dto.UserDTO;
@@ -11,10 +13,6 @@ import com.zeroping.vibecheckbe.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
@@ -26,10 +24,12 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
+    private final PlaylistService playlistService;
     private final MoodService moodService;
 
-    public UserController(UserService userService, MoodService moodService) {
+    public UserController(UserService userService, PlaylistService playlistService, MoodService moodService) {
         this.userService = userService;
+        this.playlistService = playlistService;
         this.moodService = moodService;
     }
 
@@ -49,7 +49,6 @@ public class UserController {
     public ResponseEntity<?> updateUser(
             @PathVariable UUID id,
             @RequestBody UserUpdateDTO updateDTO) {
-        // Verify the authenticated user matches the requested user ID
         String authenticatedUserId = SecurityContextHolder.getContext().getAuthentication().getName();
         if (!authenticatedUserId.equals(id.toString())) {
             return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
@@ -72,7 +71,6 @@ public class UserController {
 
     @GetMapping("/{id}/moods")
     public ResponseEntity<?> getUserMoodHistory(@PathVariable UUID id) {
-        // Verify the authenticated user matches the requested user ID
         String authenticatedUserId = SecurityContextHolder.getContext().getAuthentication().getName();
         if (!authenticatedUserId.equals(id.toString())) {
             return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
@@ -92,11 +90,6 @@ public class UserController {
         }
     }
 
-    /**
-     * Get the most recent playlist for the authenticated user.
-     * Optionally filters by mood if provided.
-     * Returns 404 if the user has no playlists (matching the mood if specified).
-     */
     @GetMapping("/last-playlist")
     public ResponseEntity<LastPlaylistResponseDTO> getLastPlaylist(
             @RequestParam(required = false) String mood) {
@@ -113,5 +106,49 @@ public class UserController {
         return playlist
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new PlaylistNotFoundException("No playlist found for user"));
+    }
+
+    @PostMapping("/playlist/save")
+    public ResponseEntity<Map<String, Object>> savePlaylistToSpotify(
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId,
+            @RequestHeader(value = "X-Spotify-Token") String spotifyToken, // <--- ADDED THIS
+            @RequestBody SavePlaylistToSpotifyRequest request) {
+
+        // For now, we'll get userId from header. In production, extract from JWT
+        if (userId == null) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "User ID is required in X-User-Id header."));
+        }
+
+        if (spotifyToken == null || spotifyToken.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "Spotify Access Token is missing."));
+        }
+
+        if (request.getPlaylistId() == null) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "Playlist ID is required."));
+        }
+
+        if (request.getSpotifyPlaylistName() == null || request.getSpotifyPlaylistName().trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "Spotify playlist name is required."));
+        }
+
+        try {
+            // Pass the token from the header to the service
+            playlistService.savePlaylistToSpotify(userId, request, spotifyToken);
+            return ResponseEntity.ok()
+                    .body(Map.of("success", true, "message", "Playlist saved to Spotify successfully."));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("success", false, "message", "Failed to save playlist to Spotify: " + e.getMessage()));
+        }
     }
 }

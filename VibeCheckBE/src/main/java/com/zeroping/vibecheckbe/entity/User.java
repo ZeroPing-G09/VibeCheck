@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -27,6 +29,9 @@ public class User {
     @Column(name = "last_log_in")
     private Instant lastLogIn;
 
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
     @Column(name = "avatar_url")
     private String avatarUrl;
 

@@ -16,7 +16,8 @@ class AuthService {
     await _client.auth.signInWithOAuth(
       OAuthProvider.spotify,
       redirectTo: 'vibecheck://auth-callback',
-      scopes: 'user-read-email user-read-private',
+      // CHANGED: Added playlist-modify scopes
+      scopes: 'user-read-email user-read-private playlist-modify-public playlist-modify-private',
     );
   }
 

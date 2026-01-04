@@ -1,16 +1,19 @@
 package com.zeroping.vibecheckbe.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.time.Instant;
-import java.util.UUID;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "\"Playlists\"", schema = "public")
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class Playlist {
 
     @Id
@@ -20,16 +23,13 @@ public class Playlist {
     @Column(name = "name", nullable = false)
     private String name;
 
+
     @Column(name = "user_id", nullable = false)
-    private UUID userId; // Links to the user from auth.users (public.users.id)
+    private UUID userId;
 
     @Column(name = "mood")
-    private String mood; // From the PlaylistRequest
+    private String mood;
 
-    @Column(name = "created_at", nullable = false)
-    private Instant createdAt = Instant.now();
-
-    // Many-to-Many relationship with Song using a join table (playlist_songs)
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "playlist_songs",
@@ -37,4 +37,8 @@ public class Playlist {
             inverseJoinColumns = @JoinColumn(name = "song_id")
     )
     private Set<Song> songs;
+
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt = Instant.now();
+
 }

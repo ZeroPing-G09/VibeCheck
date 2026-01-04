@@ -5,13 +5,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.List;
 
+@Repository
 public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
+
     // Allows retrieving all playlists created by a specific user
     List<Playlist> findByUserId(UUID userId);
 
@@ -36,5 +39,7 @@ public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
 
     // Returns the latest playlist for a user with a specific mood, if it exists
     Optional<Playlist> findFirstByUserIdAndMoodOrderByCreatedAtDesc(UUID userId, String mood);
-
+    
+    // Validates that a specific playlist belongs to a specific user (Updated to use UUID)
+    Optional<Playlist> findByIdAndUserId(Long id, UUID userId);
 }
