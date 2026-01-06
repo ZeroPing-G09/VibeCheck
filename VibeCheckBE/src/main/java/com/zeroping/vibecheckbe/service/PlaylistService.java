@@ -42,7 +42,7 @@ public class PlaylistService {
        Spotify export
        ======================= */
 
-    public void savePlaylistToSpotify(UUID userId, SavePlaylistToSpotifyRequest request, String accessToken)
+    public String savePlaylistToSpotify(UUID userId, SavePlaylistToSpotifyRequest request, String accessToken)
             throws IOException {
 
         // 1. Find the playlist in our DB to get the song list
@@ -80,6 +80,9 @@ public class PlaylistService {
                 spotifyPlaylistId,
                 trackUris
         );
+
+        // Return the Spotify playlist ID so frontend can embed the player
+        return spotifyPlaylistId;
 
         // Note: We are NOT saving anything back to the database.
         // This avoids the "column exported_to_spotify does not exist" error.

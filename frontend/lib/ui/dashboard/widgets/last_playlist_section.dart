@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/data/models/last_playlist.dart';
 import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
 import 'package:frontend/ui/dashboard/widgets/playlist_songs_dialog.dart';
+import 'package:frontend/ui/dashboard/widgets/spotify_playlist_embed.dart';
 import 'package:frontend/ui/home/widgets/save_to_spotify_button.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; // Needed for User ID
 
@@ -14,6 +15,7 @@ class LastPlaylistSection extends StatelessWidget {
   final String? errorMessage;
   final VoidCallback? onCreatePlaylist;
   final bool isGeneratingPlaylist;
+  final Function(String?)? onSpotifyPlaylistSaved; // Callback when Spotify playlist is saved
 
   const LastPlaylistSection({
     required this.playlistState,
@@ -21,6 +23,7 @@ class LastPlaylistSection extends StatelessWidget {
     this.errorMessage,
     this.onCreatePlaylist,
     this.isGeneratingPlaylist = false,
+    this.onSpotifyPlaylistSaved,
     super.key,
   });
 
@@ -203,8 +206,18 @@ class LastPlaylistSection extends StatelessWidget {
                   userId: currentUserId,
                   playlistId: playlist!.playlistId!, // Ensure this ID maps to String
                   exportedToSpotify: false, // Defaulting to false as we removed backend check
+                  onSaved: onSpotifyPlaylistSaved,
                 ),
               ),
+
+            // 2.5. SPOTIFY PLAYER (if playlist was saved to Spotify)
+            if (playlist!.spotifyPlaylistId != null) ...[
+              const SizedBox(height: 16),
+              SpotifyPlaylistEmbed(
+                playlistId: playlist!.spotifyPlaylistId!,
+                height: 380, // Compact size
+              ),
+            ],
 
             // 3. The Generate New Button
             if (onCreatePlaylist != null) ...[

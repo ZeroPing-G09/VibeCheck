@@ -212,6 +212,14 @@ class DashboardViewModel extends ChangeNotifier {
     }
   }
 
+  /// Updates the Spotify playlist ID for the current playlist
+  void updateSpotifyPlaylistId(String spotifyPlaylistId) {
+    if (_lastPlaylist != null) {
+      _lastPlaylist = _lastPlaylist!.copyWith(spotifyPlaylistId: spotifyPlaylistId);
+      notifyListeners();
+    }
+  }
+
   void clear() {
     _user = null;
     _error = null;

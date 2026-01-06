@@ -40,13 +40,14 @@ class _SaveToSpotifyDialogState extends State<SaveToSpotifyDialog> {
     try {
       final playlistService = locator<PlaylistService>();
 
-      await playlistService.savePlaylistToSpotify(
+      final response = await playlistService.savePlaylistToSpotify(
         playlistId: widget.playlistId,
         spotifyPlaylistName: _nameController.text.trim(),
       );
 
       if (mounted) {
-        Navigator.of(context).pop();
+        // Return the Spotify playlist ID to the caller
+        Navigator.of(context).pop(response['spotifyPlaylistId'] as String?);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Playlist saved to Spotify successfully!'),
