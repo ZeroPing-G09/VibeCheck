@@ -69,14 +69,17 @@ public class GeminiPlaylistService {
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException("Missing gemini.api.key in properties or environment!");
         }
+        System.out.println("Playlist bypass status: useDefaultPlaylist = " + useDefaultPlaylist);
     }
 
     public PlaylistAgentResponse generatePlaylist(String mood, List<String> genres) throws Exception {
         // Temporary bypass: Return default playlist if flag is enabled
+        System.out.println("generatePlaylist called - useDefaultPlaylist = " + useDefaultPlaylist);
         if (useDefaultPlaylist) {
             System.out.println("BYPASSING Gemini API - Using default playlist for testing");
             return getDefaultPlaylist(mood, genres);
         }
+        System.out.println("Using Gemini API - NOT bypassing");
 
         String geminiUrl = String.format(GEMINI_URL_TEMPLATE, apiKey);
 

@@ -198,8 +198,8 @@ class LastPlaylistSection extends StatelessWidget {
             
             const SizedBox(height: 16),
 
-            // 2. THE SAVE BUTTON (Inserted Here)
-            if (currentUserId != null)
+            // 2. THE SAVE BUTTON (only show if playlist hasn't been saved to Spotify yet)
+            if (currentUserId != null && playlist!.spotifyPlaylistId == null)
               Container(
                 width: double.infinity, // Make button stretch full width
                 margin: const EdgeInsets.only(bottom: 8),
