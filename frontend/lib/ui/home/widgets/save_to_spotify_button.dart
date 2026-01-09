@@ -5,22 +5,28 @@ class SaveToSpotifyButton extends StatelessWidget {
   final String userId;
   final String playlistId; // <--- FIXED: Now using int
   final bool? exportedToSpotify;
+  final Function(String?)? onSaved; // Callback when playlist is saved
 
   const SaveToSpotifyButton({
     super.key,
     required this.userId,
     required this.playlistId,
     this.exportedToSpotify,
+    this.onSaved,
   });
 
   void _showSaveDialog(BuildContext context) {
-    showDialog(
+    showDialog<String?>(
       context: context,
       builder: (context) => SaveToSpotifyDialog(
         userId: userId,
         playlistId: playlistId,
       ),
-    );
+    ).then((spotifyPlaylistId) {
+      if (spotifyPlaylistId != null && onSaved != null) {
+        onSaved!(spotifyPlaylistId);
+      }
+    });
   }
 
   @override

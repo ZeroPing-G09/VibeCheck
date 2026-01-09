@@ -224,6 +224,11 @@ return SingleChildScrollView(
         onCreatePlaylist: () {
           viewModel.generatePlaylist();
         },
+        onSpotifyPlaylistSaved: (spotifyPlaylistId) {
+          if (spotifyPlaylistId != null) {
+            viewModel.updateSpotifyPlaylistId(spotifyPlaylistId);
+          }
+        },
       ),
 
       const SizedBox(height: 24),

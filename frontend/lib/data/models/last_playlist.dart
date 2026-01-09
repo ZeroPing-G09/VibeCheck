@@ -6,12 +6,14 @@ class LastPlaylist {
   final String name;
   final DateTime createdAt;
   final List<Song> songs;
+  final String? spotifyPlaylistId; // Spotify playlist ID for embedding player
 
   LastPlaylist({
     this.playlistId,
     required this.name,
     required this.createdAt,
     this.songs = const [],
+    this.spotifyPlaylistId,
   });
 
   factory LastPlaylist.fromJson(Map<String, dynamic> json) {
@@ -27,6 +29,18 @@ class LastPlaylist {
       name: json['name'] as String? ?? '',
       createdAt: DateTime.parse(json['createdAt'] as String),
       songs: songsList,
+      spotifyPlaylistId: json['spotifyPlaylistId'] as String?,
+    );
+  }
+
+  /// Creates a copy with updated spotifyPlaylistId
+  LastPlaylist copyWith({String? spotifyPlaylistId}) {
+    return LastPlaylist(
+      playlistId: playlistId,
+      name: name,
+      createdAt: createdAt,
+      songs: songs,
+      spotifyPlaylistId: spotifyPlaylistId ?? this.spotifyPlaylistId,
     );
   }
 }

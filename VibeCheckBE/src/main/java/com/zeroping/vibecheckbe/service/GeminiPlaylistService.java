@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +28,9 @@ public class GeminiPlaylistService {
 
     @Value("${gemini.api.key}")
     private String apiKey;
+
+    @Value("${playlist.use.default:false}")
+    private boolean useDefaultPlaylist;
 
     private static final String GEMINI_URL_TEMPLATE =
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=%s";
@@ -64,9 +69,18 @@ public class GeminiPlaylistService {
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException("Missing gemini.api.key in properties or environment!");
         }
+        System.out.println("Playlist bypass status: useDefaultPlaylist = " + useDefaultPlaylist);
     }
 
     public PlaylistAgentResponse generatePlaylist(String mood, List<String> genres) throws Exception {
+        // Temporary bypass: Return default playlist if flag is enabled
+        System.out.println("generatePlaylist called - useDefaultPlaylist = " + useDefaultPlaylist);
+        if (useDefaultPlaylist) {
+            System.out.println("BYPASSING Gemini API - Using default playlist for testing");
+            return getDefaultPlaylist(mood, genres);
+        }
+        System.out.println("Using Gemini API - NOT bypassing");
+
         String geminiUrl = String.format(GEMINI_URL_TEMPLATE, apiKey);
 
         String prompt = """
@@ -146,5 +160,33 @@ public class GeminiPlaylistService {
         }
 
         return playlist;
+    }
+
+    /**
+     * Returns a default playlist for testing when Gemini API is bypassed.
+     * Uses the "555" playlist from Spotify.
+     */
+    private PlaylistAgentResponse getDefaultPlaylist(String mood, List<String> genres) {
+        PlaylistAgentResponse defaultPlaylist = new PlaylistAgentResponse();
+        defaultPlaylist.setPlaylist_name("555");
+        
+        // Default playlist tracks from the "555" playlist
+        List<TrackAgentResponse> defaultTracks = new ArrayList<>(Arrays.asList(
+            createTrack("Higher Love", "Kygo, Whitney Houston"),
+            createTrack("Happy - From \"Despicable Me 2\"", "Pharrell Williams"),
+            createTrack("One Kiss (with Dua Lipa)", "Calvin Harris, Dua Lipa"),
+            createTrack("Uptown Funk (feat. Bruno Mars)", "Mark Ronson, Bruno Mars"),
+            createTrack("Good as Hell", "Lizzo")
+        ));
+        
+        defaultPlaylist.setTracks(defaultTracks);
+        return defaultPlaylist;
+    }
+
+    private TrackAgentResponse createTrack(String title, String artist) {
+        TrackAgentResponse track = new TrackAgentResponse();
+        track.setTitle(title);
+        track.setArtist(artist);
+        return track;
     }
 }

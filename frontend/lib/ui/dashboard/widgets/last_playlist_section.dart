@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:frontend/data/models/last_playlist.dart';
 import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
 import 'package:frontend/ui/dashboard/widgets/playlist_songs_dialog.dart';
+import 'package:frontend/ui/dashboard/widgets/spotify_playlist_embed.dart';
 import 'package:frontend/ui/home/widgets/save_to_spotify_button.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; // Needed for User ID
+import 'package:url_launcher/url_launcher.dart';
 
 // Make sure to import your button
 // Adjust path if you saved it elsewhere
@@ -14,6 +16,7 @@ class LastPlaylistSection extends StatelessWidget {
   final String? errorMessage;
   final VoidCallback? onCreatePlaylist;
   final bool isGeneratingPlaylist;
+  final Function(String?)? onSpotifyPlaylistSaved; // Callback when Spotify playlist is saved
 
   const LastPlaylistSection({
     required this.playlistState,
@@ -21,6 +24,7 @@ class LastPlaylistSection extends StatelessWidget {
     this.errorMessage,
     this.onCreatePlaylist,
     this.isGeneratingPlaylist = false,
+    this.onSpotifyPlaylistSaved,
     super.key,
   });
 
@@ -194,8 +198,8 @@ class LastPlaylistSection extends StatelessWidget {
             
             const SizedBox(height: 16),
 
-            // 2. THE SAVE BUTTON (Inserted Here)
-            if (currentUserId != null)
+            // 2. THE SAVE BUTTON (only show if playlist hasn't been saved to Spotify yet)
+            if (currentUserId != null && playlist!.spotifyPlaylistId == null)
               Container(
                 width: double.infinity, // Make button stretch full width
                 margin: const EdgeInsets.only(bottom: 8),
@@ -203,8 +207,60 @@ class LastPlaylistSection extends StatelessWidget {
                   userId: currentUserId,
                   playlistId: playlist!.playlistId!, // Ensure this ID maps to String
                   exportedToSpotify: false, // Defaulting to false as we removed backend check
+                  onSaved: onSpotifyPlaylistSaved,
                 ),
               ),
+
+            // 2.5. PLAY IN SPOTIFY BUTTON (if playlist was saved to Spotify)
+            if (playlist!.spotifyPlaylistId != null) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    try {
+                      // Try deep link first (spotify:playlist:ID) - opens Spotify app if installed
+                      final deepLink = Uri.parse('spotify:playlist:${playlist!.spotifyPlaylistId}');
+                      
+                      try {
+                        // Try to launch directly - LaunchMode.platformDefault will use the best available option
+                        await launchUrl(deepLink, mode: LaunchMode.platformDefault);
+                        return; // Success, exit early
+                      } catch (e) {
+                        // Deep link failed (Spotify app not installed), try web URL
+                        debugPrint('Deep link failed: $e, trying web URL');
+                      }
+                      
+                      // Fallback to web URL - opens in browser (or Spotify app if it handles web URLs)
+                      final webUrl = Uri.parse('https://open.spotify.com/playlist/${playlist!.spotifyPlaylistId}');
+                      await launchUrl(webUrl, mode: LaunchMode.platformDefault);
+                    } catch (e) {
+                      // Show error message if both attempts fail
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Could not open Spotify. Error: ${e.toString()}'),
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
+                      }
+                      debugPrint('Error opening Spotify: $e');
+                    }
+                  },
+                  icon: const Icon(Icons.play_arrow),
+                  label: const Text('Play in Spotify'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // SPOTIFY PLAYER (30-second preview)
+              SpotifyPlaylistEmbed(
+                playlistId: playlist!.spotifyPlaylistId!,
+                height: 380, // Compact size
+              ),
+            ],
 
             // 3. The Generate New Button
             if (onCreatePlaylist != null) ...[

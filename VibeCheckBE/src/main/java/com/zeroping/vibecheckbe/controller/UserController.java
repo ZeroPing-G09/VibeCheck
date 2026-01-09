@@ -137,9 +137,13 @@ public class UserController {
 
         try {
             // Pass the token from the header to the service
-            playlistService.savePlaylistToSpotify(userId, request, spotifyToken);
+            String spotifyPlaylistId = playlistService.savePlaylistToSpotify(userId, request, spotifyToken);
             return ResponseEntity.ok()
-                    .body(Map.of("success", true, "message", "Playlist saved to Spotify successfully."));
+                    .body(Map.of(
+                            "success", true,
+                            "message", "Playlist saved to Spotify successfully.",
+                            "spotifyPlaylistId", spotifyPlaylistId
+                    ));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false, "message", e.getMessage()));
