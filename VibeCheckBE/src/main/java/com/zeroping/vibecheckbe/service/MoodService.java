@@ -24,9 +24,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 
+// Service class for managing moods and mood entries
 @Service
 public class MoodService {
-
     private static final Logger log = LoggerFactory.getLogger(MoodService.class);
 
     private final MoodRepository moodRepository;
@@ -44,6 +44,7 @@ public class MoodService {
         this.playlistService = playlistService;
     }
 
+    // Retrieve all moods with their details
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getAllMoods() {
         log.debug("getAllMoods: Fetching moods from repository");
@@ -70,6 +71,7 @@ public class MoodService {
                 .collect(Collectors.toList());
     }
 
+    // Create a single mood entry for a user
     @Transactional
     public MoodEntryResponseDTO createMoodEntry(CreateMoodEntryDTO dto) {
         User user = userRepository.findById(dto.userId())
@@ -88,6 +90,7 @@ public class MoodService {
         return toResponseDTO(saved);
     }
 
+    // Create multiple mood entries for a user in a batch
     @Transactional
     public List<MoodEntryResponseDTO> createMultipleMoodEntries(CreateBatchMoodEntriesDTO dto) {
         User user = userRepository.findById(dto.userId())
@@ -115,6 +118,7 @@ public class MoodService {
         return savedEntries;
     }
 
+    // Retrieve all mood entries for a specific user
     @Transactional(readOnly = true)
     public List<MoodEntryResponseDTO> getUserMoodEntries(UUID userId) {
         User user = userRepository.findById(userId)
@@ -126,6 +130,7 @@ public class MoodService {
                 .collect(Collectors.toList());
     }
 
+    // Retrieve mood history with associated playlists for a specific user
     @Transactional(readOnly = true)
     public List<MoodHistoryDTO> getUserMoodHistory(UUID userId) {
         User user = userRepository.findById(userId)
@@ -154,6 +159,7 @@ public class MoodService {
                 .collect(Collectors.toList());
     }
 
+    // Convert MoodEntry entity to MoodEntryResponseDTO
     private MoodEntryResponseDTO toResponseDTO(MoodEntry entry) {
         return new MoodEntryResponseDTO(
                 entry.getId(),

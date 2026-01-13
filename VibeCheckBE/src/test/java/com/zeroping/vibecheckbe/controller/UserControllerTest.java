@@ -26,6 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+// Unit tests for UserController
 class UserControllerTest {
 
     @Mock
@@ -177,7 +178,7 @@ class UserControllerTest {
         // Then
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
-        assertTrue(response.getBody() instanceof UserDTO);
+        assertInstanceOf(UserDTO.class, response.getBody());
         UserDTO responseBody = (UserDTO) response.getBody();
         assertEquals("UpdatedName", responseBody.getDisplay_name());
         verify(userService, times(1)).updateUser(eq(userId), any(UserUpdateDTO.class));
@@ -209,7 +210,7 @@ class UserControllerTest {
         // Then
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertTrue(response.getBody() instanceof Map);
+        assertInstanceOf(Map.class, response.getBody());
         @SuppressWarnings("unchecked")
         Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
         assertTrue(responseBody.containsKey("error"));

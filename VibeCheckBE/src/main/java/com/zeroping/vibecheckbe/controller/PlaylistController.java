@@ -14,11 +14,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-
+// Controller for handling playlist-related endpoints
 @RestController
 @RequestMapping("/playlist")
 public class PlaylistController {
-
     private final GeminiPlaylistService geminiPlaylistService;
     private final SpotifyPlaylistService spotifyPlaylistService;
     private final PlaylistMetadataService playlistMetadataService;
@@ -32,6 +31,7 @@ public class PlaylistController {
         this.playlistService = playlistService;
     }
 
+    // Generate a new playlist based on mood and genres
     @PostMapping("/generate")
     public PlaylistDTO generate(@RequestBody PlaylistRequest req) throws Exception {
         UUID authenticatedUserId = getAuthenticatedUserId();
@@ -94,6 +94,7 @@ public class PlaylistController {
         return Collections.singletonMap("lastGeneration", timestamp);
     }
 
+    // Helper method to get the authenticated user's UUID
     private UUID getAuthenticatedUserId() {
         String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
         return UUID.fromString(userIdString);

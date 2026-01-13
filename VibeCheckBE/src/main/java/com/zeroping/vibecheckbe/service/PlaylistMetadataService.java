@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+// Service class for handling playlist metadata operations
 @Service
 public class PlaylistMetadataService {
-
     private final PlaylistRepository playlistRepository;
 
     public PlaylistMetadataService(PlaylistRepository playlistRepository) {
@@ -57,6 +57,7 @@ public class PlaylistMetadataService {
         );
     }
 
+    // Helper method to map Song entity to SongDTO
     public SongDTO mapToSongDTO(Song song) {
         return new SongDTO(
                 song.getId(),

@@ -13,11 +13,11 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+// Custom handlers for authentication and access denied scenarios
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-
     @Bean
     public JwtAuthenticationFilter jwtAuthFilter(JwtUtils jwtUtils) {
         return new JwtAuthenticationFilter(jwtUtils);
@@ -33,6 +33,7 @@ public class SecurityConfig {
         return new CustomAccessDeniedHandler();
     }
 
+    // Security filter chain configuration
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
@@ -40,9 +41,10 @@ public class SecurityConfig {
             AuthenticationEntryPoint customAuthenticationEntryPoint,
             AccessDeniedHandler customAccessDeniedHandler
         ) throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable)// disable CSRF for API testing
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(customAuthenticationEntryPoint).accessDeniedHandler(customAccessDeniedHandler))
+        http.csrf(AbstractHttpConfigurer::disable)// disable CSRF for API testing
+                .exceptionHandling(exception
+                        -> exception.authenticationEntryPoint(customAuthenticationEntryPoint)
+                        .accessDeniedHandler(customAccessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/users/by-email").permitAll() // allow unauthenticated access to this endpoint
                         .requestMatchers("/moods").permitAll() // allow unauthenticated access to moods (public reference data)

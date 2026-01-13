@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
 
+// DTO for creating batch mood entries
 public record CreateBatchMoodEntriesDTO(
         @NotNull(message = "userId is required")
         UUID userId,

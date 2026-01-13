@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+// DTO for User Update
 @Data
 @NoArgsConstructor
 public class UserUpdateDTO {

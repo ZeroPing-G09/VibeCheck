@@ -2,9 +2,7 @@ package com.zeroping.vibecheckbe.service;
 
 import com.zeroping.vibecheckbe.dto.LastPlaylistResponseDTO;
 import com.zeroping.vibecheckbe.entity.Playlist;
-import com.zeroping.vibecheckbe.repository.GenreRepository;
 import com.zeroping.vibecheckbe.repository.PlaylistRepository;
-import com.zeroping.vibecheckbe.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,14 +17,9 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+// Test class for UserService's getLastPlaylist method
 @ExtendWith(MockitoExtension.class)
 class UserServiceGetLastPlaylistTest {
-
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private GenreRepository genreRepository;
 
     @Mock
     private PlaylistRepository playlistRepository;

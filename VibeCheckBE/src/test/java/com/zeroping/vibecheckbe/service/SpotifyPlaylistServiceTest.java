@@ -21,6 +21,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+// Test class for SpotifyPlaylistService
 @ExtendWith(MockitoExtension.class)
 class SpotifyPlaylistServiceTest {
 
@@ -83,7 +84,7 @@ class SpotifyPlaylistServiceTest {
         // Then
         assertNotNull(response);
         assertEquals(1, response.getSongs().size());
-        assertEquals(url, response.getSongs().get(0).getUrl());
+        assertEquals(url, response.getSongs().getFirst().getUrl());
 
         verify(songRepository, times(1)).save(any(Song.class));
     }
@@ -118,7 +119,7 @@ class SpotifyPlaylistServiceTest {
         // Then
         assertNotNull(response);
         assertEquals(1, response.getSongs().size());
-        assertEquals(1L, response.getSongs().get(0).getId());
+        assertEquals(1L, response.getSongs().getFirst().getId());
 
         // This should pass now because the service will see the existing song and SKIP save()
         verify(songRepository, times(0)).save(any(Song.class));

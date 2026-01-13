@@ -13,11 +13,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+// Service for handling Spotify playlist operations
 @Service
 public class SpotifyPlaylistService {
     private final SongRepository songRepository;
     private final SpotifyService spotifyService;
-
 
     public SpotifyPlaylistService(SongRepository songRepository,
                                   SpotifyService spotifyService) {
@@ -25,11 +25,12 @@ public class SpotifyPlaylistService {
         this.spotifyService = spotifyService;
     }
 
+    // Search songs from Spotify and save them to the database
     @Transactional
     public PlaylistSpotifyResponse searchAndSaveSongsFromPlaylist(PlaylistSpotifyRequest request) {
         List<Song> savedSongs = new ArrayList<>();
 
-        // search the songs
+        // Search for the songs
         for (TrackSpotifyRequest trackSpotifyRequest : request.getTracks()) {
 
             // Call Spotify service
@@ -55,7 +56,7 @@ public class SpotifyPlaylistService {
                     // It's already in db, just use that one
                     songEntity = existingSongOpt.get();
                 } else {
-                    // new song, create and add it to db
+                    // New song, create and add it to db
                     songEntity = new Song();
 
                     songEntity.setArtistName(spotifyTrack.getArtists()[0].getName());

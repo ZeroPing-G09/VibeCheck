@@ -10,13 +10,13 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+// User entity representing a user in the database
 @Entity
 @Table(name = "\"Users\"", schema = "public")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class User {
 
     @Id
@@ -28,7 +28,6 @@ public class User {
 
     @Column(name = "last_log_in")
     private Instant lastLogIn;
-
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

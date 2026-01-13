@@ -20,6 +20,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+// Test class for SpotifyService
 class SpotifyServiceTest {
 
     @Mock
@@ -41,8 +42,8 @@ class SpotifyServiceTest {
     private void mockSearchFlow(String expectedQuery, Track[] items) throws Exception {
         SearchTracksRequest.Builder sBuilder = mock(SearchTracksRequest.Builder.class);
         SearchTracksRequest sRequest = mock(SearchTracksRequest.class);
-        Paging<Track> page = mock(Paging.class);
-
+        @SuppressWarnings("unchecked")
+        Paging<Track> page = (Paging<Track>) mock(Paging.class);
         when(spotifyApi.searchTracks(expectedQuery)).thenReturn(sBuilder);
         when(sBuilder.limit(10)).thenReturn(sBuilder);
         when(sBuilder.build()).thenReturn(sRequest);

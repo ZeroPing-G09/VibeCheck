@@ -7,10 +7,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 import java.util.Set;
 
-/**
- * DTO for the last playlist endpoint response.
- * Returns the minimal information needed to display the playlist.
- */
+// DTO for returning the last created playlist details
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

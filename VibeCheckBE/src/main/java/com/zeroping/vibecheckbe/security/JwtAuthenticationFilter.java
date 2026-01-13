@@ -25,9 +25,9 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.UUID;
 
+// Filter that validates JWT tokens for protected endpoints
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
     private static final Logger DEBUG_LOGGER = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final JwtUtils jwtUtils;
@@ -36,6 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.jwtUtils = jwtUtils;
     }
 
+    // Validate JWT for each request except public endpoints
     @Override
     protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
             throws ServletException, IOException {

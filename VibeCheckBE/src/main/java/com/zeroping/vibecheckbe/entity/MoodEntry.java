@@ -5,6 +5,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+// MoodEntry entity representing a user's mood entry in the database
 @Entity
 @Table(name = "\"MoodEntries\"", schema = "public")
 @Getter
@@ -31,7 +32,7 @@ public class MoodEntry {
     @Column(name = "intensity", nullable = false)
     private Integer intensity = 50; // Default to 50% (0-100 scale)
 
-    @Column(name = "notes", nullable = true, columnDefinition = "TEXT")
+    @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
     @PrePersist

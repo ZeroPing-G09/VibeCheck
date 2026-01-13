@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
+// Playlist entity representing a user's playlist in the database
 @Entity
 @Table(name = "\"Playlists\"", schema = "public")
 @Data
@@ -22,7 +23,6 @@ public class Playlist {
 
     @Column(name = "name", nullable = false)
     private String name;
-
 
     @Column(name = "user_id", nullable = false)
     private UUID userId;
@@ -40,5 +40,4 @@ public class Playlist {
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
-
 }
