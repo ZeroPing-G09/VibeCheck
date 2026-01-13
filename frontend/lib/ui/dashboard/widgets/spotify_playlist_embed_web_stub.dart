@@ -15,13 +15,13 @@ Widget createWebSpotifyEmbed({
 
 /// Mobile implementation - shows button to open Spotify
 class _MobileSpotifyPlaylistEmbed extends StatelessWidget {
-  final String playlistId;
-  final double height;
 
   const _MobileSpotifyPlaylistEmbed({
     required this.playlistId,
     required this.height,
   });
+  final String playlistId;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +32,6 @@ class _MobileSpotifyPlaylistEmbed extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: Colors.grey.shade300,
-          width: 1,
         ),
       ),
       child: const Center(

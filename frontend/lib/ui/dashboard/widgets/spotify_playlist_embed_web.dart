@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-// ignore: avoid_web_libraries_in_flutter
+// ignore: avoid_web_libraries_in_flutter, deprecated_member_use
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
+
+import 'package:flutter/material.dart';
 
 /// Factory function that creates the web implementation with iframe
 Widget createWebSpotifyEmbed({
@@ -17,16 +17,17 @@ Widget createWebSpotifyEmbed({
 
 /// Web implementation of Spotify playlist embed using iframe
 class _WebSpotifyPlaylistEmbed extends StatefulWidget {
-  final String playlistId;
-  final double height;
 
   const _WebSpotifyPlaylistEmbed({
     required this.playlistId,
     required this.height,
   });
+  final String playlistId;
+  final double height;
 
   @override
-  State<_WebSpotifyPlaylistEmbed> createState() => _WebSpotifyPlaylistEmbedState();
+  State<_WebSpotifyPlaylistEmbed> createState() 
+  => _WebSpotifyPlaylistEmbedState();
 }
 
 class _WebSpotifyPlaylistEmbedState extends State<_WebSpotifyPlaylistEmbed> {
@@ -65,4 +66,3 @@ class _WebSpotifyPlaylistEmbedState extends State<_WebSpotifyPlaylistEmbed> {
     );
   }
 }
-

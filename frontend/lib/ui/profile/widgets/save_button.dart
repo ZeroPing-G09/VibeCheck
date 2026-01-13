@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 
+/// A button widget that allows users to save changes to their profile.
 class SaveButton extends StatelessWidget {
-  final VoidCallback onSave;
-  final bool enabled;
 
+  /// Creates a [SaveButton] widget.
   const SaveButton({
-    super.key,
-    required this.onSave,
-    required this.enabled,
+    required this.onSave, required this.enabled, super.key,
   });
+  
+  /// Callback function to be executed when the button is pressed.
+  final VoidCallback onSave;
+  /// Indicates whether the button is enabled or disabled.
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +34,9 @@ class SaveButton extends StatelessWidget {
     );
 
     // Tooltip only when disabled
-    if (enabled) return button;
+    if (enabled) {
+      return button;
+    }
 
     return Tooltip(
       message: 'Server is offline. Changes cannot be saved.',
@@ -39,4 +44,3 @@ class SaveButton extends StatelessWidget {
     );
   }
 }
-

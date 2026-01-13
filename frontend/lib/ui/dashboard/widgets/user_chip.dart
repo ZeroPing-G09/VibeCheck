@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
 
+/// A user chip widget that displays the user's avatar and name,
+/// and provides a popup menu with actions like viewing the profile and 
+/// logging out.
 class UserChip extends StatelessWidget {
-  final String username;
-  final String imageUrl;
-  final void Function(String value) onActionSelected;
 
+  /// Creates a [UserChip] widget.
   const UserChip({
-    super.key,
-    required this.username,
-    required this.imageUrl,
-    required this.onActionSelected,
+    required this.username, required this.imageUrl, 
+    required this.onActionSelected, super.key,
   });
+  /// The username to display.
+  final String username;
+
+  /// The URL of the user's avatar image.
+  final String imageUrl;
+
+  /// Callback when an action is selected from the popup menu.
+  final void Function(String value) onActionSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +40,8 @@ class UserChip extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 14,
-              backgroundImage: imageUrl.isNotEmpty && imageUrl.startsWith('http')
+              backgroundImage: imageUrl.isNotEmpty && imageUrl.
+              startsWith('http')
                   ? NetworkImage(imageUrl)
                   : null,
               backgroundColor: Colors.grey.shade200,

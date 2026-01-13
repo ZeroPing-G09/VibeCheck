@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/data/services/playlist_service.dart';
 import 'package:frontend/di/locator.dart';
-import 'package:provider/provider.dart';
 
+/// A dialog that allows the user to save a playlist to their Spotify account.
 class SaveToSpotifyDialog extends StatefulWidget {
-  final String userId;
-  final String playlistId;
-
+  /// Creates a [SaveToSpotifyDialog].
   const SaveToSpotifyDialog({
-    super.key,
-    required this.userId,
-    required this.playlistId,
+    required this.userId, required this.playlistId, super.key,
   });
+
+  /// The user's Spotify ID.
+  final String userId;
+
+  /// The ID of the playlist to be saved.
+  final String playlistId;
 
   @override
   State<SaveToSpotifyDialog> createState() => _SaveToSpotifyDialogState();
@@ -30,7 +32,9 @@ class _SaveToSpotifyDialogState extends State<SaveToSpotifyDialog> {
   }
 
   Future<void> _saveToSpotify() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
     setState(() {
       _isLoading = true;

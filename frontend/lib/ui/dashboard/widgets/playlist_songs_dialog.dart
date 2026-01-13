@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:frontend/data/models/song.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-/// A dialog that displays the songs in a playlist.
+/// A dialog that displays the list of songs in a given playlist.
+///
+/// Shows the [playlistName] as the title and lists all [songs] in a 
+/// scrollable view.
 class PlaylistSongsDialog extends StatelessWidget {
-  final String playlistName;
-  final List<Song> songs;
 
+  /// Creates a [PlaylistSongsDialog] with the given [playlistName] and [songs].
   const PlaylistSongsDialog({
     required this.playlistName,
     required this.songs,
     super.key,
   });
+  /// The name of the playlist being displayed.
+  final String playlistName;
+
+  /// The list of songs contained in the playlist.
+  final List<Song> songs;
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +75,8 @@ class PlaylistSongsDialog extends StatelessWidget {
                             onTap: () async {
                               final uri = Uri.parse(song.url);
                               if (await canLaunchUrl(uri)) {
-                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                await launchUrl(uri, mode: 
+                                LaunchMode.externalApplication);
                               }
                             },
                             child: Text(
@@ -85,7 +93,8 @@ class PlaylistSongsDialog extends StatelessWidget {
                             onPressed: () async {
                               final uri = Uri.parse(song.url);
                               if (await canLaunchUrl(uri)) {
-                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                await launchUrl(uri, mode: 
+                                LaunchMode.externalApplication);
                               }
                             },
                           ),

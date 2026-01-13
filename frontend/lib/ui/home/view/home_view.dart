@@ -4,12 +4,16 @@ import 'package:frontend/ui/dashboard/view/dashboard_view.dart';
 import 'package:frontend/ui/profile/view/profile_view.dart';
 import 'package:frontend/ui/settings/view/settings_view.dart';
 
+/// The main home view containing bottom navigation and different pages.
 class HomeView extends StatefulWidget {
+  /// Creates a [HomeView].
   const HomeView({super.key});
 
   @override
   State<HomeView> createState() => _HomeViewState();
 
+  /// Retrieves the nearest [_HomeViewState] from the widget tree.
+  // ignore: library_private_types_in_public_api
   static _HomeViewState? of(BuildContext context) {
     return context.findAncestorStateOfType<_HomeViewState>();
   }

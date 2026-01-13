@@ -4,10 +4,13 @@ import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
 import 'package:frontend/ui/profile/viewmodel/profile_view_model.dart';
 import 'package:provider/provider.dart';
 
+/// A sidebar widget for the profile section with navigation options.
 class ProfileSidebar extends StatelessWidget {
-  final VoidCallback? onClose;
 
+  /// Creates a [ProfileSidebar] widget.
   const ProfileSidebar({super.key, this.onClose});
+  /// Callback when the sidebar needs to be closed.
+  final VoidCallback? onClose;
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +19,7 @@ class ProfileSidebar extends StatelessWidget {
         children: [
           _navItem(
             context,
-            "My Profile",
+            'My Profile',
             Icons.person_outline,
             true,
             onTap: () {
@@ -26,7 +29,7 @@ class ProfileSidebar extends StatelessWidget {
           const Spacer(),
           _navItem(
             context,
-            "Logout",
+            'Logout',
             Icons.logout_outlined,
             false,
             onTap: () => _handleLogout(context),
@@ -77,7 +80,7 @@ class ProfileSidebar extends StatelessWidget {
     if (context.mounted) {
       profileVm.clear();
       dashboardVm.clear();
-      AppRouter.navigatorKey.currentState?.pushNamedAndRemoveUntil(
+      await AppRouter.navigatorKey.currentState?.pushNamedAndRemoveUntil(
         AppRouter.loginRoute,
         (route) => false,
       );

@@ -3,11 +3,13 @@ import 'package:frontend/data/models/user.dart';
 import 'package:frontend/data/repositories/auth_repository.dart';
 import 'package:frontend/data/repositories/onboarding_repository.dart';
 
+/// ViewModel for the onboarding process.
 class OnboardingViewModel extends ChangeNotifier {
+
+  /// Creates an [OnboardingViewModel].
+  OnboardingViewModel(this._onboardingRepository, this._authRepository);
   final OnboardingRepository _onboardingRepository;
   final AuthRepository _authRepository;
-
-  OnboardingViewModel(this._onboardingRepository, this._authRepository);
 
   List<String> _availableGenres = [];
   final List<String> _selectedGenres = [];
@@ -16,12 +18,19 @@ class OnboardingViewModel extends ChangeNotifier {
   String? _error;
   User? _user;
 
+  /// Gets the list of available genres.
   List<String> get availableGenres => _availableGenres;
+  /// Gets the list of selected genres.
   List<String> get selectedGenres => _selectedGenres;
+  /// Indicates if data is currently loading.
   bool get isLoading => _isLoading;
+  /// Indicates if data is currently being saved.
   bool get isSaving => _isSaving;
+  /// Gets the current error message, if any.
   String? get error => _error;
+  /// Gets the user being onboarded.
   User? get user => _user;
+  /// Indicates if the onboarding can be completed.
   bool get canComplete => _selectedGenres.length == 3;
 
   /// Command: Load genres
@@ -76,7 +85,9 @@ class OnboardingViewModel extends ChangeNotifier {
 
   /// Command: Complete onboarding
   Future<void> completeOnboarding() async {
-    if (!canComplete || _user == null) return;
+    if (!canComplete || _user == null) {
+      return;
+    }
 
     _isSaving = true;
     _error = null;
@@ -94,6 +105,7 @@ class OnboardingViewModel extends ChangeNotifier {
     }
   }
 
+  /// Command: Clear selections and errors
   void clear() {
     _selectedGenres.clear();
     _error = null;

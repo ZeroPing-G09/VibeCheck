@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 
 /// A reusable loading state widget
 class LoadingState extends StatelessWidget {
-  final String? message;
-  final double? size;
 
+  /// Creates a loading state widget
   const LoadingState({
     super.key,
     this.message,
     this.size,
   });
+  /// Optional message displayed below the loading indicator
+  final String? message;
+
+  /// Optional size for the loading indicator
+  final double? size;
 
   @override
   Widget build(BuildContext context) {
@@ -36,4 +40,3 @@ class LoadingState extends StatelessWidget {
     );
   }
 }
-

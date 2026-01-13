@@ -1,16 +1,26 @@
 import 'package:flutter/material.dart';
 
-/// Stub implementation of SpotifyPlaylistEmbed for non-web platforms.
-/// On non-web platforms, this widget shows a placeholder.
+/// A widget that embeds a Spotify playlist player.
+///
+/// On web platforms, this would typically render the Spotify embed iframe.
+/// On non-web platforms, this stub implementation shows a placeholder.
+///
+/// [playlistId] is the Spotify playlist ID to embed.
+/// [height] defines the height of the widget (default is 380 pixels).
 class SpotifyPlaylistEmbed extends StatelessWidget {
-  final String playlistId;
-  final double height;
 
+  /// Creates a [SpotifyPlaylistEmbed] for the given [playlistId] and 
+  /// optional [height].
   const SpotifyPlaylistEmbed({
     required this.playlistId,
     this.height = 380,
     super.key,
   });
+  /// The Spotify playlist ID to embed.
+  final String playlistId;
+
+  /// The height of the embed widget.
+  final double height;
 
   @override
   Widget build(BuildContext context) {

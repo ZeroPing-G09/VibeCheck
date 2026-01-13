@@ -1,14 +1,16 @@
+import 'package:frontend/data/models/user.dart';
+import 'package:frontend/data/repositories/genre_repository.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
+import 'package:frontend/data/services/onboarding_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/user.dart';
-import '../services/onboarding_service.dart';
-import '../repositories/user_repository.dart';
-import '../repositories/genre_repository.dart';
 
+/// Repository handling onboarding flow
+/// Orchestrates [OnboardingService], [UserRepository], [GenreRepository] 
+/// and local caching
 class OnboardingRepository {
-  final OnboardingService _service;
-  final UserRepository _userRepository;
-  final GenreRepository _genreRepository;
 
+  /// Creates an instance of [OnboardingRepository] with optional service, 
+  /// user, and genre repositories
   OnboardingRepository({
     OnboardingService? onboardingService,
     UserRepository? userRepository,
@@ -17,6 +19,13 @@ class OnboardingRepository {
         _userRepository = userRepository ?? UserRepository(),
         _genreRepository = genreRepository ?? GenreRepository();
 
+  final OnboardingService _service;
+  final UserRepository _userRepository;
+  final GenreRepository _genreRepository;
+
+  /// Determines if the user with [email] still needs onboarding
+  /// Falls back to checking user's genres if service call fails
+  /// Returns true if onboarding is required, false otherwise
   Future<bool> needsOnboarding(String email) async {
     try {
       return await _service.checkOnboardingNeeded(email);
@@ -30,19 +39,30 @@ class OnboardingRepository {
     }
   }
 
+  /// Retrieves user information for onboarding by [email]
+  /// Returns a [User] object
   Future<User> getUserForOnboarding(String email) async {
-    return await _userRepository.getUserByEmail(email);
+    return _userRepository.getUserByEmail(email);
   }
 
+  /// Returns list of available genres
+  /// Falls back to cached genres if fetching fails
+  /// Returns a list of genre names as [List<String>]
   Future<List<String>> getAvailableGenres() async {
     try {
       return await _genreRepository.getAllGenres();
     } catch (e) {
-      return await _genreRepository.getCachedGenres();
+      return _genreRepository.getCachedGenres();
     }
   }
 
-  Future<User> completeOnboarding(User user, List<String> selectedGenres) async {
+  /// Completes onboarding for [user] with exactly 3 [selectedGenres]
+  /// Updates user via service or repository and marks onboarding 
+  /// complete locally
+  /// Throws exception if selectedGenres length is not exactly 3
+  /// Returns updated [User] object
+  Future<User> completeOnboarding(User user, List<String> selectedGenres) 
+  async {
     if (selectedGenres.length != 3) {
       throw Exception('Exactly 3 genres must be selected');
     }
@@ -60,11 +80,14 @@ class OnboardingRepository {
     }
   }
 
+  /// Marks onboarding as complete locally for user with [userId]
   Future<void> _markOnboardingComplete(String userId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('onboarding_complete_$userId', true);
   }
 
+  /// Checks if onboarding has been completed for user with [userId]
+  /// Returns true if onboarding is complete, false otherwise
   Future<bool> isOnboardingComplete(String userId) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('onboarding_complete_$userId') ?? false;

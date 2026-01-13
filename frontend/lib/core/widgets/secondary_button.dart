@@ -2,16 +2,21 @@ import 'package:flutter/material.dart';
 
 /// A reusable secondary action button
 class SecondaryButton extends StatelessWidget {
-  final String label;
-  final VoidCallback? onPressed;
-  final IconData? icon;
 
+  /// Creates a secondary action button
   const SecondaryButton({
-    super.key,
-    required this.label,
+    required this.label, super.key,
     this.onPressed,
     this.icon,
   });
+  /// Text displayed on the button
+  final String label;
+
+  /// Callback triggered when the button is pressed
+  final VoidCallback? onPressed;
+
+  /// Optional icon displayed alongside the label
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -30,4 +35,3 @@ class SecondaryButton extends StatelessWidget {
     );
   }
 }
-

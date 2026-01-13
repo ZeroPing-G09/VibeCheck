@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:frontend/ui/settings/viewmodel/theme_view_model.dart';
 import 'package:provider/provider.dart';
 
+/// A simple settings view with options to toggle dark mode and other settings.
 class SettingsView extends StatefulWidget {
+  /// Creates a [SettingsView].
   const SettingsView({super.key});
 
   @override
@@ -54,7 +56,6 @@ class _SettingsViewState extends State<SettingsView> {
                 DropdownMenuItem(value: 'French', child: Text('French')),
               ],
               onChanged: (val) {
-                // todo
               },
             ),
           ),

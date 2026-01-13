@@ -1,21 +1,25 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'spotify_playlist_embed_web_stub.dart'
+import 'package:frontend/ui/dashboard/widgets/spotify_playlist_embed_web_stub.dart'
     if (dart.library.html) 'spotify_playlist_embed_web.dart' as web;
-import 'spotify_webview_player.dart';
+import 'package:frontend/ui/dashboard/widgets/spotify_webview_player.dart';
 
 /// A widget that displays a Spotify playlist embed.
 /// On web: shows an iframe embed
 /// On mobile: shows WebView with Spotify player embedded
 class SpotifyPlaylistEmbed extends StatelessWidget {
-  final String playlistId;
-  final double height;
 
+  /// Creates a [SpotifyPlaylistEmbed].
   const SpotifyPlaylistEmbed({
     required this.playlistId,
     this.height = 380,
     super.key,
   });
+  /// The Spotify playlist ID to embed.
+  final String playlistId;
+
+  /// The height of the embed widget.
+  final double height;
 
   @override
   Widget build(BuildContext context) {

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
+/// A widget that displays a profile picture section with a circular avatar.
 class ProfilePictureSection extends StatelessWidget {
-  const ProfilePictureSection({super.key, required this.imageUrl});
+  /// Creates a [ProfilePictureSection] widget.
+  const ProfilePictureSection({required this.imageUrl, super.key});
+  /// The URL of the profile picture to display.
   final String imageUrl;
 
   @override
