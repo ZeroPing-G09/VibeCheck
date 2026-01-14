@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+/// A dialog that confirms user logout action.
 class LogoutDialog extends StatelessWidget {
+  /// Creates a [LogoutDialog].
   const LogoutDialog({super.key});
 
   @override

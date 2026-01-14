@@ -1,66 +1,84 @@
 import 'package:flutter/material.dart';
 
-/// A visual mood meter widget that displays a slider for intensity (0-100%)
+/// A visual mood meter widget that displays a slider for intensity
 /// with a color gradient from red (0%) to green (100%)
 class MoodMeter extends StatelessWidget {
-  final String moodName;
-  final String emoji;
-  final int intensity; // 0-100
-  final ValueChanged<int> onIntensityChanged;
-  final VoidCallback? onRemove;
 
+  /// Creates a mood meter widget
   const MoodMeter({
-    super.key,
     required this.moodName,
     required this.emoji,
     required this.intensity,
     required this.onIntensityChanged,
+    super.key,
     this.onRemove,
   });
+  /// Name of the mood
+  final String moodName;
 
+  /// Emoji representing the mood
+  final String emoji;
+
+  /// Current intensity of the mood (0-100)
+  final int intensity;
+
+  /// Callback when the intensity changes
+  final ValueChanged<int> onIntensityChanged;
+
+  /// Optional callback to remove the mood
+  final VoidCallback? onRemove;
+
+  /// Returns a color corresponding to the intensity on a gradient 
+  /// from red to green
   Color _getColorForIntensity(int intensity) {
-    // Gradient from red (0) -> orange (25) -> yellow (50) -> light green (75) -> green (100)
     if (intensity <= 25) {
-      // Red to Orange
       final ratio = intensity / 25;
       return Color.lerp(
-        const Color(0xFFD32F2F), // Red
-        const Color(0xFFFF9800), // Orange
+        const Color(0xFFD32F2F),
+        const Color(0xFFFF9800),
         ratio,
       )!;
     } else if (intensity <= 50) {
-      // Orange to Yellow
       final ratio = (intensity - 25) / 25;
       return Color.lerp(
-        const Color(0xFFFF9800), // Orange
-        const Color(0xFFFFC107), // Yellow
+        const Color(0xFFFF9800),
+        const Color(0xFFFFC107),
         ratio,
       )!;
     } else if (intensity <= 75) {
-      // Yellow to Light Green
       final ratio = (intensity - 50) / 25;
       return Color.lerp(
-        const Color(0xFFFFC107), // Yellow
-        const Color(0xFF66BB6A), // Light Green
+        const Color(0xFFFFC107),
+        const Color(0xFF66BB6A),
         ratio,
       )!;
     } else {
-      // Light Green to Green
       final ratio = (intensity - 75) / 25;
       return Color.lerp(
-        const Color(0xFF66BB6A), // Light Green
-        const Color(0xFF2E7D32), // Green
+        const Color(0xFF66BB6A),
+        const Color(0xFF2E7D32),
         ratio,
       )!;
     }
   }
 
+  /// Returns a textual label describing the intensity
   String _getIntensityLabel(int intensity) {
-    if (intensity == 0) return 'Not at all';
-    if (intensity < 25) return 'Slightly';
-    if (intensity < 50) return 'Somewhat';
-    if (intensity < 75) return 'Quite a bit';
-    if (intensity < 100) return 'Very much';
+    if (intensity == 0) {
+      return 'Not at all';
+    }
+    if (intensity < 25) {
+      return 'Slightly';
+    }
+    if (intensity < 50) {
+      return 'Somewhat';
+    }
+    if (intensity < 75) {
+      return 'Quite a bit';
+    }
+    if (intensity < 100) {
+      return 'Very much';
+    }
     return 'Completely';
   }
 
@@ -76,14 +94,14 @@ class MoodMeter extends StatelessWidget {
         color: isDark ? Colors.grey[850] : Colors.grey[100],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: color.withValues(alpha: 0.3),
           width: 2,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with emoji, name, and remove button
+          // Header with emoji, name, and optional remove button
           Row(
             children: [
               Text(
@@ -110,7 +128,7 @@ class MoodMeter extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          // Intensity label
+          // Intensity label and percentage
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -134,41 +152,37 @@ class MoodMeter extends StatelessWidget {
           // Slider with gradient background
           Stack(
             children: [
-              // Gradient background bar
+              // Gradient track
               Container(
                 height: 8,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(4),
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     colors: [
-                      const Color(0xFFD32F2F), // Red
-                      const Color(0xFFFF9800), // Orange
-                      const Color(0xFFFFC107), // Yellow
-                      const Color(0xFF66BB6A), // Light Green
-                      const Color(0xFF2E7D32), // Green
+                      Color(0xFFD32F2F),
+                      Color(0xFFFF9800),
+                      Color(0xFFFFC107),
+                      Color(0xFF66BB6A),
+                      Color(0xFF2E7D32),
                     ],
-                    stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                    stops: [0.0, 0.25, 0.5, 0.75, 1.0],
                   ),
                 ),
               ),
-              // Slider
+              // Slider overlay
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   trackHeight: 8,
-                  thumbShape: const RoundSliderThumbShape(
-                    enabledThumbRadius: 10,
-                  ),
-                  overlayShape: const RoundSliderOverlayShape(
-                    overlayRadius: 16,
-                  ),
+                  thumbShape: const RoundSliderThumbShape(),
+                  overlayShape: 
+                    const RoundSliderOverlayShape(overlayRadius: 16),
                   activeTrackColor: Colors.transparent,
                   inactiveTrackColor: Colors.transparent,
                   thumbColor: color,
-                  overlayColor: color.withOpacity(0.2),
+                  overlayColor: color.withValues(alpha: 0.2),
                 ),
                 child: Slider(
                   value: intensity.toDouble(),
-                  min: 0,
                   max: 100,
                   divisions: 100,
                   label: '$intensity%',
@@ -184,4 +198,3 @@ class MoodMeter extends StatelessWidget {
     );
   }
 }
-

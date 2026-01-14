@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 
+/// A custom text field widget that displays a label and its 
+/// corresponding value.
 class CustomTextField extends StatelessWidget {
-  final String label;
-  final String value;
 
-  const CustomTextField({super.key, required this.label, required this.value});
+  /// Creates a [CustomTextField] widget.
+  const CustomTextField({required this.label, required this.value, super.key});
+  /// The label for the text field.
+  final String label;
+  /// The value to be displayed in the text field.
+  final String value;
 
   @override
   Widget build(BuildContext context) {

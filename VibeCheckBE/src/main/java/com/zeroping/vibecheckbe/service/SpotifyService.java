@@ -8,13 +8,13 @@ import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
 import se.michaelthelin.spotify.model_objects.specification.Paging;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import se.michaelthelin.spotify.model_objects.specification.User;
-import se.michaelthelin.spotify.model_objects.special.SnapshotResult;
 
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+// Service to interact with Spotify API for searching songs and managing playlists
 @Service
 public class SpotifyService {
     private final SpotifyApi spotifyApi;
@@ -25,11 +25,11 @@ public class SpotifyService {
     private Instant appTokenExpiresAt;
 
     public SpotifyService(SpotifyApi spotifyApi) {
-        this.spotifyApi = spotifyApi;  // injected bean from AppConfig (already has clientId & clientSecret)
+        this.spotifyApi = spotifyApi;  // Injected bean from AppConfig (already has clientId & clientSecret)
     }
 
     public Optional<Track> searchSong(String title, String artist) {
-        ensureAppAccessToken(); // make sure we have a valid app-level token
+        ensureAppAccessToken(); // Make sure we have a valid app-level token
         spotifyApi.setAccessToken(appAccessToken);
 
         // Build the query in Spotify's recommended format
@@ -73,6 +73,7 @@ public class SpotifyService {
         }
     }
 
+    // Ensure we have a valid app-level access token (Client Credentials Flow)
     private void ensureAppAccessToken() {
         boolean needsRefresh = appAccessToken == null
                 || appTokenExpiresAt == null
@@ -88,8 +89,8 @@ public class SpotifyService {
             }
         }
     }
-    // These methods require a user-specific access token passed from the frontend
 
+    // Get the Spotify user ID of the current user
     public String getCurrentUserId(String userAccessToken) {
         spotifyApi.setAccessToken(userAccessToken);
         try {
@@ -100,6 +101,7 @@ public class SpotifyService {
         }
     }
 
+    // Create a new playlist for the user
     public String createPlaylist(String userAccessToken, String spotifyUserId, String playlistName, String description) {
         spotifyApi.setAccessToken(userAccessToken);
         try {
@@ -114,16 +116,17 @@ public class SpotifyService {
         }
     }
 
+    // Add tracks to an existing playlist
     public void addTracksToPlaylist(String userAccessToken, String spotifyPlaylistId, List<String> trackUris) {
         spotifyApi.setAccessToken(userAccessToken);
         try {
             // Convert List<String> to String[]
             String[] urisArray = trackUris.toArray(new String[0]);
-            
-            SnapshotResult result = spotifyApi.addItemsToPlaylist(spotifyPlaylistId, urisArray)
+
+            spotifyApi.addItemsToPlaylist(spotifyPlaylistId, urisArray)
                     .build()
                     .execute();
-            
+
         } catch (IOException | SpotifyWebApiException | ParseException e) {
             throw new RuntimeException("Failed to add tracks to Spotify playlist", e);
         }

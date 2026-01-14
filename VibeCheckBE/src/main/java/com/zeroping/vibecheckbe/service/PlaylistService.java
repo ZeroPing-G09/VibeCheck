@@ -6,45 +6,35 @@ import com.zeroping.vibecheckbe.dto.SongDTO;
 import com.zeroping.vibecheckbe.entity.Playlist;
 import com.zeroping.vibecheckbe.entity.Song;
 import com.zeroping.vibecheckbe.repository.PlaylistRepository;
-import com.zeroping.vibecheckbe.repository.UserRepository;
 import com.zeroping.vibecheckbe.util.SpotifyUriUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+// Service for managing playlists
 @Service
 @Transactional
 public class PlaylistService {
-
     private final PlaylistRepository playlistRepository;
-    private final UserRepository userRepository;
     private final SpotifyService spotifyService;
 
     public PlaylistService(
             PlaylistRepository playlistRepository,
-            UserRepository userRepository,
             SpotifyService spotifyService
     ) {
         this.playlistRepository = playlistRepository;
-        this.userRepository = userRepository;
         this.spotifyService = spotifyService;
     }
 
-    /* =======================
-       Spotify export
-       ======================= */
-
-    public String savePlaylistToSpotify(UUID userId, SavePlaylistToSpotifyRequest request, String accessToken)
-            throws IOException {
-
+    // Export playlist to Spotify
+    public String savePlaylistToSpotify(UUID userId, SavePlaylistToSpotifyRequest request, String accessToken) {
         // 1. Find the playlist in our DB to get the song list
         Playlist playlist = playlistRepository
                 .findByIdAndUserId(request.getPlaylistId(), userId)
@@ -88,20 +78,19 @@ public class PlaylistService {
         // This avoids the "column exported_to_spotify does not exist" error.
     }
 
-    /* =======================
-       Playlist queries
-       ======================= */
-
+    // Get distinct moods for a user's playlists (up to 3 most recent)
     public List<String> getUserMoods(UUID userId) {
         Pageable topThree = PageRequest.of(0, 3);
         return playlistRepository
                 .findDistinctMoodByUserIdOrderByCreatedAtDesc(userId, topThree);
     }
 
+    // Get total number of playlists for a user
     public long getNumberOfPlaylists(UUID userId) {
         return playlistRepository.countByUserId(userId);
     }
 
+    // Get all playlists for a user, ordered by creation date descending
     public List<PlaylistDTO> getUserPlaylists(UUID userId) {
         return playlistRepository.findByUserIdOrderByCreatedAtDesc(userId)
                 .stream()
@@ -109,16 +98,19 @@ public class PlaylistService {
                 .toList();
     }
 
+    // Get the most recent playlist for a user
     public PlaylistDTO getLastPlaylist(UUID userId) {
         return playlistRepository.findFirstByUserIdOrderByCreatedAtDesc(userId)
                 .map(this::mapToDTO)
                 .orElse(null);
     }
 
+    // Get the timestamp of the most recent playlist for a user
     public Instant getLastPlaylistTimestamp(UUID userId) {
         return playlistRepository.findLatestTimestamp(userId).orElse(null);
     }
 
+    // Get playlists for a user filtered by mood
     public List<PlaylistDTO> getPlaylistsByMood(UUID userId, String mood) {
         return playlistRepository.findByUserIdAndMood(userId, mood)
                 .stream()
@@ -126,10 +118,7 @@ public class PlaylistService {
                 .toList();
     }
 
-    /* =======================
-       DTO mapping
-       ======================= */
-
+    // Helper method to map Playlist entity to PlaylistDTO
     private PlaylistDTO mapToDTO(Playlist playlist) {
         PlaylistDTO dto = new PlaylistDTO();
         dto.setId(playlist.getId());
@@ -149,6 +138,7 @@ public class PlaylistService {
         return dto;
     }
 
+    // Helper method to map Song entity to SongDTO
     private SongDTO mapToSongDTO(Song song) {
         return new SongDTO(
                 song.getId(),

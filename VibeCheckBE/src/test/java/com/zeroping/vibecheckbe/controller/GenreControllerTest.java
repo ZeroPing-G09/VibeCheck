@@ -16,6 +16,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+// Unit tests for GenreController
 class GenreControllerTest {
 
     @Mock
@@ -49,8 +50,9 @@ class GenreControllerTest {
 
         // Then
         assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
         assertEquals(2, response.getBody().size());
-        assertEquals("Rock", response.getBody().get(0).get("name"));
+        assertEquals("Rock", response.getBody().getFirst().get("name"));
         verify(genreService, times(1)).getAllGenres();
     }
 
@@ -70,6 +72,7 @@ class GenreControllerTest {
 
         // Then
         assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
         assertEquals("Jazz", response.getBody().get("name"));
         verify(genreService, times(1)).getGenreById(1L);
     }
@@ -89,6 +92,7 @@ class GenreControllerTest {
 
         // Then
         assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
         assertTrue(response.getBody().isEmpty());
         verify(genreService, times(1)).getAllGenres();
     }

@@ -8,9 +8,8 @@ import 'package:frontend/ui/mood/viewmodel/mood_view_model.dart';
 import 'package:frontend/ui/onboarding/viewmodel/onboarding_view_model.dart';
 import 'package:frontend/ui/profile/viewmodel/profile_view_model.dart';
 import 'package:frontend/ui/settings/viewmodel/theme_view_model.dart';
-import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:frontend/data/local/local_user_storage.dart';
+import 'package:provider/provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,7 +17,7 @@ Future<void> main() async {
   await setupLocator();
 
   await Hive.initFlutter();
-  await Hive.openBox('userBox');
+  await Hive.openBox<dynamic>('userBox');
 
   runApp(
     MultiProvider(

@@ -3,8 +3,8 @@ package com.zeroping.vibecheckbe.util;
 import java.util.HashMap;
 import java.util.Map;
 
+// Utility class to map mood names to emojis and color codes
 public class MoodEmojiMapper {
-    
     private static final Map<String, String> EMOJI_MAP = new HashMap<>();
     private static final Map<String, String> COLOR_MAP = new HashMap<>();
     
@@ -68,28 +68,16 @@ public class MoodEmojiMapper {
         COLOR_MAP.put("mad", "#B71C1C");       // Very dark red
     }
     
-    /**
-     * Gets the emoji for a mood name (case-insensitive)
-     */
+    // Gets the emoji for a mood name (case-insensitive)
     public static String getEmoji(String moodName) {
         if (moodName == null) return "😐";
         return EMOJI_MAP.getOrDefault(moodName.toLowerCase().trim(), "😐");
     }
     
-    /**
-     * Gets the color code for a mood name (case-insensitive)
-     */
+    // Gets the color code for a mood name (case-insensitive)
     public static String getColorCode(String moodName) {
         if (moodName == null) return "#FFC107";
         return COLOR_MAP.getOrDefault(moodName.toLowerCase().trim(), "#FFC107");
-    }
-    
-    /**
-     * Checks if a mood name has a mapped emoji
-     */
-    public static boolean hasMapping(String moodName) {
-        if (moodName == null) return false;
-        return EMOJI_MAP.containsKey(moodName.toLowerCase().trim());
     }
 }
 

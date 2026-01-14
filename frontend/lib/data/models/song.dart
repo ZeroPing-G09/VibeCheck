@@ -1,10 +1,7 @@
-/// Model representing a song in a playlist.
+/// Model representing a song in a playlist
 class Song {
-  final int id;
-  final String name;
-  final String url;
-  final String artistName;
 
+  /// Creates a song instance
   Song({
     required this.id,
     required this.name,
@@ -12,6 +9,7 @@ class Song {
     required this.artistName,
   });
 
+  /// Creates a [Song] from a JSON map
   factory Song.fromJson(Map<String, dynamic> json) {
     return Song(
       id: json['id'] as int,
@@ -20,4 +18,15 @@ class Song {
       artistName: json['artistName'] as String? ?? '',
     );
   }
+  /// Unique ID of the song
+  final int id;
+
+  /// Name of the song
+  final String name;
+
+  /// URL to the song resource
+  final String url;
+
+  /// Name of the artist
+  final String artistName;
 }

@@ -8,7 +8,9 @@ import 'package:frontend/core/widgets/primary_button.dart';
 import 'package:frontend/ui/onboarding/viewmodel/onboarding_view_model.dart';
 import 'package:provider/provider.dart';
 
+/// The onboarding view where users select their favorite music genres.
 class OnboardingView extends StatefulWidget {
+  /// Creates an [OnboardingView].
   const OnboardingView({super.key});
 
   @override
@@ -19,9 +21,9 @@ class _OnboardingViewState extends State<OnboardingView> {
   @override
   void initState() {
     super.initState();
-    final viewModel = context.read<OnboardingViewModel>();
-    viewModel.loadUser(); // Uses current user email from ViewModel
-    viewModel.loadGenres();
+    final _ = context.read<OnboardingViewModel>()
+    ..loadUser()
+    ..loadGenres();
   }
 
   Future<void> _handleComplete() async {
@@ -63,7 +65,7 @@ class _OnboardingViewState extends State<OnboardingView> {
           }
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -74,7 +76,8 @@ class _OnboardingViewState extends State<OnboardingView> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Select exactly 3 genres that best represent your music taste',
+                  'Select exactly 3 genres that best represent your'
+                  ' music taste',
                   style: Theme.of(
                     context,
                   ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
@@ -145,7 +148,8 @@ class _OnboardingViewState extends State<OnboardingView> {
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      'Please select ${3 - viewModel.selectedGenres.length} more genre(s)',
+                      'Please select ${3 - viewModel.selectedGenres.length} '
+                      'more genre(s)',
                       style: TextStyle(color: Colors.orange[700], fontSize: 12),
                       textAlign: TextAlign.center,
                     ),

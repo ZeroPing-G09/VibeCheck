@@ -1,20 +1,27 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../data/models/mood.dart';
-import '../../../data/services/mood_service.dart';
-import '../../../core/widgets/loading_state.dart';
-import '../../../core/widgets/error_state.dart';
-import '../../../core/widgets/empty_state.dart';
-import '../../dashboard/viewmodel/dashboard_view_model.dart';
 
+import 'package:flutter/material.dart';
+import 'package:frontend/core/widgets/empty_state.dart';
+import 'package:frontend/core/widgets/error_state.dart';
+import 'package:frontend/core/widgets/loading_state.dart';
+import 'package:frontend/data/models/mood.dart';
+import 'package:frontend/data/services/mood_service.dart';
+import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
+import 'package:provider/provider.dart';
+
+/// A widget that displays the history of the user's recorded moods.
+/// 
+/// Typically used in the dashboard to show past mood entries and allow
+/// the user to review or interact with their mood history.
 class MoodHistoryWidget extends StatefulWidget {
+  /// Creates a [MoodHistoryWidget].
   const MoodHistoryWidget({super.key});
 
   @override
   State<MoodHistoryWidget> createState() => MoodHistoryWidgetState();
 }
 
+/// The state for [MoodHistoryWidget].
 class MoodHistoryWidgetState extends State<MoodHistoryWidget> {
   List<MoodHistory>? _moodHistory;
   bool _isLoading = false;
@@ -56,7 +63,9 @@ class MoodHistoryWidgetState extends State<MoodHistoryWidget> {
   }
 
   Future<void> _loadMoodHistory() async {
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     
     setState(() {
       _isLoading = true;
@@ -100,14 +109,14 @@ class MoodHistoryWidgetState extends State<MoodHistoryWidget> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16),
         child: LoadingState(size: 24),
       );
     }
 
     if (_error != null) {
       return Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: ErrorState(
           message: _error!,
           onRetry: _loadMoodHistory,
@@ -117,7 +126,7 @@ class MoodHistoryWidgetState extends State<MoodHistoryWidget> {
 
     if (_moodHistory == null || _moodHistory!.isEmpty) {
       return const Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16),
         child: EmptyState(
           message: 'No moods registered yet.',
           icon: Icons.mood_outlined,
@@ -126,7 +135,7 @@ class MoodHistoryWidgetState extends State<MoodHistoryWidget> {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -155,7 +164,7 @@ class MoodHistoryWidgetState extends State<MoodHistoryWidget> {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -172,16 +181,14 @@ class MoodHistoryWidgetState extends State<MoodHistoryWidget> {
                     children: [
                       Text(
                         history.moodName,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium?.
+                        copyWith(fontWeight: FontWeight.bold),
                       ),
                       if (history.intensity != null)
                         Text(
                           'Intensity: ${history.intensity}%',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[600],
-                              ),
+                          style: Theme.of(context).textTheme.bodySmall?.
+                          copyWith(color: Colors.grey[600]),
                         ),
                     ],
                   ),
@@ -214,7 +221,8 @@ class MoodHistoryWidgetState extends State<MoodHistoryWidget> {
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Row(
                       children: [
-                        const Icon(Icons.music_note, size: 16, color: Colors.grey),
+                        const Icon(Icons.music_note, size: 16, 
+                        color: Colors.grey),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -256,4 +264,3 @@ class MoodHistoryWidgetState extends State<MoodHistoryWidget> {
     }
   }
 }
-

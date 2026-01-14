@@ -1,23 +1,18 @@
-import 'song.dart';
+import 'package:frontend/data/models/song.dart';
 
-/// Model representing the last playlist response from the API.
+/// Model representing the last playlist response from the API
 class LastPlaylist {
-  final String? playlistId;        // Database ID (as String)
-  final String name;
-  final DateTime createdAt;
-  final List<Song> songs;
-  final String? spotifyPlaylistId; // Spotify playlist ID for embedding player
 
+  /// Creates a last playlist instance
   LastPlaylist({
-    this.playlistId,
-    required this.name,
-    required this.createdAt,
+    required this.name, required this.createdAt, this.playlistId,
     this.songs = const [],
     this.spotifyPlaylistId,
   });
 
+  /// Creates a [LastPlaylist] from a JSON map
   factory LastPlaylist.fromJson(Map<String, dynamic> json) {
-    List<Song> songsList = [];
+    var songsList = <Song>[];
     if (json['songs'] != null) {
       songsList = (json['songs'] as List<dynamic>)
           .map((songJson) => Song.fromJson(songJson as Map<String, dynamic>))
@@ -32,8 +27,22 @@ class LastPlaylist {
       spotifyPlaylistId: json['spotifyPlaylistId'] as String?,
     );
   }
+  /// Database ID of the playlist as a string
+  final String? playlistId;
 
-  /// Creates a copy with updated spotifyPlaylistId
+  /// Name of the playlist
+  final String name;
+
+  /// Date and time when the playlist was created
+  final DateTime createdAt;
+
+  /// List of songs in the playlist
+  final List<Song> songs;
+
+  /// Spotify playlist ID for embedding the player
+  final String? spotifyPlaylistId;
+
+  /// Returns a copy of this playlist with an updated [spotifyPlaylistId]
   LastPlaylist copyWith({String? spotifyPlaylistId}) {
     return LastPlaylist(
       playlistId: playlistId,

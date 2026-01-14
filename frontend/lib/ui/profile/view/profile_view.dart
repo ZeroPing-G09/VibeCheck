@@ -3,14 +3,15 @@ import 'package:frontend/core/utils/snackbar_helper.dart';
 import 'package:frontend/data/models/user.dart';
 import 'package:frontend/ui/dashboard/viewmodel/dashboard_view_model.dart';
 import 'package:frontend/ui/profile/viewmodel/profile_view_model.dart';
-import 'package:frontend/ui/profile/widgets/custom_text_field.dart';
 import 'package:frontend/ui/profile/widgets/genres_section.dart';
 import 'package:frontend/ui/profile/widgets/profile_picture_section.dart';
 import 'package:frontend/ui/profile/widgets/profile_sidebar.dart';
 import 'package:frontend/ui/profile/widgets/save_button.dart';
 import 'package:provider/provider.dart';
 
+/// The main profile view displaying user information and settings.
 class ProfileView extends StatefulWidget {
+  /// Creates a [ProfileView].
   const ProfileView({super.key});
   @override
   State<ProfileView> createState() => _ProfileViewState();
@@ -39,7 +40,7 @@ class _ProfileViewState extends State<ProfileView> {
               }
             }
           })
-          .catchError((error) {
+          .catchError((Object error) {
             debugPrint('Error loading user in ProfileView: $error');
             if (mounted) {
               setState(() {});
@@ -86,7 +87,7 @@ class _ProfileViewState extends State<ProfileView> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bool isMobile = constraints.maxWidth < 900;
+        final isMobile = constraints.maxWidth < 900;
         final scaffold = Scaffold(
           appBar: AppBar(
             title: const Text('My Profile'),

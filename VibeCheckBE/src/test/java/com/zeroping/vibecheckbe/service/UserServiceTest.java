@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+// Unit tests for UserService
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
@@ -351,10 +352,8 @@ class UserServiceTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
         when(genreRepository.findByNameIgnoreCase("Rock")).thenReturn(Optional.of(rockGenre));
         when(genreRepository.findByNameIgnoreCase("Jazz")).thenReturn(Optional.of(jazzGenre));
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
-            User saved = invocation.getArgument(0);
-            return saved;
-        });
+        when(userRepository.save(any(User.class))).thenAnswer(invocation
+                -> invocation.<User>getArgument(0));
 
         // When
         UserDTO result = userService.updateUser(userId, updateDTO);

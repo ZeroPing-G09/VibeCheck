@@ -3,15 +3,17 @@ import 'package:frontend/data/models/user.dart';
 import 'package:frontend/ui/profile/viewmodel/profile_view_model.dart';
 import 'package:provider/provider.dart';
 
+/// A section in the profile page to display and edit user's favorite genres.
 class GenresSection extends StatefulWidget {
-  final User user;
-  final bool enabled;
 
+  /// Creates a [GenresSection].
   const GenresSection({
-    super.key,
-    required this.user,
-    required this.enabled,
+    required this.user, required this.enabled, super.key,
   });
+  /// The user whose genres are being displayed and edited.
+  final User user;
+  /// Whether the section is enabled for editing.
+  final bool enabled;
 
   @override
   State<GenresSection> createState() => _GenresSectionState();
@@ -53,7 +55,9 @@ class _GenresSectionState extends State<GenresSection> {
                   : null,
             );
 
-            if (isOnline) return chip;
+            if (isOnline) {
+              return chip;
+            }
 
             return Tooltip(
               message: 'Server is offline. Genres cannot be modified.',
@@ -74,7 +78,7 @@ class _GenresSectionState extends State<GenresSection> {
                       : 'Server is offline. Cannot add genres.',
                   child: DropdownButtonFormField<String>(
                     hint: const Text('Select genre'),
-                    value: _selectedGenre,
+                    initialValue: _selectedGenre,
                     onChanged: isOnline
                         ? (value) =>
                             setState(() => _selectedGenre = value)

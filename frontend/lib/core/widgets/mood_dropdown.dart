@@ -1,29 +1,44 @@
 import 'package:flutter/material.dart';
-import '../../data/models/mood.dart';
+import 'package:frontend/data/models/mood.dart';
 
 /// A searchable dropdown widget for selecting moods
 class MoodDropdown extends StatefulWidget {
-  final List<Mood> moods;
-  final List<Mood> selectedMoods;
-  final void Function(Mood) onMoodSelected;
-  final void Function(Mood) onMoodRemoved;
 
+  /// Creates a mood dropdown widget
   const MoodDropdown({
+    required this.moods, 
+    required this.selectedMoods, 
+    required this.onMoodSelected, 
+    required this.onMoodRemoved, 
     super.key,
-    required this.moods,
-    required this.selectedMoods,
-    required this.onMoodSelected,
-    required this.onMoodRemoved,
   });
+  /// List of available moods
+  final List<Mood> moods;
+
+  /// List of currently selected moods
+  final List<Mood> selectedMoods;
+
+  /// Callback when a mood is selected
+  final void Function(Mood) onMoodSelected;
+
+  /// Callback when a mood is removed
+  final void Function(Mood) onMoodRemoved;
 
   @override
   State<MoodDropdown> createState() => _MoodDropdownState();
 }
 
 class _MoodDropdownState extends State<MoodDropdown> {
+  /// Controller for the search text field
   final TextEditingController _searchController = TextEditingController();
+
+  /// Focus node for the search field
   final FocusNode _searchFocusNode = FocusNode();
+
+  /// Whether the dropdown is expanded
   bool _isExpanded = false;
+
+  /// List of moods filtered by the search query
   List<Mood> _filteredMoods = [];
 
   @override
@@ -40,6 +55,7 @@ class _MoodDropdownState extends State<MoodDropdown> {
     super.dispose();
   }
 
+  /// Filters moods based on the search query
   void _filterMoods() {
     final query = _searchController.text.toLowerCase();
     setState(() {
@@ -47,13 +63,13 @@ class _MoodDropdownState extends State<MoodDropdown> {
         _filteredMoods = widget.moods;
       } else {
         _filteredMoods = widget.moods
-            .where((mood) =>
-                mood.name.toLowerCase().contains(query))
+            .where((mood) => mood.name.toLowerCase().contains(query))
             .toList();
       }
     });
   }
 
+  /// Checks if a mood is currently selected
   bool _isMoodSelected(Mood mood) {
     return widget.selectedMoods.any((m) => m.id == mood.id);
   }
@@ -90,7 +106,7 @@ class _MoodDropdownState extends State<MoodDropdown> {
                   child: TextField(
                     controller: _searchController,
                     focusNode: _searchFocusNode,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       hintText: 'Search moods...',
                       border: InputBorder.none,
                       isDense: true,
@@ -124,7 +140,7 @@ class _MoodDropdownState extends State<MoodDropdown> {
             ),
             child: _filteredMoods.isEmpty
                 ? Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(16),
                     child: Text(
                       'No moods found',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -156,12 +172,11 @@ class _MoodDropdownState extends State<MoodDropdown> {
                                 ? Theme.of(context)
                                     .colorScheme
                                     .primaryContainer
-                                    .withOpacity(0.3)
+                                    .withValues(alpha: 0.3)
                                 : null,
                             border: Border(
                               bottom: BorderSide(
-                                color: Colors.grey.withOpacity(0.2),
-                                width: 1,
+                                color: Colors.grey..withValues(alpha: 0.3),
                               ),
                             ),
                           ),
@@ -195,4 +210,3 @@ class _MoodDropdownState extends State<MoodDropdown> {
     );
   }
 }
-

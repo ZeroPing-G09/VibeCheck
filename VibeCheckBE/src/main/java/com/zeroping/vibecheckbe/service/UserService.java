@@ -22,9 +22,9 @@ import java.util.stream.Collectors;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+// Service for managing users, their preferences, and playlists.
 @Service
 public class UserService {
-
     private final UserRepository userRepository;
     private final GenreRepository genreRepository;
     private final PlaylistRepository playlistRepository;
@@ -36,6 +36,7 @@ public class UserService {
         this.playlistRepository = playlistRepository;
     }
 
+    // Get user by ID
     @Transactional(readOnly = true)
     public UserDTO getUserById(UUID id) {
         User user = userRepository.findById(id)
@@ -44,6 +45,7 @@ public class UserService {
         return toUserDTO(user);
     }
 
+    // Get user by email
     @Transactional(readOnly = true)
     public UserDTO getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
@@ -52,6 +54,7 @@ public class UserService {
         return toUserDTO(user);
     }
 
+    // Convert User entity to UserDTO
     private UserDTO toUserDTO(User user) {
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
@@ -62,6 +65,7 @@ public class UserService {
         return dto;
     }
 
+    // Extract genre names from User entity
     private List<String> extractGenres(User user) {
         if (user.getGenres() == null || user.getGenres().isEmpty()) {
             return Collections.emptyList();
@@ -74,12 +78,14 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    // Resolve Genre by ID, or return null if ID is null
     private Genre resolveGenreOrNull(Long genreId) {
         if (genreId == null) return null;
         return genreRepository.findById(genreId)
                 .orElseThrow(() -> new GenreNotFoundException("Genre not found: " + genreId));
     }
 
+    // Update user preferences (top 3 genres)
     @Transactional
     public User updateUserPreferences(UUID userId, UserPreferencesDTO dto) {
         User user = userRepository.findById(userId)
@@ -108,12 +114,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    /**
-     * Get the most recent playlist for a user.
-     * 
-     * @param userId The user's UUID
-     * @return LastPlaylistResponseDTO with playlist info, or empty Optional if no playlist exists
-     */
+    // Get the most recent playlist for a user
     public Optional<LastPlaylistResponseDTO> getLastPlaylist(UUID userId) {
         try {
             return playlistRepository.findFirstByUserIdOrderByCreatedAtDesc(userId)
@@ -125,13 +126,7 @@ public class UserService {
         }
     }
 
-    /**
-     * Get the most recent playlist for a user with a specific mood.
-     * 
-     * @param userId The user's UUID
-     * @param mood The mood name to filter by
-     * @return LastPlaylistResponseDTO with playlist info, or empty Optional if no playlist exists
-     */
+    // Get the most recent playlist for a user filtered by mood
     public Optional<LastPlaylistResponseDTO> getLastPlaylistByMood(UUID userId, String mood) {
         try {
             return playlistRepository.findFirstByUserIdAndMoodOrderByCreatedAtDesc(userId, mood)
@@ -143,6 +138,7 @@ public class UserService {
         }
     }
 
+    // Convert Playlist entity to LastPlaylistResponseDTO
     private LastPlaylistResponseDTO toLastPlaylistResponse(Playlist playlist) {
         // Map songs if available
         Set<SongDTO> songDTOs = null;
@@ -165,6 +161,7 @@ public class UserService {
         );
     }
 
+    // Update user profile information
     @Transactional
     public UserDTO updateUser(UUID userId, UserUpdateDTO updateDTO) {
         User user = userRepository.findById(userId)

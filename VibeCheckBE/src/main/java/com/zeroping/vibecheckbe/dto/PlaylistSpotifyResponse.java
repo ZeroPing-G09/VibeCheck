@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.util.List;
 
+// DTO for Spotify playlist response
 @Data
 @AllArgsConstructor
 public class PlaylistSpotifyResponse {

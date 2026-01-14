@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+// DTO for Mood History
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

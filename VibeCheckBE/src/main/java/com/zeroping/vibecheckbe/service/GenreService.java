@@ -9,15 +9,16 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+// Service class for managing genres
 @Service
 public class GenreService {
-
     private final GenreRepository genreRepository;
 
     public GenreService(GenreRepository genreRepository) {
         this.genreRepository = genreRepository;
     }
 
+    // Retrieve all genres
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getAllGenres() {
         List<Genre> genres = genreRepository.findAll();
@@ -31,7 +32,7 @@ public class GenreService {
                 .collect(Collectors.toList());
     }
 
-
+    // Retrieve a genre by its ID
     @Transactional(readOnly = true)
     public Map<String, Object> getGenreById(Long id) {
         Genre genre = genreRepository.findById(id)

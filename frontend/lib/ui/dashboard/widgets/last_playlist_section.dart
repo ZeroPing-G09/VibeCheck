@@ -10,14 +10,21 @@ import 'package:url_launcher/url_launcher.dart';
 // Make sure to import your button
 // Adjust path if you saved it elsewhere
 
+/// A widget that displays the user's latest playlist section in the dashboard,
+/// handling different playlist states (loading, empty, error, loaded) and
+/// providing actions for generating a new playlist or saving it to Spotify.
 class LastPlaylistSection extends StatelessWidget {
-  final PlaylistState playlistState;
-  final LastPlaylist? playlist;
-  final String? errorMessage;
-  final VoidCallback? onCreatePlaylist;
-  final bool isGeneratingPlaylist;
-  final Function(String?)? onSpotifyPlaylistSaved; // Callback when Spotify playlist is saved
-
+  /// Creates a [LastPlaylistSection] widget.
+  ///
+  /// [playlistState] indicates the current state of the playlist section.
+  /// [playlist] is the last generated playlist (if any).
+  /// [errorMessage] is an optional error message to display.
+  /// [onCreatePlaylist] is a callback triggered when the user requests a 
+  /// new playlist.
+  /// [isGeneratingPlaylist] indicates whether a playlist generation is in 
+  /// progress.
+  /// [onSpotifyPlaylistSaved] is a callback triggered when a playlist is 
+  /// successfully saved to Spotify.
   const LastPlaylistSection({
     required this.playlistState,
     this.playlist,
@@ -27,6 +34,24 @@ class LastPlaylistSection extends StatelessWidget {
     this.onSpotifyPlaylistSaved,
     super.key,
   });
+
+  /// The current state of the playlist section (loading, empty, error, loaded)
+  final PlaylistState playlistState;
+
+  /// The last generated playlist, if available
+  final LastPlaylist? playlist;
+
+  /// Optional error message to display in case of failure
+  final String? errorMessage;
+
+  /// Callback triggered when the user wants to generate or retry a playlist
+  final VoidCallback? onCreatePlaylist;
+
+  /// Indicates if a playlist is currently being generated
+  final bool isGeneratingPlaylist;
+
+  /// Callback triggered when the playlist is saved to Spotify
+  final void Function(String?)? onSpotifyPlaylistSaved;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +63,7 @@ class LastPlaylistSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -132,7 +157,7 @@ class LastPlaylistSection extends StatelessWidget {
                 Text(
                   isGeneratingPlaylist
                       ? 'Generating your playlist...'
-                      : 'You don\'t have any playlists generated yet.',
+                      : "You don't have any playlists generated yet.",
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 const SizedBox(height: 8),
@@ -146,7 +171,8 @@ class LastPlaylistSection extends StatelessWidget {
                           )
                         : const Icon(Icons.add),
                     label: Text(
-                      isGeneratingPlaylist ? 'Generating...' : 'Create a new one!',
+                      isGeneratingPlaylist ? 'Generating...' : 
+                      'Create a new one!',
                     ),
                   ),
               ],
@@ -168,7 +194,7 @@ class LastPlaylistSection extends StatelessWidget {
             // 1. The Clickable Playlist Name
             InkWell(
               onTap: () {
-                showDialog(
+                showDialog<void>(
                   context: context,
                   builder: (context) => PlaylistSongsDialog(
                     playlistName: playlist!.name,
@@ -198,15 +224,16 @@ class LastPlaylistSection extends StatelessWidget {
             
             const SizedBox(height: 16),
 
-            // 2. THE SAVE BUTTON (only show if playlist hasn't been saved to Spotify yet)
+            // 2. THE SAVE BUTTON (only show if playlist hasn't been saved 
+            // to Spotify yet)
             if (currentUserId != null && playlist!.spotifyPlaylistId == null)
               Container(
                 width: double.infinity, // Make button stretch full width
                 margin: const EdgeInsets.only(bottom: 8),
                 child: SaveToSpotifyButton(
                   userId: currentUserId,
-                  playlistId: playlist!.playlistId!, // Ensure this ID maps to String
-                  exportedToSpotify: false, // Defaulting to false as we removed backend check
+                  playlistId: playlist!.playlistId!,
+                  exportedToSpotify: false,
                   onSaved: onSpotifyPlaylistSaved,
                 ),
               ),
@@ -219,27 +246,33 @@ class LastPlaylistSection extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: () async {
                     try {
-                      // Try deep link first (spotify:playlist:ID) - opens Spotify app if installed
-                      final deepLink = Uri.parse('spotify:playlist:${playlist!.spotifyPlaylistId}');
+                      // Try deep link first (spotify:playlist:ID) - 
+                      // opens Spotify app if installed
+                      final deepLink = Uri.parse(
+                        'spotify:playlist:${playlist!.spotifyPlaylistId}');
                       
                       try {
-                        // Try to launch directly - LaunchMode.platformDefault will use the best available option
-                        await launchUrl(deepLink, mode: LaunchMode.platformDefault);
+                        // Try to launch directly - LaunchMode.platformDefault 
+                        // will use the best available option
+                        await launchUrl(deepLink);
                         return; // Success, exit early
                       } catch (e) {
-                        // Deep link failed (Spotify app not installed), try web URL
+                        // Deep link failed (Spotify app not installed), try 
+                        // web URL
                         debugPrint('Deep link failed: $e, trying web URL');
                       }
                       
-                      // Fallback to web URL - opens in browser (or Spotify app if it handles web URLs)
+                      // Fallback to web URL - opens in browser (or Spotify app
+                      // if it handles web URLs)
                       final webUrl = Uri.parse('https://open.spotify.com/playlist/${playlist!.spotifyPlaylistId}');
-                      await launchUrl(webUrl, mode: LaunchMode.platformDefault);
+                      await launchUrl(webUrl);
                     } catch (e) {
                       // Show error message if both attempts fail
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Could not open Spotify. Error: ${e.toString()}'),
+                            content: Text('Could not open Spotify. '
+                            'Error: $e'),
                             duration: const Duration(seconds: 3),
                           ),
                         );
@@ -258,7 +291,6 @@ class LastPlaylistSection extends StatelessWidget {
               // SPOTIFY PLAYER (30-second preview)
               SpotifyPlaylistEmbed(
                 playlistId: playlist!.spotifyPlaylistId!,
-                height: 380, // Compact size
               ),
             ],
 
@@ -267,7 +299,7 @@ class LastPlaylistSection extends StatelessWidget {
               const SizedBox(height: 8),
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton.icon( // Changed to Outlined for visual hierarchy
+                child: OutlinedButton.icon(
                   onPressed: isGeneratingPlaylist ? null : onCreatePlaylist,
                   icon: isGeneratingPlaylist
                       ? const SizedBox(
@@ -279,7 +311,8 @@ class LastPlaylistSection extends StatelessWidget {
                         )
                       : const Icon(Icons.refresh),
                   label: Text(
-                    isGeneratingPlaylist ? 'Generating...' : 'Generate new playlist',
+                    isGeneratingPlaylist ? 'Generating...' : 
+                    'Generate new playlist',
                   ),
                 ),
               ),

@@ -1,21 +1,30 @@
 import 'package:flutter/material.dart';
 
-/// A reusable primary action button with loading state
+/// A reusable primary action button with optional loading state
 class PrimaryButton extends StatelessWidget {
-  final String label;
-  final VoidCallback? onPressed;
-  final bool isLoading;
-  final IconData? icon;
-  final EdgeInsetsGeometry? padding;
 
+  /// Creates a primary action button
   const PrimaryButton({
-    super.key,
-    required this.label,
+    required this.label, super.key,
     this.onPressed,
     this.isLoading = false,
     this.icon,
     this.padding,
   });
+  /// Text displayed on the button
+  final String label;
+
+  /// Callback triggered when the button is pressed
+  final VoidCallback? onPressed;
+
+  /// Whether the button shows a loading indicator
+  final bool isLoading;
+
+  /// Optional icon displayed alongside the label
+  final IconData? icon;
+
+  /// Optional padding for the button content
+  final EdgeInsetsGeometry? padding;
 
   @override
   Widget build(BuildContext context) {
@@ -49,4 +58,3 @@ class PrimaryButton extends StatelessWidget {
     );
   }
 }
-

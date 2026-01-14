@@ -10,15 +10,18 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+// Centralized exception handler for GenreController
 @RestControllerAdvice(assignableTypes = GenreController.class)
 public class GenreControllerExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GenreControllerExceptionHandler.class);
 
+    // Handle GenreNotFoundException
     @ExceptionHandler(GenreNotFoundException.class)
     public ProblemDetail handleGenreNotFoundException(GenreNotFoundException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
+    // Handle DataIntegrityViolationException
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail handleDataIntegrityViolationException(DataIntegrityViolationException e) {
         log.error("Data integrity violation occurred", e);
@@ -29,11 +32,13 @@ public class GenreControllerExceptionHandler {
         );
     }
 
+    // Handle IllegalArgumentException
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail handleIllegalArgumentException(IllegalArgumentException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
+    // Handle generic Exception
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGenericException(Exception e) {
         return ProblemDetail.forStatusAndDetail(

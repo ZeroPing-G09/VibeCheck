@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.util.Set;
 
+// Song entity representing a song in the database
 @Entity
 @Table(name = "\"Songs\"", schema = "public")
 @Getter
@@ -13,6 +14,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Song {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -4,25 +4,31 @@ import 'package:frontend/data/repositories/auth_repository.dart';
 import 'package:frontend/data/repositories/mood_repository.dart';
 import 'package:frontend/data/repositories/user_repository.dart';
 
+/// ViewModel for managing mood-related state and operations.
 class MoodViewModel extends ChangeNotifier {
-  final MoodRepository _moodRepository;
-  final AuthRepository _authRepository;
-  final UserRepository _userRepository;
 
+  /// Creates a [MoodViewModel] with the required repositories.
   MoodViewModel(
     this._moodRepository,
     this._authRepository,
     this._userRepository,
   );
+  final MoodRepository _moodRepository;
+  final AuthRepository _authRepository;
+  final UserRepository _userRepository;
 
   List<Mood> _availableMoods = [];
   bool _isLoading = false;
   bool _isSaving = false;
   String? _error;
 
+  /// Gets the list of available moods.
   List<Mood> get availableMoods => _availableMoods;
+  /// Indicates if moods are being loaded.
   bool get isLoading => _isLoading;
+  /// Indicates if a mood entry is being saved.
   bool get isSaving => _isSaving;
+  /// Gets the current error message, if any.
   String? get error => _error;
 
   /// Command: Loads moods from the API
@@ -34,7 +40,8 @@ class MoodViewModel extends ChangeNotifier {
     try {
       _availableMoods = await _moodRepository.getAllMoods();
       debugPrint(
-        'MoodViewModel.loadMoods: Loaded ${_availableMoods.length} moods from API',
+        'MoodViewModel.loadMoods: Loaded ${_availableMoods.length} moods'
+        ' from API',
       );
     } catch (e) {
       _error = e.toString();
@@ -70,7 +77,8 @@ class MoodViewModel extends ChangeNotifier {
         notes: notes,
       );
       debugPrint(
-        'MoodViewModel.saveMoodEntry: Saved mood $moodId with intensity $intensity for user ${user.id}',
+        'MoodViewModel.saveMoodEntry: Saved mood $moodId with intensity'
+        ' $intensity for user ${user.id}',
       );
     } catch (e) {
       _error = e.toString();
@@ -105,7 +113,8 @@ class MoodViewModel extends ChangeNotifier {
         generalNotes,
       );
       debugPrint(
-        'MoodViewModel.saveMultipleMoodEntries: Saved ${moodEntries.length} moods for user ${user.id}',
+        'MoodViewModel.saveMultipleMoodEntries: Saved ${moodEntries.length} '
+        'moods for user ${user.id}',
       );
     } catch (e) {
       _error = e.toString();
@@ -128,6 +137,7 @@ class MoodViewModel extends ChangeNotifier {
     }
   }
 
+  /// Command: Clears the current error state
   void clear() {
     _error = null;
     notifyListeners();

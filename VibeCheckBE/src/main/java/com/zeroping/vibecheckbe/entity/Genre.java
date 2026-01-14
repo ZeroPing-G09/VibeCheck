@@ -3,6 +3,7 @@ package com.zeroping.vibecheckbe.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+// Genre entity representing a music genre in the database
 @Entity
 @Table(name = "\"Genres\"", schema = "public")
 @Getter

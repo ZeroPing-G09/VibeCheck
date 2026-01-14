@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+// Repository interface for Genre entity
 @Repository
 public interface GenreRepository extends JpaRepository<Genre, Long> {
     Optional<Genre> findByNameIgnoreCase(String name);

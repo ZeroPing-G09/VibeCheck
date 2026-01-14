@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
-import '../dialogs/save_to_spotify_dialog.dart';
+import 'package:frontend/ui/home/dialogs/save_to_spotify_dialog.dart';
 
+/// A button that allows users to save a playlist to Spotify.
 class SaveToSpotifyButton extends StatelessWidget {
-  final String userId;
-  final String playlistId; // <--- FIXED: Now using int
-  final bool? exportedToSpotify;
-  final Function(String?)? onSaved; // Callback when playlist is saved
-
+  /// Creates a [SaveToSpotifyButton].
   const SaveToSpotifyButton({
-    super.key,
-    required this.userId,
-    required this.playlistId,
+    required this.userId, required this.playlistId, super.key,
     this.exportedToSpotify,
     this.onSaved,
   });
+
+  /// The Spotify user ID.
+  final String userId;
+  /// The playlist ID to be saved.
+  final String playlistId;
+  /// Indicates if the playlist has already been exported to Spotify.
+  final bool? exportedToSpotify;
+  /// Callback when the playlist is successfully saved to Spotify.
+  final void Function(String?)? onSaved;
 
   void _showSaveDialog(BuildContext context) {
     showDialog<String?>(
@@ -31,7 +35,7 @@ class SaveToSpotifyButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (exportedToSpotify == true) {
+    if (exportedToSpotify ?? false) {
       return OutlinedButton.icon(
         onPressed: null,
         icon: const Icon(Icons.check_circle, size: 18),

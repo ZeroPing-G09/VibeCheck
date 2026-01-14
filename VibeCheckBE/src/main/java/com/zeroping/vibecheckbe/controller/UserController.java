@@ -19,10 +19,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+// Controller for handling user-related endpoints
 @RestController
 @RequestMapping("/users")
 public class UserController {
-
     private final UserService userService;
     private final PlaylistService playlistService;
     private final MoodService moodService;
@@ -33,18 +33,21 @@ public class UserController {
         this.moodService = moodService;
     }
 
+    // Get user by ID
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUser(@PathVariable UUID id) {
         UserDTO response = userService.getUserById(id);
         return ResponseEntity.ok(response);
     }
 
+    // Get user by email
     @GetMapping("/by-email")
     public ResponseEntity<UserDTO> getUserByEmail(@RequestParam String email) {
         UserDTO response = userService.getUserByEmail(email);
         return ResponseEntity.ok(response);
     }
 
+    // Update user profile
     @PutMapping("/{id}")
     public ResponseEntity<?> updateUser(
             @PathVariable UUID id,
@@ -59,6 +62,7 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
+    // Save user preferences
     @PostMapping("/preferences")
     public ResponseEntity<Map<String, Object>> savePreferences(@RequestBody UserPreferencesDTO preferences) {
         String userIdString = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -69,6 +73,7 @@ public class UserController {
                 .body(Map.of("success", true, "message", "Preferences updated successfully."));
     }
 
+    // Get user's mood history
     @GetMapping("/{id}/moods")
     public ResponseEntity<?> getUserMoodHistory(@PathVariable UUID id) {
         String authenticatedUserId = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -90,6 +95,7 @@ public class UserController {
         }
     }
 
+    // Get the last generated playlist for the authenticated user, optionally filtered by mood
     @GetMapping("/last-playlist")
     public ResponseEntity<LastPlaylistResponseDTO> getLastPlaylist(
             @RequestParam(required = false) String mood) {
@@ -108,13 +114,13 @@ public class UserController {
                 .orElseThrow(() -> new PlaylistNotFoundException("No playlist found for user"));
     }
 
+    // Save a playlist to the user's Spotify account
     @PostMapping("/playlist/save")
     public ResponseEntity<Map<String, Object>> savePlaylistToSpotify(
             @RequestHeader(value = "X-User-Id", required = false) UUID userId,
-            @RequestHeader(value = "X-Spotify-Token") String spotifyToken, // <--- ADDED THIS
+            @RequestHeader(value = "X-Spotify-Token") String spotifyToken,
             @RequestBody SavePlaylistToSpotifyRequest request) {
 
-        // For now, we'll get userId from header. In production, extract from JWT
         if (userId == null) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false, "message", "User ID is required in X-User-Id header."));
@@ -144,10 +150,7 @@ public class UserController {
                             "message", "Playlist saved to Spotify successfully.",
                             "spotifyPlaylistId", spotifyPlaylistId
                     ));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", e.getMessage()));
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalStateException | IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false, "message", e.getMessage()));
         } catch (Exception e) {

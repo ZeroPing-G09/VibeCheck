@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import okhttp3.Dns;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -17,12 +16,12 @@ import okhttp3.Response;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+// Service to interact with Gemini API for playlist generation
 @Service
 public class GeminiPlaylistService {
 
@@ -37,25 +36,18 @@ public class GeminiPlaylistService {
 
     // Configure OkHttpClient to prefer IPv4 and handle DNS resolution better
     private final OkHttpClient client = new OkHttpClient.Builder()
-            .dns(new Dns() {
-                @Override
-                public List<InetAddress> lookup(String hostname) throws UnknownHostException {
-                    try {
-                        // Get all addresses
-                        InetAddress[] addresses = InetAddress.getAllByName(hostname);
-                        // Prefer IPv4 addresses
-                        List<InetAddress> ipv4Addresses = java.util.Arrays.stream(addresses)
-                                .filter(addr -> addr instanceof Inet4Address)
-                                .collect(java.util.stream.Collectors.toList());
-                        
-                        // If we have IPv4 addresses, use them; otherwise use all addresses
-                        return ipv4Addresses.isEmpty() 
-                                ? java.util.Arrays.asList(addresses)
-                                : ipv4Addresses;
-                    } catch (UnknownHostException e) {
-                        throw e;
-                    }
-                }
+            .dns(hostname -> {
+                // Get all addresses
+                InetAddress[] addresses = InetAddress.getAllByName(hostname);
+                // Prefer IPv4 addresses
+                List<InetAddress> ipv4Addresses = Arrays.stream(addresses)
+                        .filter(addr -> addr instanceof Inet4Address)
+                        .collect(java.util.stream.Collectors.toList());
+
+                // If we have IPv4 addresses, use them; otherwise use all addresses
+                return ipv4Addresses.isEmpty()
+                        ? Arrays.asList(addresses)
+                        : ipv4Addresses;
             })
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
@@ -73,11 +65,11 @@ public class GeminiPlaylistService {
     }
 
     public PlaylistAgentResponse generatePlaylist(String mood, List<String> genres) throws Exception {
-        // Temporary bypass: Return default playlist if flag is enabled
+        // Return default playlist if flag is enabled
         System.out.println("generatePlaylist called - useDefaultPlaylist = " + useDefaultPlaylist);
         if (useDefaultPlaylist) {
             System.out.println("BYPASSING Gemini API - Using default playlist for testing");
-            return getDefaultPlaylist(mood, genres);
+            return getDefaultPlaylist();
         }
         System.out.println("Using Gemini API - NOT bypassing");
 
@@ -162,11 +154,8 @@ public class GeminiPlaylistService {
         return playlist;
     }
 
-    /**
-     * Returns a default playlist for testing when Gemini API is bypassed.
-     * Uses the "555" playlist from Spotify.
-     */
-    private PlaylistAgentResponse getDefaultPlaylist(String mood, List<String> genres) {
+    // Default playlist for testing purposes
+    private PlaylistAgentResponse getDefaultPlaylist() {
         PlaylistAgentResponse defaultPlaylist = new PlaylistAgentResponse();
         defaultPlaylist.setPlaylist_name("555");
         

@@ -11,17 +11,19 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+// Utility class for handling JWT operations
 @Component
 public class JwtUtils {
-
     @Value("${supabase.jwt-secret}")
     private String supabaseSecret;
 
+    // Generate the signing key from the secret
     private SecretKey getSigningKey() {
         byte[] keyBytes = this.supabaseSecret.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    // Validate the JWT token
     public boolean validateToken(String token) throws InvalidTokenException {
         try {
             Jwts.parserBuilder()
@@ -34,6 +36,7 @@ public class JwtUtils {
         }
     }
 
+    // Extract user ID from the JWT token
     public UUID getUserIdFromToken(String token) throws InvalidTokenException {
         try {
             Claims claims = Jwts.parserBuilder()

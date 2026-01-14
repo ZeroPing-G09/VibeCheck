@@ -12,7 +12,9 @@ import 'package:frontend/data/models/mood.dart';
 import 'package:frontend/ui/mood/viewmodel/mood_view_model.dart';
 import 'package:provider/provider.dart';
 
+/// Dialog for selecting and saving moods.
 class MoodSelectionDialog extends StatefulWidget {
+  /// Creates a [MoodSelectionDialog].
   const MoodSelectionDialog({super.key});
 
   @override
@@ -128,7 +130,8 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
   }
 
   Widget _buildMoodSelector(MoodViewModel viewModel) {
-    final selectedMoodsList = _selectedMoods.values.map((data) => data.mood).toList();
+    final selectedMoodsList = _selectedMoods.values.map((data) => data.mood)
+    .toList();
     
     return MoodDropdown(
       moods: viewModel.availableMoods,
@@ -149,7 +152,7 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Text(
             'Selected Mood',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -294,12 +297,11 @@ class _MoodSelectionDialogState extends State<MoodSelectionDialog> {
 
 // Helper class to store selected mood data
 class _SelectedMoodData {
-  final Mood mood;
-  int intensity;
 
   _SelectedMoodData({
     required this.mood,
     required this.intensity,
   });
+  final Mood mood;
+  int intensity;
 }
-

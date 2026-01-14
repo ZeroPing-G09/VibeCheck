@@ -2,24 +2,31 @@ import 'package:flutter/material.dart';
 
 /// A reusable error state widget with retry functionality
 class ErrorState extends StatelessWidget {
-  final String message;
-  final String? title;
-  final VoidCallback? onRetry;
-  final IconData? icon;
 
+  /// Creates an error state widget
   const ErrorState({
-    super.key,
-    required this.message,
+    required this.message, super.key,
     this.title,
     this.onRetry,
     this.icon,
   });
+  /// Main error message shown to the user
+  final String message;
+
+  /// Optional title displayed above the message
+  final String? title;
+
+  /// Optional retry callback
+  final VoidCallback? onRetry;
+
+  /// Optional icon displayed above the text
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -61,4 +68,3 @@ class ErrorState extends StatelessWidget {
     );
   }
 }
-

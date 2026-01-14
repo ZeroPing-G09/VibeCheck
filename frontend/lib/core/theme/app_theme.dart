@@ -1,18 +1,29 @@
 import 'package:flutter/material.dart';
 
+/// Centralized theme configuration for the application
 class AppTheme {
-  // APP COLORS:
+  /// Primary brand color
   static const Color primary = Color(0xFF3388FF);
-  // Dark mode
+
+  /// Text color for dark mode
   static const Color text = Color(0xFFFEFEFE);
+
+  /// Background color for dark mode
   static const Color bg = Color(0xFF1E1E1E);
+
+  /// Darker background color for dark mode
   static const Color bgDarker = Color(0xFF121212);
-  // Light mode
+
+  /// Text color for light mode
   static const Color lightText = Color(0xFF080808);
+
+  /// Background color for light mode
   static const Color lightBg = Color(0xFFF5F5F5);
+
+  /// Darker background color for light mode
   static const Color lightBgDarker = Color(0xFFE1E1E1);
 
-  // Theme instances
+  /// Light theme configuration
   static final ThemeData light = ThemeData(
     brightness: Brightness.light,
     scaffoldBackgroundColor: AppTheme.lightBg,
@@ -28,6 +39,7 @@ class AppTheme {
     iconTheme: const IconThemeData(color: AppTheme.lightText),
   );
 
+  /// Dark theme configuration
   static final ThemeData dark = ThemeData(
     brightness: Brightness.dark,
     scaffoldBackgroundColor: AppTheme.bg,

@@ -1,23 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/data/models/last_playlist.dart';
-import 'package:frontend/data/models/mood.dart';
+import 'package:frontend/data/models/user.dart';
+import 'package:frontend/data/repositories/auth_repository.dart';
+import 'package:frontend/data/repositories/mood_repository.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
 import 'package:frontend/data/services/playlist_service.dart';
 import 'package:frontend/di/locator.dart';
 
-import '../../../../data/models/user.dart';
-import '../../../../data/repositories/user_repository.dart';
-import '../../../../data/repositories/auth_repository.dart';
-import '../../../../data/repositories/mood_repository.dart';
+/// Represents the current state of the playlist section in the dashboard.
+enum PlaylistState { 
+  /// Playlist is currently being loaded
+  loading, 
 
-/// State for the playlist section of the dashboard.
-enum PlaylistState { loading, loaded, empty, error }
+  /// Playlist loaded successfully
+  loaded, 
 
+  /// No playlist available
+  empty, 
+
+  /// Error occurred while fetching or generating playlist
+  error 
+}
+
+/// ViewModel for the Dashboard screen, managing user, playlist, and mood data.
 class DashboardViewModel extends ChangeNotifier {
-  final UserRepository _userRepository;
-  final AuthRepository _authRepository;
-  final MoodRepository _moodRepository;
-  final PlaylistService _playlistService = locator<PlaylistService>();
 
+  /// Constructor with optional dependency injection for repositories
   DashboardViewModel({
     UserRepository? userRepository,
     AuthRepository? authRepository,
@@ -25,6 +33,11 @@ class DashboardViewModel extends ChangeNotifier {
   })  : _userRepository = userRepository ?? UserRepository(),
         _authRepository = authRepository ?? locator<AuthRepository>(),
         _moodRepository = moodRepository ?? MoodRepository();
+        
+  final UserRepository _userRepository;
+  final AuthRepository _authRepository;
+  final MoodRepository _moodRepository;
+  final PlaylistService _playlistService = locator<PlaylistService>();
 
   User? _user;
   bool _isLoading = false;
@@ -36,14 +49,25 @@ class DashboardViewModel extends ChangeNotifier {
   String? _playlistError;
   bool _isGeneratingPlaylist = false;
 
+  /// Current authenticated user
   User? get user => _user;
+
+  /// Whether the view model is loading data
   bool get isLoading => _isLoading;
+
+  /// Error message, if any
   String? get error => _error;
 
-  // Playlist getters
+  /// Last fetched playlist
   LastPlaylist? get lastPlaylist => _lastPlaylist;
+
+  /// Current state of the playlist section
   PlaylistState get playlistState => _playlistState;
+
+  /// Error message related to playlist operations
   String? get playlistError => _playlistError;
+
+  /// Whether a playlist is currently being generated
   bool get isGeneratingPlaylist => _isGeneratingPlaylist;
 
   /// Gets the current authenticated user's email
@@ -127,7 +151,8 @@ class DashboardViewModel extends ChangeNotifier {
       _playlistState =
           _lastPlaylist != null ? PlaylistState.loaded : PlaylistState.empty;
     } catch (e) {
-      // Only show error for authentication issues, treat other errors as no playlist
+      // Only show error for authentication issues, treat other errors as 
+      // no playlist
       if (e.toString().contains('Unauthorized')) {
         _playlistError = e.toString();
         _playlistState = PlaylistState.error;
@@ -153,7 +178,6 @@ class DashboardViewModel extends ChangeNotifier {
       case 'logout':
         await _authRepository.signOut();
         clear();
-        break;
     }
     notifyListeners();
   }
@@ -189,7 +213,8 @@ class DashboardViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Use provided mood, or get the last saved mood, fallback to "happy" if none exists
+      // Use provided mood, or get the last saved mood, fallback to "happy" if 
+      //none exists
       final moodName = mood ?? await _getLastMoodName() ?? 'happy';
 
       // Use user's favorite genres if available, otherwise empty list
@@ -200,7 +225,8 @@ class DashboardViewModel extends ChangeNotifier {
         genres: userGenres,
       );
 
-      // After successful generation, reload the last playlist with the specific mood
+      // After successful generation, reload the last playlist with the 
+      //specific mood
       await loadLastPlaylist(mood: moodName);
     } catch (e) {
       _playlistError = e.toString();
@@ -215,11 +241,13 @@ class DashboardViewModel extends ChangeNotifier {
   /// Updates the Spotify playlist ID for the current playlist
   void updateSpotifyPlaylistId(String spotifyPlaylistId) {
     if (_lastPlaylist != null) {
-      _lastPlaylist = _lastPlaylist!.copyWith(spotifyPlaylistId: spotifyPlaylistId);
+      _lastPlaylist = _lastPlaylist!.copyWith(
+        spotifyPlaylistId: spotifyPlaylistId);
       notifyListeners();
     }
   }
 
+  /// Clears all user and playlist state and notifies listeners.
   void clear() {
     _user = null;
     _error = null;

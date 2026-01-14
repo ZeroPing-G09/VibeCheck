@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
+// DTO for batch mood entry
 public record BatchMoodEntryDTO(
         @NotNull(message = "moodId is required")
         Long moodId,

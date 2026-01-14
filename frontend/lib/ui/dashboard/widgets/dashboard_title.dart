@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 
+/// A reusable tile widget for displaying a title and a corresponding value 
+/// in the dashboard.
 class DashboardTile extends StatelessWidget {
-  final String title;
-  final String value;
 
-  const DashboardTile({super.key, required this.title, required this.value});
+  /// Creates a [DashboardTile] with the given [title] and [value]
+  const DashboardTile({required this.title, required this.value, super.key});
+  /// The title to display on the left side of the tile
+  final String title;
+
+  /// The value to display on the right side of the tile
+  final String value;
 
   @override
   Widget build(BuildContext context) {

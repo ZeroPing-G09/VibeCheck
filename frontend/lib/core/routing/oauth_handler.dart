@@ -4,25 +4,35 @@ import 'package:flutter/material.dart';
 import 'package:frontend/core/routing/app_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Widget that handles OAuth callback routes and completes authentication flow
 class OAuthCallbackHandler extends StatefulWidget {
-  final String callbackRoute; // e.g. "/?code=..." or "/?access_token=..."
 
-  const OAuthCallbackHandler({super.key, required this.callbackRoute});
+  /// Creates an OAuth callback handler
+  const OAuthCallbackHandler({required this.callbackRoute, super.key});
+  /// Raw callback route containing auth parameters
+  /// Example: "/?code=..." or "/?access_token=..."
+  final String callbackRoute;
 
   @override
   State<OAuthCallbackHandler> createState() => _OAuthCallbackHandlerState();
 }
 
+/// State class for [OAuthCallbackHandler]
 class _OAuthCallbackHandlerState extends State<OAuthCallbackHandler> {
+  /// Subscription to Supabase auth state changes
   StreamSubscription<AuthState>? _sub;
+
+  /// Whether navigation has already been handled
   bool _handled = false;
+
+  /// Timeout fallback in case auth does not complete
   Timer? _timeout;
 
   @override
   void initState() {
     super.initState();
 
-    // Listen to auth changes – when session becomes non-null, navigate
+    /// Listen to auth changes and navigate when session becomes available
     _sub = Supabase.instance.client.auth.onAuthStateChange.listen((event) {
       final session =
           event.session ?? Supabase.instance.client.auth.currentSession;
@@ -32,7 +42,7 @@ class _OAuthCallbackHandlerState extends State<OAuthCallbackHandler> {
       }
     });
 
-    // As a fallback, navigate to login after a short timeout
+    /// Fallback navigation to login after a short timeout
     _timeout = Timer(const Duration(seconds: 10), () {
       if (!_handled) {
         _handled = true;
@@ -41,13 +51,13 @@ class _OAuthCallbackHandlerState extends State<OAuthCallbackHandler> {
     });
   }
 
+  /// Navigates to the dashboard after successful authentication
   void _navigateToPostAuth() {
-    // Navigate to dashboard using the new helper
     AppRouter.goToDashboard();
   }
 
+  /// Navigates to the login screen when authentication fails or times out
   void _goToLogin() {
-    // Navigate to login using the new helper
     AppRouter.goToLogin();
   }
 

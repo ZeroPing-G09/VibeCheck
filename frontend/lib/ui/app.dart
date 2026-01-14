@@ -9,7 +9,9 @@ import 'package:frontend/ui/settings/viewmodel/theme_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// The main application widget.
 class VibeCheckApp extends StatefulWidget {
+  /// Creates a [VibeCheckApp].
   const VibeCheckApp({super.key});
 
   @override
@@ -36,23 +38,27 @@ class _VibeCheckAppState extends State<VibeCheckApp> {
 
   Future<void> _syncRouteWithSession(Session? session) async {
   final navigator = AppRouter.navigatorKey.currentState;
-  if (navigator == null) return;
+  if (navigator == null) {
+    return;
+  }
 
   // 🔓 Not logged in → go to login immediately
   if (session == null) {
-    _navigateOnce(AppRouter.loginRoute);
+    await _navigateOnce(AppRouter.loginRoute);
     return;
   }
 
   // ✅ Logged in → ALWAYS enter app immediately
-  _navigateOnce(AppRouter.dashboardRoute);
-
+  await _navigateOnce(AppRouter.dashboardRoute);
+  
   // 🔄 Check onboarding asynchronously (never block UI)
-  _checkOnboardingInBackground(session);
+  await _checkOnboardingInBackground(session);
 }
 
-void _navigateOnce(String route) async {
-  if (_currentRoute == route) return;
+Future<void> _navigateOnce(String route) async {
+  if (_currentRoute == route) {
+    return;
+  }
 
   await AppRouter.navigatorKey.currentState!
       .pushNamedAndRemoveUntil(route, (route) => false);
@@ -61,19 +67,23 @@ void _navigateOnce(String route) async {
 }
 
 Future<void> _checkOnboardingInBackground(Session session) async {
-  if (_isCheckingOnboarding) return;
+  if (_isCheckingOnboarding) {
+    return;
+  }
 
   _isCheckingOnboarding = true;
   try {
     final email = session.user.email;
-    if (email == null) return;
+    if (email == null) {
+      return;
+    }
 
     final needsOnboarding = await _onboardingRepo
         .needsOnboarding(email)
         .timeout(const Duration(seconds: 5));
 
     if (needsOnboarding) {
-      _navigateOnce(AppRouter.onboardingRoute);
+      await _navigateOnce(AppRouter.onboardingRoute);
     }
   } catch (e) {
     // Backend down? Offline? Timeout?

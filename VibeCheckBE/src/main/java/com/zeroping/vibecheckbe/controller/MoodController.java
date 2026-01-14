@@ -14,12 +14,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+// Controller for handling mood-related endpoints
 @RestController
 @RequestMapping("/moods")
 public class MoodController {
-
+    // Logger for debugging
     private static final Logger log = LoggerFactory.getLogger(MoodController.class);
 
+    // Dependency injection of MoodService
     private final MoodService moodService;
 
     public MoodController(MoodService moodService) {
@@ -27,6 +29,7 @@ public class MoodController {
         this.moodService = moodService;
     }
 
+    // Endpoint to get all moods
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getAllMoods() {
         log.debug("getAllMoods: Request received");
@@ -35,6 +38,7 @@ public class MoodController {
         return ResponseEntity.ok(moods);
     }
 
+    // Endpoint to create a single mood entry
     @PostMapping("/entries")
     public ResponseEntity<MoodEntryResponseDTO> createMoodEntry(
             @Valid @RequestBody CreateMoodEntryDTO dto) {
@@ -45,6 +49,7 @@ public class MoodController {
         return ResponseEntity.ok(response);
     }
 
+    // Endpoint to create multiple mood entries in batch
     @PostMapping("/entries/batch")
     public ResponseEntity<List<MoodEntryResponseDTO>> createMultipleMoodEntries(
             @Valid @RequestBody CreateBatchMoodEntriesDTO dto) {
@@ -55,6 +60,7 @@ public class MoodController {
         return ResponseEntity.ok(responses);
     }
 
+    // Endpoint to get mood entries for a specific user
     @GetMapping("/entries/user/{userId}")
     public ResponseEntity<List<MoodEntryResponseDTO>> getUserMoodEntries(@PathVariable UUID userId) {
         log.debug("getUserMoodEntries: userId={}", userId);

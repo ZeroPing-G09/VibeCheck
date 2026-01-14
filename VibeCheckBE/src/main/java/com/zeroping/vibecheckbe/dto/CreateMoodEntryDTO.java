@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
+// DTO for creating a single mood entry
 public record CreateMoodEntryDTO(
         @NotNull(message = "userId is required")
         UUID userId,

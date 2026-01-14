@@ -1,28 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/data/local/local_user_storage.dart';
 import 'package:frontend/data/models/user.dart';
 import 'package:frontend/data/repositories/auth_repository.dart';
 import 'package:frontend/data/repositories/genre_repository.dart';
 import 'package:frontend/data/repositories/user_repository.dart';
-import 'package:frontend/data/local/local_user_storage.dart';
 
+/// ViewModel for managing user profile data and actions
 class ProfileViewModel extends ChangeNotifier {
-  final UserRepository _userRepository;
-  final GenreRepository _genreRepository;
-  final AuthRepository _authRepository;
-  final LocalUserStorage _localStorage;
 
+  /// Constructor
   ProfileViewModel(
     this._userRepository,
     this._genreRepository,
     this._authRepository,
     this._localStorage
   );
+  final UserRepository _userRepository;
+  final GenreRepository _genreRepository;
+  final AuthRepository _authRepository;
+  final LocalUserStorage _localStorage;
 
+  /// Current user data
   User? user;
+  /// Loading state
   bool isLoading = false;
+  /// Available genres
   List<String> availableGenres = [];
 
   bool _isServerAvailable = true;
+  /// Indicates if the server is reachable
   bool get isServerAvailable => _isServerAvailable;
 
   /// Gets the current authenticated user's email
@@ -94,6 +100,7 @@ class ProfileViewModel extends ChangeNotifier {
     await _authRepository.signOut();
   }
 
+  /// Clear ViewModel state
   void clear() {
     user = null;
     isLoading = false;

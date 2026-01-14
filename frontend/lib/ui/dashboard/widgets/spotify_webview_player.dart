@@ -1,3 +1,5 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
@@ -6,14 +8,18 @@ import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 /// Widget that displays Spotify playlist player using WebView
 /// Works on both Android and iOS
 class SpotifyWebViewPlayer extends StatefulWidget {
-  final String spotifyPlaylistId;
-  final double height;
 
+  /// Creates a SpotifyWebViewPlayer
   const SpotifyWebViewPlayer({
     required this.spotifyPlaylistId,
     this.height = 380, // Compact size - shows ~3-4 songs
     super.key,
   });
+  /// Spotify playlist ID to embed
+  final String spotifyPlaylistId;
+
+  /// Height of the WebView player
+  final double height;
 
   @override
   State<SpotifyWebViewPlayer> createState() => _SpotifyWebViewPlayerState();
@@ -100,10 +106,10 @@ class _SpotifyWebViewPlayerState extends State<SpotifyWebViewPlayer> {
 
     // Configure Android-specific settings for audio/media playback
     if (_controller.platform is AndroidWebViewController) {
-      final androidController = _controller.platform as AndroidWebViewController;
+      final _ = _controller.platform as AndroidWebViewController
       // Don't require user gesture for media playback (allows autoplay)
-      androidController.setMediaPlaybackRequiresUserGesture(false);
-      androidController.setOnShowFileSelector(_androidFilePicker);
+      ..setMediaPlaybackRequiresUserGesture(false)
+      ..setOnShowFileSelector(_androidFilePicker);
     }
 
     _controller.loadRequest(Uri.parse(_embedUrl));
@@ -123,8 +129,7 @@ class _SpotifyWebViewPlayerState extends State<SpotifyWebViewPlayer> {
           color: Colors.black,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Colors.grey.shade700,
-            width: 1,
+            color: Colors.grey.shade700
           ),
         ),
         child: ClipRRect(
@@ -133,11 +138,12 @@ class _SpotifyWebViewPlayerState extends State<SpotifyWebViewPlayer> {
             children: [
               WebViewWidget(controller: _controller),
               if (_isLoading)
-                Container(
+                const ColoredBox(
                   color: Colors.black87,
-                  child: const Center(
+                  child: Center(
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1DB954)),
+                      valueColor: 
+                      AlwaysStoppedAnimation<Color>(Color(0xFF1DB954)),
                     ),
                   ),
                 ),
@@ -148,4 +154,3 @@ class _SpotifyWebViewPlayerState extends State<SpotifyWebViewPlayer> {
     );
   }
 }
-

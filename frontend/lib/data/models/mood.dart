@@ -1,20 +1,15 @@
+/// Model representing a mood definition
 class Mood {
-  final int id;
-  final String name;
-  final String? tempo;
-  final String? danceable;
-  final String emoji; 
-  final String colorCode;
 
+  /// Creates a mood instance
   Mood({
     required this.id,
     required this.name,
-    this.tempo,
+    required this.emoji, required this.colorCode, this.tempo,
     this.danceable,
-    required this.emoji,
-    required this.colorCode,
   });
 
+  /// Creates a [Mood] from a JSON map
   factory Mood.fromJson(Map<String, dynamic> json) {
     return Mood(
       id: json['id'] as int? ?? 0,
@@ -25,7 +20,25 @@ class Mood {
       colorCode: json['colorCode'] as String? ?? '#FFC107',
     );
   }
+  /// Unique ID of the mood
+  final int id;
 
+  /// Name of the mood
+  final String name;
+
+  /// Optional tempo description
+  final String? tempo;
+
+  /// Optional danceable description
+  final String? danceable;
+
+  /// Emoji representing the mood
+  final String emoji;
+
+  /// Hex color code associated with the mood
+  final String colorCode;
+
+  /// Converts the [Mood] to a JSON map
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -38,16 +51,10 @@ class Mood {
   }
 }
 
+/// Model representing a user mood entry
 class MoodEntry {
-  final int id; 
-  final String userId; 
-  final int moodId;
-  final String moodName;
-  final String moodEmoji;
-  final String createdAt;
-  final int? intensity; // 0-100, percentage
-  final String? notes; // Additional user notes
 
+  /// Creates a mood entry
   MoodEntry({
     required this.id,
     required this.userId,
@@ -59,6 +66,7 @@ class MoodEntry {
     this.notes,
   });
 
+  /// Creates a [MoodEntry] from a JSON map
   factory MoodEntry.fromJson(Map<String, dynamic> json) {
     return MoodEntry(
       id: json['id'] as int? ?? 0,
@@ -71,7 +79,31 @@ class MoodEntry {
       notes: json['notes'] as String?,
     );
   }
+  /// Unique ID of the mood entry
+  final int id;
 
+  /// ID of the user
+  final String userId;
+
+  /// ID of the mood
+  final int moodId;
+
+  /// Name of the mood
+  final String moodName;
+
+  /// Emoji representing the mood
+  final String moodEmoji;
+
+  /// Creation timestamp
+  final String createdAt;
+
+  /// Optional intensity (0-100)
+  final int? intensity;
+
+  /// Optional user notes
+  final String? notes;
+
+  /// Converts the [MoodEntry] to a JSON map
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -86,18 +118,25 @@ class MoodEntry {
   }
 }
 
-// Helper class for creating mood entries with intensity
+/// Helper class for creating mood entries with intensity
 class MoodEntryData {
-  final int moodId;
-  final int intensity; // 0-100
-  final String? notes;
 
+  /// Creates a mood entry data object
   MoodEntryData({
     required this.moodId,
     required this.intensity,
     this.notes,
   });
+  /// Mood ID
+  final int moodId;
 
+  /// Intensity (0-100)
+  final int intensity;
+
+  /// Optional user notes
+  final String? notes;
+
+  /// Converts the [MoodEntryData] to a JSON map
   Map<String, dynamic> toJson() {
     return {
       'moodId': moodId,
@@ -107,22 +146,17 @@ class MoodEntryData {
   }
 }
 
-// Playlist model for mood history
+/// Model representing a playlist for mood history
 class Playlist {
-  final int id;
-  final String name;
-  final String? mood;
-  final String userId;
-  final String createdAt;
 
+  /// Creates a playlist instance
   Playlist({
     required this.id,
     required this.name,
-    this.mood,
-    required this.userId,
-    required this.createdAt,
+    required this.userId, required this.createdAt, this.mood,
   });
 
+  /// Creates a [Playlist] from a JSON map
   factory Playlist.fromJson(Map<String, dynamic> json) {
     return Playlist(
       id: json['id'] as int? ?? 0,
@@ -132,32 +166,37 @@ class Playlist {
       createdAt: json['createdAt'] as String? ?? '',
     );
   }
+  /// Playlist ID
+  final int id;
+
+  /// Playlist name
+  final String name;
+
+  /// Optional mood associated with the playlist
+  final String? mood;
+
+  /// User ID
+  final String userId;
+
+  /// Creation timestamp
+  final String createdAt;
 }
 
-// Mood History model combining mood entry with playlists
+/// Model representing mood history combining mood entry with playlists
 class MoodHistory {
-  final int id;
-  final String userId;
-  final int moodId;
-  final String moodName;
-  final String moodEmoji;
-  final int? intensity;
-  final String? notes;
-  final String createdAt;
-  final List<Playlist> playlists;
 
+  /// Creates a mood history instance
   MoodHistory({
     required this.id,
     required this.userId,
     required this.moodId,
     required this.moodName,
     required this.moodEmoji,
-    this.intensity,
+    required this.createdAt, required this.playlists, this.intensity,
     this.notes,
-    required this.createdAt,
-    required this.playlists,
   });
 
+  /// Creates a [MoodHistory] from a JSON map
   factory MoodHistory.fromJson(Map<String, dynamic> json) {
     return MoodHistory(
       id: json['id'] as int? ?? 0,
@@ -174,5 +213,30 @@ class MoodHistory {
           [],
     );
   }
-}
+  /// Mood entry ID
+  final int id;
 
+  /// User ID
+  final String userId;
+
+  /// Mood ID
+  final int moodId;
+
+  /// Name of the mood
+  final String moodName;
+
+  /// Emoji representing the mood
+  final String moodEmoji;
+
+  /// Optional intensity (0-100)
+  final int? intensity;
+
+  /// Optional user notes
+  final String? notes;
+
+  /// Creation timestamp
+  final String createdAt;
+
+  /// List of associated playlists
+  final List<Playlist> playlists;
+}
